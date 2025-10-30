@@ -5,7 +5,10 @@
 	import { onMount } from 'svelte';
 	
 	let { data } = $props();
-	const { event } = data;
+	const { event, user } = data;
+	
+	// Verificar si el usuario está autenticado
+	let isAuthenticated = $derived(!!user);
 
 	// Configurar Lemon Squeezy event listener
 	onMount(() => {
@@ -231,11 +234,75 @@
 				<p class="text-gray-700 text-lg leading-relaxed whitespace-pre-line">{event.description}</p>
 			</div>
 
-			<!-- Tipos de Tickets -->
+			<!-- Información de Precios (solo informativa) -->
 			{#if event.ticket_types && event.ticket_types.length > 0}
 				<div class="mb-8 pb-8 border-b border-gray-200">
-					<h2 class="text-2xl font-bold text-gray-900 mb-6">Tipos de Entradas</h2>
-					<div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+					<h2 class="text-2xl font-bold text-gray-900 mb-6">Precios de Entradas</h2>
+					<div class="bg-gray-50 rounded-xl p-6">
+						<div class="space-y-4">
+							{#each event.ticket_types as ticket}
+								<div class="flex items-center justify-between py-3 border-b border-gray-200 last:border-0">
+									<div class="flex items-center gap-3">
+										<div class="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center">
+											<svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+												<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
+											</svg>
+										</div>
+										<div>
+											<h3 class="font-semibold text-gray-900">{ticket.name}</h3>
+											<p class="text-sm text-gray-500">{ticket.available_tickets} disponibles</p>
+										</div>
+									</div>
+									<div class="text-right">
+										<p class="text-2xl font-bold text-indigo-600">${ticket.price}</p>
+										<p class="text-xs text-gray-500">por entrada</p>
+									</div>
+								</div>
+							{/each}
+						</div>
+					</div>
+				</div>
+
+				<!-- Sección de Compra de Entradas -->
+				<div class="mb-8 pb-8 border-b border-gray-200 relative">
+					<h2 class="text-2xl font-bold text-gray-900 mb-6">Comprar Entradas</h2>
+					
+					<!-- Overlay de blur si no está autenticado -->
+					{#if !isAuthenticated}
+						<div class="absolute inset-0 bg-white/60 backdrop-blur-sm z-10 rounded-xl flex items-center justify-center" in:fade={{ duration: 300 }}>
+							<div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md mx-4 text-center" in:fly={{ y: 20, duration: 400, delay: 100 }}>
+								<div class="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
+									<svg class="w-8 h-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+									</svg>
+								</div>
+								<h3 class="text-2xl font-bold text-gray-900 mb-3">Inicia sesión para comprar</h3>
+								<p class="text-gray-600 mb-6">
+									Necesitas tener una cuenta para poder adquirir tus entradas. 
+									Es rápido, fácil y seguro.
+								</p>
+								<div class="space-y-3">
+									<button
+										onclick={() => goto('/login')}
+										class="w-full px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition-colors duration-200 flex items-center justify-center gap-2"
+									>
+										<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+										</svg>
+										Iniciar Sesión
+									</button>
+									<p class="text-sm text-gray-500">
+										¿No tienes cuenta? 
+										<button onclick={() => goto('/login')} class="text-indigo-600 hover:text-indigo-700 font-semibold">
+											Regístrate aquí
+										</button>
+									</p>
+								</div>
+							</div>
+						</div>
+					{/if}
+					
+					<div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6" class:pointer-events-none={!isAuthenticated} class:cursor-default={!isAuthenticated}>
 						{#each event.ticket_types as ticket, i (ticket.id)}
 							<div
 								in:fly={{ y: 30, duration: 400, delay: 400 + (i * 100) }}

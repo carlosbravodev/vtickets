@@ -3,7 +3,7 @@ import type { RequestHandler } from './$types';
 import { env } from '$env/dynamic/private';
 import { env as publicEnv } from '$env/dynamic/public';
 
-export const POST: RequestHandler = async ({ request }) => {
+export const POST: RequestHandler = async ({ request, locals }) => {
 	try {
 		const { eventId, eventTitle, tickets, totalAmount, ticketDetails } = await request.json();
 
@@ -17,6 +17,21 @@ export const POST: RequestHandler = async ({ request }) => {
 		if (!apiKey || !storeId || !variantId) {
 			console.error('Missing Lemon Squeezy configuration');
 			return json({ error: 'Server configuration error' }, { status: 500 });
+		}
+
+		// Obtener buyer_id si el usuario está autenticado
+		// Nota: Esto funcionará cuando implementemos la Fase 2 (Hooks y Sesión)
+		const buyerId = locals.session?.user?.id || null;
+
+		// Preparar custom data para el webhook
+		const customData: any = {
+			event_id: eventId,
+			tickets: JSON.stringify(tickets)
+		};
+
+		// Agregar buyer_id si el usuario está autenticado
+		if (buyerId) {
+			customData.buyer_id = buyerId;
 		}
 
 		// Crear checkout directamente con la API de Lemon Squeezy
@@ -37,10 +52,7 @@ export const POST: RequestHandler = async ({ request }) => {
 							billing_address: {
 								country: 'EC' // Ecuador por defecto
 							},
-							custom: {
-								event_id: eventId,
-								tickets: JSON.stringify(tickets)
-							}
+							custom: customData
 						},
 						product_options: {
 							name: `🎫 ${eventTitle}`,

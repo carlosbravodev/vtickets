@@ -1,8 +1,16 @@
 <script lang="ts">
 	import { optimizeSupabaseImage } from '$lib/utils/image';
+	import { generateEventSlug } from '$lib/utils/slug';
 	import { fade, fly } from 'svelte/transition';
 	
 	let { data } = $props();
+	
+	// Ordenar eventos por fecha de creación para generar slugs consistentes
+	let sortedEvents = $derived(
+		[...data.events].sort((a, b) => 
+			new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+		)
+	);
 
 	function formatDateTime(dateString: string) {
 		const date = new Date(dateString);
@@ -31,14 +39,14 @@
 		<div class="grid gap-8 lg:grid-cols-3 md:grid-cols-2 sm:grid-cols-1">
 			{#if data.error}
 				<p class="text-red-500">Error: {data.error}</p>
-			{:else if data.events.length > 0}
-				{#each data.events as event, i (event.id)}
+			{:else if sortedEvents.length > 0}
+				{#each sortedEvents as event, i (event.id)}
 					<article
 						in:fly={{ y: 50, duration: 400, delay: i * 100 }}
 						class="group relative bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 flex flex-col"
 					>
 						<!-- Imagen con overlay en hover -->
-						<a href={`/evento/${event.id}`} class="relative overflow-hidden block">
+						<a href={`/evento/${generateEventSlug(event, sortedEvents)}`} class="relative overflow-hidden block">
 							<div class="absolute inset-0 bg-linear-to-t from-black/60 via-black/0 to-black/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10"></div>
 							<img
 								class="w-full h-56 object-cover transform group-hover:scale-105 transition-transform duration-500"
@@ -57,7 +65,7 @@
 						<!-- Contenido -->
 						<div class="p-6 flex flex-col grow">
 							<!-- Título -->
-							<a href={`/evento/${event.id}`} class="group/title">
+							<a href={`/evento/${generateEventSlug(event, sortedEvents)}`} class="group/title">
 								<h3
 									class="text-xl font-bold text-gray-900 mb-3 line-clamp-2 group-hover/title:text-indigo-600 transition-colors duration-200"
 								>
@@ -91,7 +99,7 @@
 
 							<!-- Botón -->
 							<a
-								href={`/evento/${event.id}`}
+								href={`/evento/${generateEventSlug(event, sortedEvents)}`}
 								class="inline-flex items-center justify-center px-6 py-3 text-sm font-semibold text-white bg-linear-to-r from-indigo-600 to-purple-600 rounded-lg hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-4 focus:ring-indigo-300 transition-all duration-200 shadow-md hover:shadow-lg mt-auto"
 							>
 								Ver detalles

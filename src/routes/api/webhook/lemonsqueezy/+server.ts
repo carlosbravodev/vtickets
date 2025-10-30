@@ -37,20 +37,32 @@ export const POST: RequestHandler = async ({ request }) => {
 			const customData = event.data.attributes.custom_data;
 			const status = event.data.attributes.status;
 			const totalAmount = parseFloat(event.data.attributes.total) / 100;
+			const userEmail = event.data.attributes.user_email;
 
 			if (status === 'paid') {
 				// Extraer información personalizada
 				const eventId = customData.event_id;
 				const tickets = JSON.parse(customData.tickets);
+				const buyerId = customData.buyer_id || null; // UUID del usuario autenticado (si existe)
 
-				// Crear orden en Supabase
-				const { error: orderError } = await supabase.from('orders').insert({
+				// Preparar datos de la orden
+				const orderData: any = {
 					lemon_squeezy_order_id: orderId,
 					event_id: eventId,
+					user_email: userEmail,
 					total_price: totalAmount,
 					payment_status: 'paid',
+					tickets_data: tickets,
 					created_at: new Date().toISOString()
-				});
+				};
+
+				// Agregar buyer_id si el usuario estaba autenticado
+				if (buyerId) {
+					orderData.buyer_id = buyerId;
+				}
+
+				// Crear orden en Supabase
+				const { error: orderError } = await supabase.from('orders').insert(orderData);
 
 				if (orderError) {
 					console.error('Error creating order:', orderError);
@@ -66,6 +78,11 @@ export const POST: RequestHandler = async ({ request }) => {
 				}
 
 				console.log('✅ Order processed successfully:', orderId);
+				if (buyerId) {
+					console.log('   Authenticated user:', buyerId);
+				} else {
+					console.log('   Guest user:', userEmail);
+				}
 			}
 		}
 
