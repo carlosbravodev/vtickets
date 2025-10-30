@@ -1,0 +1,53 @@
+@import "tailwindcss";
+
+/* View Transitions */
+@view-transition {
+	navigation: auto;
+}
+
+/* Fade animation para view transitions */
+::view-transition-old(root) {
+	animation: 200ms cubic-bezier(0.4, 0, 1, 1) both fade-out;
+}
+
+::view-transition-new(root) {
+	animation: 400ms cubic-bezier(0, 0, 0.2, 1) both fade-in;
+}
+
+/* Keyframes para fade */
+@keyframes fade-in {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
+}
+
+@keyframes fade-out {
+	from {
+		opacity: 1;
+	}
+	to {
+		opacity: 0;
+	}
+}
+
+/* Animación de entrada para elementos */
+.fade-in {
+	animation: fade-in 0.6s ease-out forwards;
+}
+
+/* Animación escalonada para cards */
+.stagger-fade-in {
+	opacity: 0;
+	animation: fade-in 0.5s ease-out forwards;
+}
+
+.stagger-fade-in:nth-child(1) { animation-delay: 0.1s; }
+.stagger-fade-in:nth-child(2) { animation-delay: 0.2s; }
+.stagger-fade-in:nth-child(3) { animation-delay: 0.3s; }
+.stagger-fade-in:nth-child(4) { animation-delay: 0.4s; }
+.stagger-fade-in:nth-child(5) { animation-delay: 0.5s; }
+.stagger-fade-in:nth-child(6) { animation-delay: 0.6s; }
+

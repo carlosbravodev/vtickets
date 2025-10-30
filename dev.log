@@ -1,0 +1,14 @@
+
+> vtickets@0.0.1 dev
+> vite dev
+
+
+  VITE v7.1.12  ready in 984 ms
+
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: use --host to expose
+  ➜  press h + enter to show help
+1:11:27 [vite-plugin-svelte] src/routes/evento/[id]/+page.svelte:240:0 Buttons and links should either contain text or have an `aria-label`, `aria-labelledby` or `title` attribute
+https://svelte.dev/e/a11y_consider_explicit_label
+1:11:27 [vite-plugin-svelte] src/routes/evento/[id]/+page.svelte:254:0 Buttons and links should either contain text or have an `aria-label`, `aria-labelledby` or `title` attribute
+https://svelte.dev/e/a11y_consider_explicit_label
