@@ -1,13 +1,23 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { LEMON_SQUEEZY_API_KEY, LEMON_SQUEEZY_STORE_ID, LEMON_SQUEEZY_VARIANT_ID } from '$env/static/private';
-import { PUBLIC_APP_URL } from '$env/static/public';
-
-const APP_URL = PUBLIC_APP_URL || 'http://localhost:5173';
+import { env } from '$env/dynamic/private';
+import { env as publicEnv } from '$env/dynamic/public';
 
 export const POST: RequestHandler = async ({ request }) => {
 	try {
 		const { eventId, eventTitle, tickets, totalAmount, ticketDetails } = await request.json();
+
+		// Obtener variables de entorno
+		const apiKey = env.LEMON_SQUEEZY_API_KEY;
+		const storeId = env.LEMON_SQUEEZY_STORE_ID;
+		const variantId = env.LEMON_SQUEEZY_VARIANT_ID;
+		const appUrl = publicEnv.PUBLIC_APP_URL || 'http://localhost:5173';
+
+		// Validar que las variables estén configuradas
+		if (!apiKey || !storeId || !variantId) {
+			console.error('Missing Lemon Squeezy configuration');
+			return json({ error: 'Server configuration error' }, { status: 500 });
+		}
 
 		// Crear checkout directamente con la API de Lemon Squeezy
 		// Esto NO requiere productos pre-configurados
@@ -16,7 +26,7 @@ export const POST: RequestHandler = async ({ request }) => {
 			headers: {
 				'Accept': 'application/vnd.api+json',
 				'Content-Type': 'application/vnd.api+json',
-				'Authorization': `Bearer ${LEMON_SQUEEZY_API_KEY}`
+				'Authorization': `Bearer ${apiKey}`
 			},
 			body: JSON.stringify({
 				data: {
@@ -49,13 +59,13 @@ export const POST: RequestHandler = async ({ request }) => {
 						store: {
 							data: {
 								type: 'stores',
-								id: LEMON_SQUEEZY_STORE_ID
+								id: storeId
 							}
 						},
 						variant: {
 							data: {
 								type: 'variants',
-								id: LEMON_SQUEEZY_VARIANT_ID
+								id: variantId
 							}
 						}
 					}

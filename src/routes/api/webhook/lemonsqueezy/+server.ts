@@ -2,9 +2,7 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import crypto from 'crypto';
 import { supabase } from '$lib/supabase';
-import { LEMON_SQUEEZY_WEBHOOK_SECRET } from '$env/static/private';
-
-const WEBHOOK_SECRET = LEMON_SQUEEZY_WEBHOOK_SECRET;
+import { env } from '$env/dynamic/private';
 
 export const POST: RequestHandler = async ({ request }) => {
 	try {
@@ -16,7 +14,14 @@ export const POST: RequestHandler = async ({ request }) => {
 		}
 
 		// Verificar firma del webhook
-		const hmac = crypto.createHmac('sha256', WEBHOOK_SECRET);
+		const webhookSecret = env.LEMON_SQUEEZY_WEBHOOK_SECRET;
+		
+		if (!webhookSecret) {
+			console.error('LEMON_SQUEEZY_WEBHOOK_SECRET not configured');
+			return json({ error: 'Server configuration error' }, { status: 500 });
+		}
+
+		const hmac = crypto.createHmac('sha256', webhookSecret);
 		const digest = hmac.update(rawBody).digest('hex');
 
 		if (signature !== digest) {
