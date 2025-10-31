@@ -1,11 +1,48 @@
 <script lang="ts">
 	import { fade } from 'svelte/transition';
 	import Hero from '$lib/components/Hero.svelte';
+	import EventSection from '$lib/components/EventSection.svelte';
+	import type { PageData } from './$types';
+
+	let { data }: { data: PageData } = $props();
 </script>
 
 <div class="min-h-screen bg-linear-to-br from-indigo-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800">
 	<!-- Hero Section -->
 	<Hero />
+
+	<!-- Próximos Eventos Section -->
+	<div class="first-section">
+		{#if data?.upcomingEvents?.length}
+			<EventSection 
+				title="Próximos Eventos" 
+				events={data.upcomingEvents}
+				maxCards={10}
+			/>
+		{:else}
+			<div class="py-8 text-center">
+				<p class="text-gray-500">No hay eventos disponibles</p>
+			</div>
+		{/if}
+	</div>
+
+	<!-- Eventos en Guayaquil Section -->
+	{#if data?.guayaquilEvents?.length}
+		<EventSection 
+			title="Eventos en Guayaquil" 
+			events={data.guayaquilEvents}
+			maxCards={10}
+		/>
+	{/if}
+
+	<!-- Eventos en Quito Section -->
+	{#if data?.quitoEvents?.length}
+		<EventSection 
+			title="Eventos en Quito" 
+			events={data.quitoEvents}
+			maxCards={10}
+		/>
+	{/if}
 
 	<!-- Features Section -->
 	<section class="py-20 bg-white dark:bg-gray-800">
@@ -64,6 +101,14 @@
 </div>
 
 <style>
+	.first-section {
+		padding-top: 3rem;
+	}
 
+	@media (min-width: 768px) {
+		.first-section {
+			padding-top: 4rem;
+		}
+	}
 </style>
 

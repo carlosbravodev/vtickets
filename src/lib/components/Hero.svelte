@@ -257,30 +257,34 @@
 
 	.hero-title {
 		font-size: clamp(2rem, 5vw, 4rem);
-		font-weight: 800;
+		font-weight: 900; /* Roboto Black */
 		margin-bottom: 1rem;
 		text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.5);
 		line-height: 1.2;
+		letter-spacing: -0.02em;
 	}
 
 	.hero-subtitle {
 		font-size: clamp(1rem, 2vw, 1.5rem);
+		font-weight: 400; /* Roboto Regular */
 		margin-bottom: 2rem;
 		text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.5);
 		opacity: 0.95;
+		letter-spacing: 0.01em;
 	}
 
 	.hero-cta {
 		display: inline-block;
 		padding: 1rem 2.5rem;
 		font-size: 1.125rem;
-		font-weight: 600;
+		font-weight: 700; /* Roboto Bold */
 		color: white;
 		background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 		border-radius: 50px;
 		text-decoration: none;
 		transition: all 0.3s ease;
 		box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+		letter-spacing: 0.02em;
 	}
 
 	.hero-cta:hover {

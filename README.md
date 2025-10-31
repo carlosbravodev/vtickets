@@ -18,6 +18,7 @@ Plataforma moderna de venta de tickets para eventos desarrollada con SvelteKit 5
 - **SvelteKit 5** - Framework moderno con Svelte 5 Runes
 - **Tailwind CSS v4** - Estilos utility-first de última generación
 - **Vite** - Build tool ultra-rápido
+- **Roboto** - Sistema tipográfico unificado con jerarquía clara
 
 ### Backend & Database
 - **Supabase** - Base de datos PostgreSQL con Row Level Security
@@ -28,6 +29,37 @@ Plataforma moderna de venta de tickets para eventos desarrollada con SvelteKit 5
 - View Transitions API para navegación fluida
 - Optimización automática de imágenes
 - Test mode para desarrollo seguro
+
+## 🎨 Sistema Tipográfico
+
+VTickets utiliza **Roboto** como fuente única con una jerarquía clara de pesos:
+
+### Jerarquía de Pesos
+
+| Peso | Uso | Clases Disponibles |
+|------|-----|-------------------|
+| **900 (Black)** | Títulos principales, Hero | `.text-black`, `h1` |
+| **700 (Bold)** | Títulos de sección, encabezados de cards | `.text-bold`, `h2`, `h3` |
+| **500 (Medium)** | Subtítulos, elementos destacados | `.text-medium`, `h4`, `h5`, `h6` |
+| **400 (Regular)** | Texto de cuerpo, párrafos | `.body-text`, `p` |
+| **300 (Light)** | Texto secundario (opcional) | `.text-light` |
+
+### Letter Spacing
+
+- Títulos grandes (h1): `-0.02em` - Más compacto para impacto visual
+- Títulos medianos (h2): `-0.01em` - Ligeramente compacto
+- Cuerpo de texto: `0.01em` - Mejor legibilidad
+- Botones: `0.02em` - Mayor espaciado para claridad
+
+### Ejemplo de Uso
+
+```html
+<h1 class="text-4xl">Título Principal</h1> <!-- 900 Black -->
+<h2 class="text-2xl">Sección</h2> <!-- 700 Bold -->
+<p class="body-text">Texto de cuerpo</p> <!-- 400 Regular -->
+<span class="text-medium">Destacado</span> <!-- 500 Medium -->
+<small class="text-light">Secundario</small> <!-- 300 Light -->
+```
 
 ## 📋 Requisitos previos
 
