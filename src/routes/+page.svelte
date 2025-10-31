@@ -1,40 +1,11 @@
 <script lang="ts">
 	import { fade } from 'svelte/transition';
+	import Hero from '$lib/components/Hero.svelte';
 </script>
 
 <div class="min-h-screen bg-linear-to-br from-indigo-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800">
 	<!-- Hero Section -->
-	<section class="relative overflow-hidden">
-		<div class="absolute inset-0 bg-linear-to-br from-indigo-500/10 to-purple-500/10"></div>
-		<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-32 relative">
-			<div class="text-center" in:fade={{ duration: 600 }}>
-				<h1 class="text-5xl lg:text-7xl font-extrabold text-gray-900 dark:text-white mb-6">
-					<span class="bg-linear-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-						VTickets
-					</span>
-				</h1>
-				<p class="text-xl lg:text-2xl text-gray-600 dark:text-gray-300 mb-8 max-w-3xl mx-auto">
-					Tu plataforma de confianza para comprar entradas a los mejores eventos
-				</p>
-				<div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
-					<a
-						href="/eventos"
-						class="inline-flex items-center px-8 py-4 text-lg font-semibold text-white bg-linear-to-r from-indigo-600 to-purple-600 rounded-full hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-4 focus:ring-indigo-300 transition-all duration-200 shadow-xl hover:shadow-2xl hover:scale-105"
-					>
-						Ver Eventos
-						<svg class="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-						</svg>
-					</a>
-				</div>
-			</div>
-		</div>
-
-		<!-- Decorative elements -->
-		<div class="absolute top-0 left-0 w-72 h-72 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob"></div>
-		<div class="absolute top-0 right-0 w-72 h-72 bg-indigo-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000"></div>
-		<div class="absolute bottom-0 left-1/2 w-72 h-72 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000"></div>
-	</section>
+	<Hero />
 
 	<!-- Features Section -->
 	<section class="py-20 bg-white dark:bg-gray-800">
@@ -93,31 +64,6 @@
 </div>
 
 <style>
-	@keyframes blob {
-		0% {
-			transform: translate(0px, 0px) scale(1);
-		}
-		33% {
-			transform: translate(30px, -50px) scale(1.1);
-		}
-		66% {
-			transform: translate(-20px, 20px) scale(0.9);
-		}
-		100% {
-			transform: translate(0px, 0px) scale(1);
-		}
-	}
-	
-	.animate-blob {
-		animation: blob 7s infinite;
-	}
-	
-	.animation-delay-2000 {
-		animation-delay: 2s;
-	}
-	
-	.animation-delay-4000 {
-		animation-delay: 4s;
-	}
+
 </style>
 
