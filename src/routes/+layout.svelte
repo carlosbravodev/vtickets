@@ -127,42 +127,41 @@
 
 	<!-- Mobile Menu -->
 	{#if isMenuOpen}
-		<div class="absolute w-full md:hidden bg-white shadow-md">
-			<div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-				<a href="/eventos" class="text-gray-800 hover:text-gray-600 block px-3 py-2 rounded-md text-base font-medium">Eventos</a>
+		<div class="mobile-menu-container">
+			<div class="mobile-menu-content">
+				<a href="/eventos" class="menu-link" onclick={toggleMenu}>Eventos</a>
 				
 				{#if isAuthenticated}
-					<div class="border-t border-gray-200 mt-2 pt-2">
-						<div class="px-3 py-2">
-							<p class="text-sm text-gray-500">Cuenta</p>
-							<p class="text-sm font-semibold text-gray-900 truncate">{user?.email}</p>
-						</div>
-						<a
-							href="/cuenta"
-							class="text-gray-800 hover:text-gray-600 block px-3 py-2 rounded-md text-base font-medium"
-							onclick={toggleMenu}
-						>
-							Mi cuenta
-						</a>
-						<button
-							onclick={() => {
-								handleLogout();
-								toggleMenu();
-							}}
-							class="w-full text-left text-red-600 hover:text-red-700 block px-3 py-2 rounded-md text-base font-medium"
-						>
-							Cerrar sesión
-						</button>
+					<div class="menu-divider"></div>
+					<div class="user-info">
+						<p class="user-label">Cuenta</p>
+						<p class="user-email">{user?.email}</p>
 					</div>
+					<a
+						href="/cuenta"
+						class="menu-link"
+						onclick={toggleMenu}
+					>
+						Mi cuenta
+					</a>
+					<button
+						onclick={() => {
+							handleLogout();
+							toggleMenu();
+						}}
+						class="menu-link logout-link"
+					>
+						Cerrar sesión
+					</button>
 				{:else}
 					<button
 						onclick={() => {
 							goto('/login');
 							toggleMenu();
 						}}
-						class="w-full text-left flex items-center bg-indigo-600 hover:bg-indigo-700 transition-colors duration-300 font-bold text-white py-2 px-3 rounded"
+						class="login-button-mobile"
 					>
-						<img src={userIcon} alt="Icono de usuario" class="inline-block mr-2 h-5 w-5" />
+						<img src={userIcon} alt="Icono de usuario" class="icon-mobile" />
 						Entrar
 					</button>
 				{/if}
@@ -172,3 +171,149 @@
 </header>
 
 {@render children?.()}
+
+<style>
+	/* Mobile Menu Container - Fondo con backdrop */
+	.mobile-menu-container {
+		position: absolute;
+		top: 100%;
+		left: 0;
+		right: 0;
+		padding: 0.75rem;
+		animation: menuFadeIn 0.3s ease-out forwards;
+	}
+
+	/* Contenido del menú - Card flotante */
+	.mobile-menu-content {
+		background: white;
+		border-radius: 16px;
+		box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+		padding: 1.25rem;
+		width: 100%;
+		margin: 0 auto;
+		animation: menuSlideDown 0.3s ease-out forwards;
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+	}
+
+	/* Animación del menú - Fade in + Slide down */
+	@keyframes menuFadeIn {
+		from {
+			opacity: 0;
+		}
+		to {
+			opacity: 1;
+		}
+	}
+
+	@keyframes menuSlideDown {
+		from {
+			opacity: 0;
+			transform: translateY(-12px);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0);
+		}
+	}
+
+	/* Links del menú */
+	.menu-link {
+		display: block;
+		padding: 0.875rem 1rem;
+		color: #1a1a1a;
+		font-weight: 500;
+		font-size: 1rem;
+		text-decoration: none;
+		border-radius: 10px;
+		transition: all 0.2s ease;
+		background: transparent;
+		border: none;
+		width: 100%;
+		text-align: left;
+		cursor: pointer;
+	}
+
+	.menu-link:hover {
+		background: #f3f4f6;
+		color: #667eea;
+	}
+
+	/* Divisor */
+	.menu-divider {
+		height: 1px;
+		background: #e5e7eb;
+		margin: 0.5rem 0;
+	}
+
+	/* Información de usuario */
+	.user-info {
+		padding: 0.875rem 1rem;
+		background: #f9fafb;
+		border-radius: 10px;
+		margin-bottom: 0.25rem;
+	}
+
+	.user-label {
+		font-size: 0.75rem;
+		color: #6b7280;
+		font-weight: 500;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		margin-bottom: 0.25rem;
+	}
+
+	.user-email {
+		font-size: 0.875rem;
+		font-weight: 600;
+		color: #1a1a1a;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	/* Link de logout */
+	.logout-link {
+		color: #dc2626;
+		font-weight: 600;
+	}
+
+	.logout-link:hover {
+		background: #fef2f2;
+		color: #b91c1c;
+	}
+
+	/* Botón de login móvil */
+	.login-button-mobile {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.5rem;
+		background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+		color: white;
+		font-weight: 700;
+		font-size: 1rem;
+		padding: 0.875rem 1rem;
+		border-radius: 10px;
+		border: none;
+		cursor: pointer;
+		transition: all 0.3s ease;
+		width: 100%;
+		margin-top: 0.25rem;
+	}
+
+	.login-button-mobile:hover {
+		transform: translateY(-1px);
+		box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+	}
+
+	.login-button-mobile:active {
+		transform: translateY(0);
+	}
+
+	.icon-mobile {
+		height: 1.25rem;
+		width: 1.25rem;
+	}
+</style>
