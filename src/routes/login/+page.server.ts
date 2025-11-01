@@ -6,6 +6,7 @@ export const actions: Actions = {
 		const formData = await request.formData();
 		const email = formData.get('email') as string;
 		const password = formData.get('password') as string;
+		const redirectTo = formData.get('redirectTo') as string || '/';
 
 		const { error } = await supabase.auth.signInWithPassword({
 			email,
@@ -21,19 +22,21 @@ export const actions: Actions = {
 			});
 		}
 
-		redirect(303, '/');
+		// Redirigir a la página original o al home
+		redirect(303, redirectTo);
 	},
 
 	registro: async ({ request, locals: { supabase } }) => {
 		const formData = await request.formData();
 		const email = formData.get('email') as string;
 		const password = formData.get('password') as string;
+		const redirectTo = formData.get('redirectTo') as string || '/';
 
 		const { error } = await supabase.auth.signUp({
 			email,
 			password,
 			options: {
-				emailRedirectTo: `${new URL(request.url).origin}/auth/callback`
+				emailRedirectTo: `${new URL(request.url).origin}/auth/callback?redirectTo=${encodeURIComponent(redirectTo)}`
 			}
 		});
 

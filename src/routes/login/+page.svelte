@@ -1,6 +1,7 @@
 <script lang="ts">
 import { enhance } from '$app/forms';
 import { goto, invalidateAll } from '$app/navigation';
+import { page } from '$app/stores';
 import type { ActionData } from './$types';
 import { supabase } from '$lib/supabaseClient';
 
@@ -13,6 +14,9 @@ let showPassword = $state(false);
 let message = $derived(form?.message || '');
 let messageType = $derived(form?.success ? 'success' : 'error');
 
+// Obtener el parámetro redirectTo de la URL
+let redirectTo = $derived($page.url.searchParams.get('redirectTo') || '/');
+
 function toggleMode() {
 mode = mode === 'login' ? 'registro' : 'login';
 }
@@ -22,7 +26,7 @@ isLoading = true;
 const { error } = await supabase.auth.signInWithOAuth({
 provider: provider,
 options: {
-redirectTo: `${location.origin}/auth/callback`
+redirectTo: `${location.origin}/auth/callback?redirectTo=${encodeURIComponent(redirectTo)}`
 }
 });
 
@@ -76,6 +80,9 @@ goto(result.location);
 }
 };
 }}>
+<!-- Campo oculto para redirección -->
+<input type="hidden" name="redirectTo" value={redirectTo} />
+
 <div class="mb-4">
 <label for="email" class="block text-sm font-medium text-gray-700 mb-2">Correo electrónico</label>
 <input type="email" id="email" name="email" required autocomplete="email" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all" placeholder="tu@email.com" value={form?.email ?? ''} />

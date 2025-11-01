@@ -7,7 +7,7 @@
 	let { data }: { data: PageData } = $props();
 </script>
 
-<div class="min-h-screen bg-linear-to-br from-indigo-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800">
+<div class="page-container">
 	<!-- Hero Section -->
 	<Hero />
 
@@ -101,6 +101,11 @@
 </div>
 
 <style>
+	.page-container {
+		min-height: 100vh;
+		background: #f8f9fa;
+	}
+
 	.first-section {
 		padding-top: 3rem;
 	}
