@@ -9,7 +9,7 @@
 		const interval = setInterval(() => {
 			countdown--;
 			if (countdown <= 0) {
-				goto('/');
+				goto('/cuenta');
 			}
 		}, 1000);
 
@@ -50,14 +50,20 @@
 				<!-- Botones -->
 				<div class="space-y-3">
 					<a
-						href="/"
+						href="/cuenta"
 						class="block w-full px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition-colors duration-200"
 					>
-						Volver al inicio
+						Ver mis entradas
+					</a>
+					<a
+						href="/eventos"
+						class="block w-full px-6 py-3 bg-white border-2 border-gray-300 hover:border-gray-400 text-gray-700 font-semibold rounded-lg transition-colors duration-200"
+					>
+						Explorar más eventos
 					</a>
 
 					<p class="text-sm text-gray-500">
-						Redirigiendo automáticamente en {countdown} segundo{countdown !== 1 ? 's' : ''}...
+						Redirigiendo a tu cuenta en {countdown} segundo{countdown !== 1 ? 's' : ''}...
 					</p>
 				</div>
 			</div>
