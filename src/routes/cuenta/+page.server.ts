@@ -18,6 +18,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		.select(`
 			id,
 			lemon_squeezy_order_id,
+			order_number,
 			event_id,
 			total_price,
 			payment_status,

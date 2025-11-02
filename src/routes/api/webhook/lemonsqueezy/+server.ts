@@ -36,12 +36,14 @@ export const POST: RequestHandler = async ({ request }) => {
 		// Procesar evento de pago exitoso
 		if (eventName === 'order_created') {
 			const orderId = event.data.id;
-			const orderIdentifier = event.data.attributes.identifier; // ID legible para humanos
+			const orderIdentifier = event.data.attributes.identifier; // UUID de la orden
+			const orderNumber = event.data.attributes.order_number; // Número secuencial (el que ve el usuario)
 			const customData = event.meta.custom_data || {};
 			const status = event.data.attributes.status;
 			const totalAmount = parseFloat(event.data.attributes.total) / 100;
 			const userEmail = event.data.attributes.user_email;
 
+			console.log(`   Order Number: #${orderNumber}`);
 			console.log(`   Order ID: ${orderIdentifier}`);
 			console.log(`   Status: ${status}`);
 			console.log(`   Amount: $${totalAmount}`);
@@ -73,6 +75,7 @@ export const POST: RequestHandler = async ({ request }) => {
 				// Preparar datos de la orden
 				const orderData: any = {
 					lemon_squeezy_order_id: orderId,
+					order_number: orderNumber,
 					event_id: eventId,
 					user_email: userEmail,
 					total_price: totalAmount,

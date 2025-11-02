@@ -193,7 +193,7 @@
 										Comprado el {formatDate(order.created_at)}
 									</p>
 									<p class="text-xs text-gray-400">
-										Order #{order.lemon_squeezy_order_id}
+										Orden #{order.order_number || order.lemon_squeezy_order_id}
 									</p>
 								</div>
 							</div>
