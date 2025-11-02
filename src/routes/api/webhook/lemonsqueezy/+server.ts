@@ -37,7 +37,7 @@ export const POST: RequestHandler = async ({ request }) => {
 		if (eventName === 'order_created') {
 			const orderId = event.data.id;
 			const orderIdentifier = event.data.attributes.identifier; // ID legible para humanos
-			const customData = event.data.attributes.checkout_data?.custom || {};
+			const customData = event.meta.custom_data || {};
 			const status = event.data.attributes.status;
 			const totalAmount = parseFloat(event.data.attributes.total) / 100;
 			const userEmail = event.data.attributes.user_email;
