@@ -26,6 +26,35 @@
 				}
 			});
 		}
+
+		// Resetear el estado de checkout cuando el usuario vuelve a la página
+		const handleVisibilityChange = () => {
+			if (document.visibilityState === 'visible') {
+				// Si el usuario vuelve a la página y el estado está en "procesando", resetearlo
+				if (isCreatingCheckout) {
+					isCreatingCheckout = false;
+				}
+			}
+		};
+
+		// Resetear cuando la página se carga desde el caché (botón back del navegador)
+		const handlePageShow = (event: PageTransitionEvent) => {
+			if (event.persisted) {
+				// La página fue restaurada desde el caché (bfcache)
+				isCreatingCheckout = false;
+			}
+		};
+
+		// Escuchar cuando el usuario regresa a la pestaña
+		document.addEventListener('visibilitychange', handleVisibilityChange);
+		window.addEventListener('pageshow', handlePageShow);
+
+		// Cleanup
+		return () => {
+			document.removeEventListener('visibilitychange', handleVisibilityChange);
+			window.removeEventListener('pageshow', handlePageShow);
+			if (checkoutTimeout) clearTimeout(checkoutTimeout);
+		};
 	});
 
 	// Estado para las cantidades de tickets seleccionados
@@ -88,12 +117,21 @@
 
 	// Estado de loading para el checkout
 	let isCreatingCheckout = $state(false);
+	let checkoutTimeout: number | null = null;
 
 	// Función para proceder al pago
 	async function proceedToPayment() {
 		if (totalAmount <= 0) return;
 
 		isCreatingCheckout = true;
+
+		// Timeout de seguridad: resetear después de 3 minutos si no se completa
+		checkoutTimeout = window.setTimeout(() => {
+			if (isCreatingCheckout) {
+				console.log('Checkout timeout - resetting state');
+				isCreatingCheckout = false;
+			}
+		}, 180000); // 3 minutos
 
 		try {
 			// Construir descripción detallada de los tickets
@@ -125,6 +163,7 @@
 				console.error('Error details:', data.details);
 				alert('Error al crear el checkout. Por favor verifica tu configuración de Lemon Squeezy.');
 				isCreatingCheckout = false;
+				if (checkoutTimeout) clearTimeout(checkoutTimeout);
 				return;
 			}
 
@@ -134,6 +173,7 @@
 			console.error('Error:', error);
 			alert('Error al procesar el pago. Por favor intenta de nuevo.');
 			isCreatingCheckout = false;
+			if (checkoutTimeout) clearTimeout(checkoutTimeout);
 		}
 	}
 </script>
