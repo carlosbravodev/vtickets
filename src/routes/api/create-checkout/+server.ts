@@ -64,7 +64,6 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 							button_color: '#6366f1',
 							locale: 'es' // Idioma español
 						},
-						redirect_url: `${appUrl}/success`,
 						preview: false,
 						test_mode: true
 					},
