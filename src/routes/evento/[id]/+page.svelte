@@ -167,12 +167,9 @@
 				return;
 			}
 
-			// Agregar parámetro de redirección a la URL del checkout
-			const baseUrl = window.location.origin;
-			const checkoutUrlWithRedirect = `${data.checkoutUrl}?checkout[custom][redirect_url]=${encodeURIComponent(baseUrl + '/success')}`;
-			
-			// Redirigir al checkout de Lemon Squeezy
-			window.location.href = checkoutUrlWithRedirect;
+			// Redirigir al checkout de Lemon Squeezy (sin parámetro de redirección)
+			// La redirección se manejará manualmente después del pago
+			window.location.href = data.checkoutUrl;
 		} catch (error) {
 			console.error('Error:', error);
 			alert('Error al procesar el pago. Por favor intenta de nuevo.');

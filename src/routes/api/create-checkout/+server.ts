@@ -58,6 +58,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 							name: `🎫 ${eventTitle}`,
 							description: ticketDetails,
 							receipt_button_text: 'Ver mis entradas',
+							receipt_link_url: `${appUrl}/cuenta`,
 							receipt_thank_you_note: '¡Gracias por tu compra! Tus entradas han sido enviadas a tu correo.'
 						},
 						checkout_options: {
