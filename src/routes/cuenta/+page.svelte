@@ -1,23 +1,41 @@
 <script lang="ts">
 	import type { PageData } from './$types';
 	import { onMount } from 'svelte';
+	import { browser } from '$app/environment';
 	
 	let { data }: { data: PageData } = $props();
-	let QRCodeStyling: any;
+	let QRCodeStyling: any = null;
+	let isQRLibraryLoaded = $state(false);
 
 	// Cargar la librería solo en el cliente
 	onMount(async () => {
-		const QRCodeStylingModule = await import('qr-code-styling');
-		QRCodeStyling = QRCodeStylingModule.default;
+		try {
+			const QRCodeStylingModule = await import('qr-code-styling');
+			QRCodeStyling = QRCodeStylingModule.default;
+			isQRLibraryLoaded = true;
+		} catch (error) {
+			console.error('Error cargando qr-code-styling:', error);
+		}
 	});
 
 	// Generar QR code moderno como data URL
 	async function generateQRImage(jwt: string): Promise<string> {
+		// Solo ejecutar en el navegador
+		if (!browser) {
+			return '';
+		}
+
 		try {
-			// Esperar a que la librería esté cargada
-			if (!QRCodeStyling) {
+			// Esperar a que la librería esté cargada (máximo 5 segundos)
+			let attempts = 0;
+			while (!QRCodeStyling && attempts < 50) {
 				await new Promise(resolve => setTimeout(resolve, 100));
-				if (!QRCodeStyling) return '';
+				attempts++;
+			}
+
+			if (!QRCodeStyling) {
+				console.error('QRCodeStyling no se cargó después de 5 segundos');
+				return '';
 			}
 
 			const qrCode = new QRCodeStyling({
@@ -28,7 +46,7 @@
 				qrOptions: {
 					typeNumber: 0,
 					mode: 'Byte',
-					errorCorrectionLevel: 'Q' // Q para balance entre densidad y corrección
+					errorCorrectionLevel: 'Q'
 				},
 				imageOptions: {
 					hideBackgroundDots: true,
@@ -37,31 +55,38 @@
 					saveAsBlob: true
 				},
 				dotsOptions: {
-					type: 'extra-rounded', // Puntos extra redondeados (del JSON)
-					color: '#000000', // Negro sólido
+					type: 'extra-rounded',
+					color: '#000000',
 					roundSize: true
 				},
 				backgroundOptions: {
-					color: '#ffffff', // Fondo blanco
+					color: '#ffffff',
 					round: 0
 				},
 				cornersSquareOptions: {
-					type: 'extra-rounded', // Esquinas extra redondeadas (del JSON)
-					color: '#000000' // Negro sólido
+					type: 'extra-rounded',
+					color: '#000000'
 				},
 				cornersDotOptions: {
-					type: '', // Sin tipo especial en los centros (del JSON)
+					type: '',
 					color: '#000000'
 				}
 			});
 
 			// Convertir a data URL
 			const blob = await qrCode.getRawData('png');
-			if (!blob) return '';
+			if (!blob) {
+				console.error('No se pudo generar el blob del QR');
+				return '';
+			}
 			
 			return new Promise((resolve) => {
 				const reader = new FileReader();
 				reader.onloadend = () => resolve(reader.result as string);
+				reader.onerror = () => {
+					console.error('Error leyendo el blob');
+					resolve('');
+				};
 				reader.readAsDataURL(blob);
 			});
 		} catch (error) {
