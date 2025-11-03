@@ -4,6 +4,21 @@
 
 	let { data }: { data: PageData } = $props();
 
+	// 🔍 DEBUG: Ver qué datos llegan
+	$effect(() => {
+		console.log('🔍 Datos de la página:', data);
+		console.log('📋 Total de órdenes:', data.orders?.length);
+		data.orders?.forEach((order, i) => {
+			console.log(`📦 Orden ${i + 1}:`, {
+				id: order.id,
+				order_number: order.order_number,
+				tickets: order.tickets,
+				ticketCount: order.tickets?.length || 0,
+				hasTickets: !!order.tickets && order.tickets.length > 0
+			});
+		});
+	});
+
 	// Generar QR code como data URL
 	async function generateQRImage(jwt: string): Promise<string> {
 		try {
