@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { PUBLIC_SUPABASE_URL } from '$env/static/public';
 import { env } from '$env/dynamic/private';
 
 /**
@@ -11,7 +12,7 @@ import { env } from '$env/dynamic/private';
  * como webhooks, API routes, y procesos del backend.
  */
 export const supabaseAdmin = createClient(
-	env.PUBLIC_SUPABASE_URL!,
+	PUBLIC_SUPABASE_URL,
 	env.SUPABASE_SERVICE_ROLE_KEY!, // Service role key (privada)
 	{
 		auth: {
