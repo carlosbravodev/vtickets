@@ -1,6 +1,7 @@
 import { SignJWT } from 'jose';
 import crypto from 'crypto';
 import { nanoid } from 'nanoid';
+import { env } from '$env/dynamic/private';
 
 interface TicketData {
 	orderId: string;
@@ -48,7 +49,7 @@ export async function generateTicket(data: TicketData): Promise<GeneratedTicket>
 	
 	// Crear JWT con los datos del ticket
 	const secret = new TextEncoder().encode(
-		process.env.JWT_SECRET_KEY || 'your-secret-key-change-in-production'
+		env.JWT_SECRET_KEY || 'your-secret-key-change-in-production'
 	);
 	
 	const jwt = await new SignJWT({
@@ -66,7 +67,7 @@ export async function generateTicket(data: TicketData): Promise<GeneratedTicket>
 		.sign(secret);
 	
 	// Generar hash SHA256 del JWT para búsqueda rápida
-	const hashSalt = process.env.HASH_SALT || 'your-hash-salt-change-in-production';
+	const hashSalt = env.HASH_SALT || 'your-hash-salt-change-in-production';
 	const qrHash = crypto
 		.createHash('sha256')
 		.update(jwt + hashSalt)
