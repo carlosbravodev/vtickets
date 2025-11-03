@@ -12,7 +12,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 	const userId = session.user.id;
 
-	// Obtener todas las órdenes del usuario
+	// Obtener todas las órdenes del usuario con tickets individuales
 	const { data: orders, error: ordersError } = await supabase
 		.from('orders')
 		.select(`
@@ -30,6 +30,18 @@ export const load: PageServerLoad = async ({ locals }) => {
 				event_date,
 				location,
 				image_url
+			),
+			tickets (
+				id,
+				ticket_code,
+				qr_token,
+				status,
+				scanned_at,
+				ticket_type:ticket_types (
+					id,
+					name,
+					price
+				)
 			)
 		`)
 		.eq('buyer_id', userId)
