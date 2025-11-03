@@ -52,6 +52,9 @@ export async function generateTicket(data: TicketData): Promise<GeneratedTicket>
 		env.JWT_SECRET_KEY || 'your-secret-key-change-in-production'
 	);
 	
+	// Convertir fecha del evento a timestamp Unix (segundos desde epoch)
+	const eventTimestamp = Math.floor(new Date(data.eventDate).getTime() / 1000);
+	
 	const jwt = await new SignJWT({
 		ticket_id: ticketId,
 		event_id: data.eventId,
@@ -62,7 +65,7 @@ export async function generateTicket(data: TicketData): Promise<GeneratedTicket>
 	})
 		.setProtectedHeader({ alg: 'HS256' })
 		.setIssuedAt()
-		.setExpirationTime(data.eventDate) // Expira en la fecha del evento
+		.setExpirationTime(eventTimestamp) // Expira en la fecha del evento (timestamp Unix)
 		.setJti(nanoid()) // ID único del JWT
 		.sign(secret);
 	
