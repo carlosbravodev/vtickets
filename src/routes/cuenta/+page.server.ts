@@ -13,8 +13,6 @@ export const load: PageServerLoad = async ({ locals }) => {
 	const userId = session.user.id;
 
 	// Obtener todas las órdenes del usuario con tickets individuales
-	console.log('🔍 [SERVER] Cargando órdenes para user:', userId);
-	
 	const { data: orders, error: ordersError } = await supabaseAdmin
 		.from('orders')
 		.select(`
@@ -49,18 +47,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 		.eq('buyer_id', userId)
 		.order('created_at', { ascending: false });
 
-	console.log('📦 [SERVER] Órdenes encontradas:', orders?.length);
-	orders?.forEach((order, i) => {
-		console.log(`📋 [SERVER] Orden ${i + 1}:`, {
-			id: order.id,
-			order_number: order.order_number,
-			ticketCount: order.tickets?.length || 0,
-			tickets: order.tickets
-		});
-	});
-
 	if (ordersError) {
-		console.error('❌ [SERVER] Error fetching orders:', ordersError);
+		console.error('Error fetching orders:', ordersError);
 		return {
 			orders: [],
 			user: session.user

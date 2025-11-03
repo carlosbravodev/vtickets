@@ -1,35 +1,68 @@
 <script lang="ts">
 	import type { PageData } from './$types';
-	import QRCode from 'qrcode';
-
+	import { onMount } from 'svelte';
+	
 	let { data }: { data: PageData } = $props();
+	let QRCodeStyling: any;
 
-	// 🔍 DEBUG: Ver qué datos llegan
-	$effect(() => {
-		console.log('🔍 Datos de la página:', data);
-		console.log('📋 Total de órdenes:', data.orders?.length);
-		data.orders?.forEach((order, i) => {
-			console.log(`📦 Orden ${i + 1}:`, {
-				id: order.id,
-				order_number: order.order_number,
-				tickets: order.tickets,
-				ticketCount: order.tickets?.length || 0,
-				hasTickets: !!order.tickets && order.tickets.length > 0
-			});
-		});
+	// Cargar la librería solo en el cliente
+	onMount(async () => {
+		const QRCodeStylingModule = await import('qr-code-styling');
+		QRCodeStyling = QRCodeStylingModule.default;
 	});
 
-	// Generar QR code como data URL
+	// Generar QR code moderno como data URL
 	async function generateQRImage(jwt: string): Promise<string> {
 		try {
-			return await QRCode.toDataURL(jwt, {
-				errorCorrectionLevel: 'H',
+			// Esperar a que la librería esté cargada
+			if (!QRCodeStyling) {
+				await new Promise(resolve => setTimeout(resolve, 100));
+				if (!QRCodeStyling) return '';
+			}
+
+			const qrCode = new QRCodeStyling({
 				width: 300,
-				margin: 2,
-				color: {
-					dark: '#000000',
-					light: '#FFFFFF'
+				height: 300,
+				data: jwt,
+				margin: 0,
+				qrOptions: {
+					typeNumber: 0,
+					mode: 'Byte',
+					errorCorrectionLevel: 'Q' // Q para balance entre densidad y corrección
+				},
+				imageOptions: {
+					hideBackgroundDots: true,
+					imageSize: 0.4,
+					margin: 0,
+					saveAsBlob: true
+				},
+				dotsOptions: {
+					type: 'extra-rounded', // Puntos extra redondeados (del JSON)
+					color: '#000000', // Negro sólido
+					roundSize: true
+				},
+				backgroundOptions: {
+					color: '#ffffff', // Fondo blanco
+					round: 0
+				},
+				cornersSquareOptions: {
+					type: 'extra-rounded', // Esquinas extra redondeadas (del JSON)
+					color: '#000000' // Negro sólido
+				},
+				cornersDotOptions: {
+					type: '', // Sin tipo especial en los centros (del JSON)
+					color: '#000000'
 				}
+			});
+
+			// Convertir a data URL
+			const blob = await qrCode.getRawData('png');
+			if (!blob) return '';
+			
+			return new Promise((resolve) => {
+				const reader = new FileReader();
+				reader.onloadend = () => resolve(reader.result as string);
+				reader.readAsDataURL(blob);
 			});
 		} catch (error) {
 			console.error('Error generando QR:', error);
@@ -275,98 +308,196 @@
 							<!-- Tickets Individuales con QR -->
 							{#if order.tickets && order.tickets.length > 0}
 								<div class="mt-6 pt-6 border-t border-gray-200">
-									<h4 class="text-lg font-bold text-gray-900 mb-4">
-										🎫 Tus Entradas ({order.tickets.length})
-									</h4>
-								<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+									<!-- Header desplegable -->
+									<button
+										onclick={() => {
+											const ticketsSection = document.getElementById(`tickets-${order.id}`);
+											const icon = document.getElementById(`icon-tickets-${order.id}`);
+											if (ticketsSection && icon) {
+												const isHidden = ticketsSection.classList.contains('hidden');
+												ticketsSection.classList.toggle('hidden');
+												icon.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
+											}
+										}}
+										class="w-full flex items-center justify-between text-left mb-6 group hover:bg-gray-50 p-3 rounded-lg transition-colors"
+									>
+										<h4 class="text-lg font-bold text-gray-900 flex items-center gap-2">
+											<span class="text-2xl">🎫</span>
+											<span>Tus Entradas ({order.tickets.length})</span>
+										</h4>
+										<svg 
+											id="icon-tickets-{order.id}"
+											class="w-6 h-6 text-gray-600 transition-transform duration-300"
+											fill="none" 
+											stroke="currentColor" 
+											viewBox="0 0 24 24"
+										>
+											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+										</svg>
+									</button>
+
+									<!-- Contenido desplegable -->
+									<div id="tickets-{order.id}" class="hidden">
+										<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 									{#each order.tickets as ticket}
 										{@const ticketType = Array.isArray(ticket.ticket_type)
 											? ticket.ticket_type[0]
 											: ticket.ticket_type}
-										<div
-											class="bg-white border-2 {getTicketStatusColor(
-												ticket.status
-											)} rounded-lg p-4 hover:shadow-lg transition-shadow"
-										>
-												<!-- QR Code -->
-												<div class="flex justify-center mb-3">
-													{#await generateQRImage(ticket.qr_token)}
-														<div
-															class="w-48 h-48 bg-gray-100 rounded-lg flex items-center justify-center"
-														>
-															<div
-																class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"
-															></div>
-														</div>
-													{:then qrDataUrl}
-														<img
-															src={qrDataUrl}
-															alt="QR Code"
-															class="w-48 h-48 rounded-lg"
-														/>
-													{:catch error}
-														<div
-															class="w-48 h-48 bg-red-50 rounded-lg flex items-center justify-center text-red-500 text-sm"
-														>
-															Error generando QR
-														</div>
-													{/await}
+										
+										<!-- Ticket Card - Estilo Boarding Pass -->
+										<div class="relative bg-gradient-to-br from-indigo-600 to-purple-700 rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300">
+											<!-- Background Pattern -->
+											<div class="absolute inset-0 opacity-10">
+												<div class="absolute inset-0" style="background-image: repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(255,255,255,.1) 35px, rgba(255,255,255,.1) 70px);"></div>
+											</div>
+											
+											<!-- Status Badge -->
+											<div class="absolute top-4 right-4 z-10">
+												<span class="px-3 py-1.5 rounded-full text-xs font-bold shadow-lg {
+													ticket.status === 'active' ? 'bg-green-400 text-green-900' :
+													ticket.status === 'used' ? 'bg-gray-300 text-gray-700' :
+													ticket.status === 'cancelled' ? 'bg-red-400 text-red-900' :
+													'bg-yellow-400 text-yellow-900'
+												}">
+													{getTicketStatusText(ticket.status).toUpperCase()}
+												</span>
+											</div>
+
+											<div class="relative p-6">
+												<!-- Header -->
+												<div class="mb-4">
+													<div class="text-white/80 text-xs uppercase tracking-wider mb-1">
+														Tipo de Entrada
+													</div>
+													<div class="text-white text-xl font-bold">
+														{ticketType?.name || 'Entrada General'}
+													</div>
 												</div>
 
-											<!-- Información del Ticket -->
-											<div class="space-y-2 text-sm">
-												<div class="flex items-center justify-between">
-													<span class="font-bold text-gray-900">
-														{ticketType?.name || 'Entrada'}
-													</span>
-														<span
-															class="px-2 py-1 rounded-full text-xs font-medium {getTicketStatusColor(
-																ticket.status
-															)}"
-														>
-															{getTicketStatusText(ticket.status)}
-														</span>
+												<!-- Main Content - Two Columns -->
+												<div class="grid grid-cols-[1fr,auto] gap-6 items-center">
+													<!-- Left: Event Info -->
+													<div class="space-y-4">
+														<!-- Event Name -->
+														<div>
+															<div class="text-white/60 text-xs uppercase tracking-wider mb-1">
+																Evento
+															</div>
+															<div class="text-white text-base font-semibold leading-tight">
+																{event?.title || 'Evento'}
+															</div>
+														</div>
+
+														<!-- Date & Location -->
+														<div class="grid grid-cols-2 gap-3">
+															<div>
+																<div class="text-white/60 text-xs uppercase tracking-wider mb-1">
+																	Fecha
+																</div>
+																<div class="text-white text-sm font-medium">
+																	{#if event?.event_date}
+																		{new Date(event.event_date).toLocaleDateString('es-ES', { 
+																			day: '2-digit', 
+																			month: 'short',
+																			year: 'numeric'
+																		})}
+																	{:else}
+																		Por confirmar
+																	{/if}
+																</div>
+															</div>
+															<div>
+																<div class="text-white/60 text-xs uppercase tracking-wider mb-1">
+																	Hora
+																</div>
+																<div class="text-white text-sm font-medium">
+																	{#if event?.event_date}
+																		{new Date(event.event_date).toLocaleTimeString('es-ES', { 
+																			hour: '2-digit', 
+																			minute: '2-digit'
+																		})}
+																	{:else}
+																		--:--
+																	{/if}
+																</div>
+															</div>
+														</div>
+
+														<!-- Ticket Code -->
+														<div class="bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/20">
+															<div class="text-white/60 text-xs uppercase tracking-wider mb-1">
+																Código de Entrada
+															</div>
+															<div class="text-white font-mono text-sm font-bold tracking-wide">
+																{ticket.ticket_code}
+															</div>
+														</div>
+
+														{#if ticket.status === 'used' && ticket.scanned_at}
+															<div class="bg-gray-900/30 backdrop-blur-sm rounded-lg p-2 border border-white/10">
+																<p class="text-white/70 text-xs text-center">
+																	✓ Escaneado el {formatDate(ticket.scanned_at)}
+																</p>
+															</div>
+														{/if}
 													</div>
 
-													<div class="bg-gray-50 rounded p-2">
-														<p class="text-xs text-gray-500 mb-1">Código:</p>
-														<p class="font-mono font-bold text-gray-900 text-center">
-															{ticket.ticket_code}
-														</p>
+													<!-- Right: QR Code -->
+													<div class="flex flex-col items-center gap-3">
+														{#await generateQRImage(ticket.qr_token)}
+															<div class="w-40 h-40 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border-2 border-white/30">
+																<div class="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
+															</div>
+														{:then qrDataUrl}
+															<div class="bg-white p-3 rounded-xl shadow-2xl border-4 border-white/30">
+																<img
+																	src={qrDataUrl}
+																	alt="QR Code"
+																	class="w-36 h-36"
+																/>
+															</div>
+														{:catch error}
+															<div class="w-40 h-40 bg-red-500/20 backdrop-blur-sm rounded-xl flex items-center justify-center text-white text-sm border-2 border-red-500/50">
+																Error QR
+															</div>
+														{/await}
+
+														<div class="text-white/60 text-xs text-center max-w-40">
+															Presenta este código en la entrada
+														</div>
 													</div>
+												</div>
 
-													{#if ticket.status === 'used' && ticket.scanned_at}
-														<p class="text-xs text-gray-500 text-center">
-															Usado el {formatDate(ticket.scanned_at)}
-														</p>
-													{/if}
-
-													{#if ticket.status === 'active'}
+												<!-- Footer Actions -->
+												{#if ticket.status === 'active'}
+													<div class="mt-6 pt-4 border-t border-white/20 space-y-2">
 														{#await generateQRImage(ticket.qr_token) then qrDataUrl}
 															<button
 																onclick={() => downloadQR(qrDataUrl, ticket.ticket_code)}
-																class="w-full mt-2 px-3 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2"
+																class="w-full px-4 py-3 bg-white text-indigo-600 font-bold rounded-lg hover:bg-indigo-50 transition-all duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl"
 															>
-																<svg
-																	class="w-4 h-4"
-																	fill="none"
-																	stroke="currentColor"
-																	viewBox="0 0 24 24"
-																>
-																	<path
-																		stroke-linecap="round"
-																		stroke-linejoin="round"
-																		stroke-width="2"
-																		d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-																	/>
+																<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+																	<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
 																</svg>
-																Descargar QR
+																Descargar Entrada
 															</button>
 														{/await}
-													{/if}
-												</div>
+														<a
+															href="/evento/{order.event_id}"
+															class="w-full px-4 py-3 bg-white/10 backdrop-blur-sm text-white font-bold rounded-lg hover:bg-white/20 transition-all duration-200 flex items-center justify-center gap-2 border border-white/30"
+														>
+															<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+																<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+																<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+															</svg>
+															Ver Detalles del Evento
+														</a>
+													</div>
+												{/if}
 											</div>
+										</div>
 										{/each}
+										</div>
 									</div>
 								</div>
 							{/if}
