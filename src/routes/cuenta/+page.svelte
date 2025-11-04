@@ -39,14 +39,14 @@
 			}
 
 			const qrCode = new QRCodeStyling({
-				width: 300,
-				height: 300,
+				width: 400,
+				height: 400,
 				data: jwt,
-				margin: 0,
+				margin: 15,
 				qrOptions: {
-					typeNumber: 0,
+					typeNumber: 0, // Auto-ajuste según datos (ahora más pequeño por JWT optimizado)
 					mode: 'Byte',
-					errorCorrectionLevel: 'Q'
+					errorCorrectionLevel: 'L' // L = Baja corrección (7%) → PUNTOS MÁS GRANDES ✅
 				},
 				imageOptions: {
 					hideBackgroundDots: true,
@@ -55,7 +55,7 @@
 					saveAsBlob: true
 				},
 				dotsOptions: {
-					type: 'extra-rounded',
+					type: 'extra-rounded', // Puntos súper redondeados
 					color: '#000000',
 					roundSize: true
 				},
@@ -64,11 +64,11 @@
 					round: 0
 				},
 				cornersSquareOptions: {
-					type: 'extra-rounded',
+					type: 'extra-rounded', // Esquinas redondeadas más grandes
 					color: '#000000'
 				},
 				cornersDotOptions: {
-					type: '',
+					type: 'dot', // Puntos internos de las esquinas más visibles
 					color: '#000000'
 				}
 			});
@@ -346,10 +346,12 @@
 										}}
 										class="w-full flex items-center justify-between text-left mb-6 group hover:bg-gray-50 p-3 rounded-lg transition-colors"
 									>
-										<h4 class="text-lg font-bold text-gray-900 flex items-center gap-2">
+										<div class="flex items-center gap-2">
 											<span class="text-2xl">🎫</span>
-											<span>Tus Entradas ({order.tickets.length})</span>
-										</h4>
+											<h4 class="text-lg font-bold text-gray-900">
+												Tus Entradas ({order.tickets.length})
+											</h4>
+										</div>
 										<svg 
 											id="icon-tickets-{order.id}"
 											class="w-6 h-6 text-gray-600 transition-transform duration-300"
@@ -361,16 +363,44 @@
 										</svg>
 									</button>
 
-									<!-- Contenido desplegable -->
-									<div id="tickets-{order.id}" class="hidden">
-										<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+									<!-- Contenido desplegable con scroll horizontal -->
+									<div id="tickets-{order.id}" class="hidden tickets-scroll-container">
+										<!-- Botones de scroll (solo visible en desktop y dentro del contenedor) -->
+										<div class="hidden lg:flex gap-2 justify-end mb-4">
+											<button 
+												onclick={() => {
+													const container = document.getElementById(`scroll-tickets-${order.id}`);
+													if (container) container.scrollBy({ left: -400, behavior: 'smooth' });
+												}}
+												class="w-10 h-10 rounded-full border-2 border-gray-900 bg-white text-gray-900 hover:bg-gray-900 hover:text-white transition-all duration-200 flex items-center justify-center shadow-sm hover:shadow-md"
+												aria-label="Scroll izquierda"
+											>
+												<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+													<polyline points="15 18 9 12 15 6"></polyline>
+												</svg>
+											</button>
+											<button 
+												onclick={() => {
+													const container = document.getElementById(`scroll-tickets-${order.id}`);
+													if (container) container.scrollBy({ left: 400, behavior: 'smooth' });
+												}}
+												class="w-10 h-10 rounded-full border-2 border-gray-900 bg-white text-gray-900 hover:bg-gray-900 hover:text-white transition-all duration-200 flex items-center justify-center shadow-sm hover:shadow-md"
+												aria-label="Scroll derecha"
+											>
+												<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+													<polyline points="9 18 15 12 9 6"></polyline>
+												</svg>
+											</button>
+										</div>
+
+										<div id="scroll-tickets-{order.id}" class="tickets-scroll-wrapper">
 									{#each order.tickets as ticket}
 										{@const ticketType = Array.isArray(ticket.ticket_type)
 											? ticket.ticket_type[0]
 											: ticket.ticket_type}
 										
 										<!-- Ticket Card - Estilo Boarding Pass -->
-										<div class="relative bg-gradient-to-br from-indigo-600 to-purple-700 rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300">
+										<div class="relative bg-linear-to-br from-indigo-600 to-purple-700 rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300">
 											<!-- Background Pattern -->
 											<div class="absolute inset-0 opacity-10">
 												<div class="absolute inset-0" style="background-image: repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(255,255,255,.1) 35px, rgba(255,255,255,.1) 70px);"></div>
@@ -470,7 +500,7 @@
 													<!-- Right: QR Code -->
 													<div class="flex flex-col items-center gap-3">
 														{#await generateQRImage(ticket.qr_token)}
-															<div class="w-40 h-40 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border-2 border-white/30">
+															<div class="w-44 h-44 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border-2 border-white/30">
 																<div class="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
 															</div>
 														{:then qrDataUrl}
@@ -478,16 +508,16 @@
 																<img
 																	src={qrDataUrl}
 																	alt="QR Code"
-																	class="w-36 h-36"
+																	class="w-40 h-40 object-contain"
 																/>
 															</div>
 														{:catch error}
-															<div class="w-40 h-40 bg-red-500/20 backdrop-blur-sm rounded-xl flex items-center justify-center text-white text-sm border-2 border-red-500/50">
+															<div class="w-44 h-44 bg-red-500/20 backdrop-blur-sm rounded-xl flex items-center justify-center text-white text-sm border-2 border-red-500/50">
 																Error QR
 															</div>
 														{/await}
 
-														<div class="text-white/60 text-xs text-center max-w-40">
+														<div class="text-white/60 text-xs text-center max-w-44">
 															Presenta este código en la entrada
 														</div>
 													</div>
@@ -571,5 +601,42 @@
 	/* Smooth transitions */
 	:global(body) {
 		font-family: 'Roboto', sans-serif;
+	}
+
+	/* Tickets Scroll Container */
+	.tickets-scroll-container {
+		position: relative;
+	}
+
+	/* Wrapper con scroll horizontal */
+	.tickets-scroll-wrapper {
+		display: flex;
+		gap: 1.5rem;
+		overflow-x: auto;
+		overflow-y: hidden;
+		scroll-behavior: smooth;
+		padding-bottom: 1.5rem;
+		padding-right: 1.5rem;
+		/* Ocultar scrollbar */
+		-ms-overflow-style: none;
+		scrollbar-width: none;
+	}
+
+	.tickets-scroll-wrapper::-webkit-scrollbar {
+		display: none;
+	}
+
+	/* Cada ticket card */
+	.tickets-scroll-wrapper > div {
+		min-width: 380px;
+		max-width: 380px;
+		flex-shrink: 0;
+	}
+
+	@media (max-width: 640px) {
+		.tickets-scroll-wrapper > div {
+			min-width: 320px;
+			max-width: 320px;
+		}
 	}
 </style>

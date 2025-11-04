@@ -55,18 +55,19 @@ export async function generateTicket(data: TicketData): Promise<GeneratedTicket>
 	// Convertir fecha del evento a timestamp Unix (segundos desde epoch)
 	const eventTimestamp = Math.floor(new Date(data.eventDate).getTime() / 1000);
 	
+	// JWT optimizado con claims cortos para reducir tamaño del QR
 	const jwt = await new SignJWT({
-		ticket_id: ticketId,
-		event_id: data.eventId,
-		event_title: data.eventTitle,
-		ticket_type: data.ticketTypeName,
-		holder_email: data.holderEmail,
-		ticket_code: ticketCode
+		tid: ticketId,           // ticket_id → tid (más corto)
+		eid: data.eventId,       // event_id → eid
+		tcd: ticketCode,         // ticket_code → tcd
+		tte: data.ticketTypeName // ticket_type → tte
+		// Removemos event_title y holder_email para reducir tamaño
+		// Se pueden validar luego contra la base de datos con tid
 	})
 		.setProtectedHeader({ alg: 'HS256' })
 		.setIssuedAt()
 		.setExpirationTime(eventTimestamp) // Expira en la fecha del evento (timestamp Unix)
-		.setJti(nanoid()) // ID único del JWT
+		.setJti(nanoid(8)) // Reducido de 21 a 8 caracteres
 		.sign(secret);
 	
 	// Generar hash SHA256 del JWT para búsqueda rápida
