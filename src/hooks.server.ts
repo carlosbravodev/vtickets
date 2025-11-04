@@ -2,6 +2,7 @@ import { createServerClient } from '@supabase/ssr';
 import { type Handle, redirect } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
 import { env } from '$env/dynamic/public';
+import { supabaseAdmin } from '$lib/supabaseAdmin';
 
 const supabase: Handle = async ({ event, resolve }) => {
 	/**
@@ -87,4 +88,45 @@ const authGuard: Handle = async ({ event, resolve }) => {
 	return resolve(event);
 };
 
-export const handle: Handle = sequence(supabase, authGuard);
+const profileGuard: Handle = async ({ event, resolve }) => {
+	const { session } = await event.locals.safeGetSession();
+
+	// Solo verificar si el usuario está autenticado
+	if (session?.user) {
+		// Rutas públicas que NO requieren perfil completo
+		const publicRoutes = [
+			'/login',
+			'/auth',
+			'/eventos',
+			'/evento',
+			'/api',
+			'/onboarding'
+		];
+
+		// Verificar si la ruta actual es pública
+		const isPublicRoute = publicRoutes.some((route) => event.url.pathname.startsWith(route));
+
+		// Si NO es ruta pública, verificar perfil
+		if (!isPublicRoute) {
+			try {
+				const { data: profile } = await supabaseAdmin
+					.from('profiles')
+					.select('first_name, last_name, phone')
+					.eq('id', session.user.id)
+					.single();
+
+				// Si el perfil no está completo, redirigir a onboarding
+				if (!profile?.first_name || !profile?.last_name || !profile?.phone) {
+					redirect(303, '/onboarding');
+				}
+			} catch (error) {
+				console.error('Error verificando perfil:', error);
+				// En caso de error, permitir continuar
+			}
+		}
+	}
+
+	return resolve(event);
+};
+
+export const handle: Handle = sequence(supabase, authGuard, profileGuard);

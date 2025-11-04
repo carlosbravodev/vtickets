@@ -14,7 +14,15 @@
 
   // Usuario y sesión reactivos
   let user = $derived(data.user);
+  let profile = $derived(data.profile);
   let isAuthenticated = $derived(!!user);
+  
+  // Nombre a mostrar: nombre completo o email
+  let displayName = $derived(
+    profile?.first_name && profile?.last_name
+      ? `${profile.first_name} ${profile.last_name}`
+      : profile?.first_name || user?.email?.split("@")[0] || user?.email || ""
+  );
 
   // Obtener la URL actual para redirección
   let currentPath = $derived($page.url.pathname);
@@ -86,7 +94,7 @@
               class="inline-block h-6 w-6"
             />
             <span class="max-w-[150px] truncate"
-              >{user?.email?.split("@")[0]}</span
+              >{displayName}</span
             >
             <svg
               class="w-4 h-4"
@@ -105,13 +113,18 @@
 
           {#if showUserMenu}
             <div
-              class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl py-2 z-50"
+              class="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl py-2 z-50"
             >
               <div class="px-4 py-2 border-b border-gray-200">
                 <p class="text-sm text-gray-500">Cuenta</p>
                 <p class="text-sm font-semibold text-gray-900 truncate">
-                  {user?.email}
+                  {displayName}
                 </p>
+                {#if profile?.first_name && profile?.last_name}
+                  <p class="text-xs text-gray-400 truncate mt-0.5">
+                    {user?.email}
+                  </p>
+                {/if}
               </div>
               <a
                 href="/cuenta"

@@ -1,11 +1,16 @@
 <script lang="ts">
-	import type { PageData } from './$types';
+	import type { PageData, ActionData } from './$types';
 	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
+	import { enhance } from '$app/forms';
 	
-	let { data }: { data: PageData } = $props();
+	let { data, form }: { data: PageData; form: ActionData } = $props();
 	let QRCodeStyling: any = null;
 	let isQRLibraryLoaded = $state(false);
+	
+	// Estado de las pestañas (por defecto "perfil")
+	let activeTab = $state<'entradas' | 'perfil'>('perfil');
+	let isSubmitting = $state(false);
 
 	// Cargar la librería solo en el cliente
 	onMount(async () => {
@@ -188,11 +193,52 @@
 		<div class="mb-8">
 			<h1 class="text-4xl font-black text-gray-900 mb-2">Mi Cuenta</h1>
 			<p class="text-xl text-gray-600">
-				Bienvenido, <span class="font-bold">{data.user.email}</span>
+				Bienvenido, <span class="font-bold">
+					{#if data.profile?.first_name && data.profile?.last_name}
+						{data.profile.first_name} {data.profile.last_name}
+					{:else if data.profile?.first_name}
+						{data.profile.first_name}
+					{:else}
+						{data.user.email}
+					{/if}
+				</span>
 			</p>
 		</div>
 
-		<!-- Órdenes -->
+		<!-- Pestañas de Navegación -->
+		<div class="mb-6 border-b border-gray-200">
+			<nav class="flex space-x-8" aria-label="Tabs">
+				<button
+					onclick={() => activeTab = 'perfil'}
+					class="tab-button {activeTab === 'perfil' ? 'tab-active' : 'tab-inactive'}"
+				>
+					<svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+					</svg>
+					Mi Perfil
+				</button>
+				
+				<button
+					onclick={() => activeTab = 'entradas'}
+					class="tab-button {activeTab === 'entradas' ? 'tab-active' : 'tab-inactive'}"
+				>
+					<svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/>
+					</svg>
+					Mis Entradas
+					{#if data.orders.length > 0}
+						<span class="ml-2 px-2 py-0.5 text-xs font-bold bg-indigo-100 text-indigo-800 rounded-full">
+							{data.orders.length}
+						</span>
+					{/if}
+				</button>
+			</nav>
+		</div>
+
+		<!-- Contenido de las Pestañas -->
+		
+		<!-- Pestaña: Mis Entradas -->
+		{#if activeTab === 'entradas'}
 		<div class="bg-white rounded-lg shadow">
 			<div class="px-6 py-4 border-b border-gray-200">
 				<h2 class="text-2xl font-bold text-gray-900">Mis Compras</h2>
@@ -594,6 +640,196 @@
 				</div>
 			</div>
 		</div>
+		{/if}
+
+		<!-- Pestaña: Mi Perfil -->
+		{#if activeTab === 'perfil'}
+		<div class="bg-white rounded-lg shadow">
+			<div class="px-6 py-4 border-b border-gray-200">
+				<h2 class="text-2xl font-bold text-gray-900">Información Personal</h2>
+			</div>
+
+			<div class="px-6 py-8">
+				{#if form?.message}
+					<div class="mb-6 p-4 rounded-lg {form.success ? 'bg-green-50 border border-green-200 text-green-800' : 'bg-red-50 border border-red-200 text-red-800'}">
+						<p class="text-sm font-medium">{form.message}</p>
+					</div>
+				{/if}
+
+				<form method="POST" action="?/updateProfile" use:enhance={() => {
+					isSubmitting = true;
+					return async ({ update }) => {
+						await update();
+						isSubmitting = false;
+					};
+				}} class="space-y-6">
+					<!-- Nombre y Apellido -->
+					<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+						<div>
+							<label for="first_name" class="block text-sm font-medium text-gray-700 mb-2">
+								Nombres <span class="text-red-500">*</span>
+							</label>
+							<input
+								type="text"
+								id="first_name"
+								name="first_name"
+								value={data.profile?.first_name || ''}
+								class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+								placeholder="Juan Carlos"
+								required
+							/>
+						</div>
+
+						<div>
+							<label for="last_name" class="block text-sm font-medium text-gray-700 mb-2">
+								Apellidos <span class="text-red-500">*</span>
+							</label>
+							<input
+								type="text"
+								id="last_name"
+								name="last_name"
+								value={data.profile?.last_name || ''}
+								class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+								placeholder="Pérez García"
+								required
+							/>
+						</div>
+					</div>
+
+					<!-- Email (solo lectura) -->
+					<div>
+						<label for="email" class="block text-sm font-medium text-gray-700 mb-2">
+							Correo Electrónico
+						</label>
+						<input
+							type="email"
+							id="email"
+							name="email"
+							value={data.user.email}
+							disabled
+							class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed"
+						/>
+						<p class="mt-1 text-xs text-gray-500">El correo no se puede modificar</p>
+					</div>
+
+					<!-- Teléfono -->
+					<div>
+						<label for="phone" class="block text-sm font-medium text-gray-700 mb-2">
+							Teléfono
+						</label>
+						<input
+							type="tel"
+							id="phone"
+							name="phone"
+							value={data.profile?.phone || ''}
+							class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+							placeholder="+593 99 999 9999"
+						/>
+					</div>
+
+					<!-- Fecha de Nacimiento -->
+					<div>
+						<label for="birth_date" class="block text-sm font-medium text-gray-700 mb-2">
+							Fecha de Nacimiento
+						</label>
+						<input
+							type="date"
+							id="birth_date"
+							name="birth_date"
+							value={data.profile?.birth_date || ''}
+							class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+						/>
+					</div>
+
+					<!-- Tipo de Documento -->
+					<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+						<div>
+							<label for="document_type" class="block text-sm font-medium text-gray-700 mb-2">
+								Tipo de Documento
+							</label>
+							<select
+								id="document_type"
+								name="document_type"
+								value={data.profile?.document_type || ''}
+								class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+							>
+								<option value="">Seleccionar</option>
+								<option value="cedula">Cédula</option>
+								<option value="pasaporte">Pasaporte</option>
+								<option value="ruc">RUC</option>
+							</select>
+						</div>
+
+						<!-- Número de Documento -->
+						<div>
+							<label for="document_number" class="block text-sm font-medium text-gray-700 mb-2">
+								Número de Documento
+							</label>
+							<input
+								type="text"
+								id="document_number"
+								name="document_number"
+								value={data.profile?.document_number || ''}
+								class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+								placeholder="1234567890"
+							/>
+						</div>
+					</div>
+
+					<!-- Ciudad y País -->
+					<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+						<div>
+							<label for="city" class="block text-sm font-medium text-gray-700 mb-2">
+								Ciudad
+							</label>
+							<input
+								type="text"
+								id="city"
+								name="city"
+								value={data.profile?.city || ''}
+								class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+								placeholder="Quito"
+							/>
+						</div>
+
+						<div>
+							<label for="country" class="block text-sm font-medium text-gray-700 mb-2">
+								País
+							</label>
+							<input
+								type="text"
+								id="country"
+								name="country"
+								value={data.profile?.country || 'Ecuador'}
+								class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+								placeholder="Ecuador"
+							/>
+						</div>
+					</div>
+
+					<!-- Botones -->
+					<div class="flex gap-4 pt-4">
+						<button
+							type="submit"
+							disabled={isSubmitting}
+							class="px-6 py-3 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors duration-200 shadow-md hover:shadow-xl flex items-center gap-2"
+						>
+							{#if isSubmitting}
+								<svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+									<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+									<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+								</svg>
+								Guardando...
+							{:else}
+								Guardar Cambios
+							{/if}
+						</button>
+					</div>
+				</form>
+			</div>
+		</div>
+		{/if}
+
 	</div>
 </div>
 
@@ -601,6 +837,37 @@
 	/* Smooth transitions */
 	:global(body) {
 		font-family: 'Roboto', sans-serif;
+	}
+
+	/* Estilos de pestañas */
+	.tab-button {
+		display: flex;
+		align-items: center;
+		padding: 1rem 0.5rem;
+		font-size: 0.875rem;
+		font-weight: 600;
+		border-bottom: 2px solid transparent;
+		transition: all 0.2s ease;
+		cursor: pointer;
+		background: none;
+		border-top: none;
+		border-left: none;
+		border-right: none;
+	}
+
+	.tab-active {
+		color: #667eea;
+		border-bottom-color: #667eea;
+	}
+
+	.tab-inactive {
+		color: #6b7280;
+		border-bottom-color: transparent;
+	}
+
+	.tab-inactive:hover {
+		color: #374151;
+		border-bottom-color: #d1d5db;
 	}
 
 	/* Tickets Scroll Container */

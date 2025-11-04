@@ -1,5 +1,5 @@
-import type { PageServerLoad } from './$types';
-import { redirect } from '@sveltejs/kit';
+import type { PageServerLoad, Actions } from './$types';
+import { redirect, fail } from '@sveltejs/kit';
 import { supabaseAdmin } from '$lib/supabaseAdmin';
 
 export const load: PageServerLoad = async ({ locals }) => {
@@ -49,15 +49,22 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 	if (ordersError) {
 		console.error('Error fetching orders:', ordersError);
-		return {
-			orders: [],
-			user: session.user
-		};
+	}
+
+	// Obtener perfil del usuario
+	const { data: profile, error: profileError } = await supabaseAdmin
+		.from('profiles')
+		.select('*')
+		.eq('id', userId)
+		.single();
+
+	if (profileError) {
+		console.error('Error fetching profile:', profileError);
 	}
 
 	// Para cada orden, obtener los nombres de los tickets
 	const ordersWithTicketDetails = await Promise.all(
-		orders.map(async (order) => {
+		(orders || []).map(async (order) => {
 			const ticketIds = Object.keys(order.tickets_data);
 			
 			const { data: ticketTypes } = await supabaseAdmin
@@ -80,6 +87,62 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 	return {
 		orders: ordersWithTicketDetails,
-		user: session.user
+		user: session.user,
+		profile: profile || null
 	};
+};
+
+export const actions: Actions = {
+	updateProfile: async ({ request, locals }) => {
+		const session = locals.session;
+
+		if (!session) {
+			return fail(401, { message: 'No autenticado' });
+		}
+
+		const formData = await request.formData();
+		const first_name = formData.get('first_name') as string;
+		const last_name = formData.get('last_name') as string;
+		const phone = formData.get('phone') as string;
+		const birth_date = formData.get('birth_date') as string;
+		const document_type = formData.get('document_type') as string;
+		const document_number = formData.get('document_number') as string;
+		const city = formData.get('city') as string;
+		const country = formData.get('country') as string;
+
+		// Validación de campos requeridos
+		if (!first_name || !last_name || !phone) {
+			return fail(400, {
+				message: 'Los campos Nombres, Apellidos y Teléfono son obligatorios'
+			});
+		}
+
+		try {
+			// Actualizar perfil
+			const { error } = await supabaseAdmin
+				.from('profiles')
+				.update({
+					first_name,
+					last_name,
+					phone,
+					birth_date: birth_date || null,
+					document_type: document_type || null,
+					document_number: document_number || null,
+					city: city || null,
+					country: country || 'Ecuador',
+					updated_at: new Date().toISOString()
+				})
+				.eq('id', session.user.id);
+
+			if (error) {
+				console.error('Error actualizando perfil:', error);
+				return fail(500, { message: 'Error al actualizar el perfil' });
+			}
+
+			return { success: true, message: 'Perfil actualizado correctamente' };
+		} catch (error) {
+			console.error('Error:', error);
+			return fail(500, { message: 'Error al actualizar el perfil' });
+		}
+	}
 };
