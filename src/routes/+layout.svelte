@@ -3,6 +3,7 @@
   import logoNavbar from "$lib/assets/logo-navbar.png";
   import userIcon from "$lib/assets/icons/user.svg";
   import { supabase } from "$lib/supabaseClient";
+  import Toast from "$lib/components/Toast.svelte";
 
   let { children, data } = $props();
   import "../app.css";
@@ -375,3 +376,6 @@
     width: 1.25rem;
   }
 </style>
+
+<!-- Toast Container -->
+<Toast />

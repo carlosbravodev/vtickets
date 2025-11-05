@@ -1,6 +1,8 @@
 <script lang="ts">
 	import type { PageData, ActionData } from './$types';
 	import { enhance } from '$app/forms';
+	import { toast } from '$lib/stores/toast.svelte';
+	import { goto } from '$app/navigation';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 	
@@ -36,9 +38,14 @@
 
 			<form method="POST" use:enhance={() => {
 				isSubmitting = true;
-				return async ({ update }) => {
+				return async ({ update, result }) => {
 					await update();
 					isSubmitting = false;
+					
+					if (result.type === 'redirect') {
+						toast.success('¡Perfil completado exitosamente! Bienvenido a v•tickets 🎉');
+						setTimeout(() => goto('/cuenta'), 500);
+					}
 				};
 			}} class="space-y-6">
 				<!-- Nombres y Apellidos -->

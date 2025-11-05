@@ -4,6 +4,7 @@ import { goto, invalidateAll } from '$app/navigation';
 import { page } from '$app/stores';
 import type { ActionData } from './$types';
 import { supabase } from '$lib/supabaseClient';
+import { toast } from '$lib/stores/toast.svelte';
 
 let { form }: { form: ActionData } = $props();
 
@@ -13,6 +14,28 @@ let showPassword = $state(false);
 
 let message = $derived(form?.message || '');
 let messageType = $derived(form?.success ? 'success' : 'error');
+
+// Rastrear el último form para evitar duplicados en el mismo render
+let lastFormTimestamp = $state(0);
+
+// Mostrar toast cuando hay un mensaje del servidor
+$effect(() => {
+	if (form?.message) {
+		// Crear un identificador único basado en el contenido del form
+		const currentTimestamp = Date.now();
+		
+		// Solo mostrar si ha pasado al menos 100ms desde el último (evita duplicados en mismo render)
+		if (currentTimestamp - lastFormTimestamp > 100) {
+			lastFormTimestamp = currentTimestamp;
+			
+			if (form.success) {
+				toast.success(form.message);
+			} else {
+				toast.error(form.message);
+			}
+		}
+	}
+});
 
 // Obtener el parámetro redirectTo de la URL
 let redirectTo = $derived($page.url.searchParams.get('redirectTo') || '/');
@@ -32,7 +55,7 @@ redirectTo: `${location.origin}/auth/callback?redirectTo=${encodeURIComponent(re
 
 if (error) {
 console.error('Error con OAuth:', error.message);
-alert(`Error al iniciar sesión con ${provider}: ${error.message}`);
+toast.error(`Error al iniciar sesión con ${provider}: ${error.message}`);
 }
 isLoading = false;
 }
@@ -54,29 +77,20 @@ isLoading = false;
 </p>
 </div>
 
-{#if message}
-<div class="mb-4 p-4 rounded-lg {messageType === 'success' ? 'bg-green-50 border border-green-200 text-green-800' : 'bg-red-50 border border-red-200 text-red-800'}">
-<div class="flex items-start">
-<svg class="w-5 h-5 mr-2 shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-{#if messageType === 'success'}
-<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-{:else}
-<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
-{/if}
-</svg>
-<span>{message}</span>
-</div>
-</div>
-{/if}
-
 <form method="POST" action="?/{mode}" use:enhance={() => {
 isLoading = true;
 return async ({ update, result }) => {
 await update();
 isLoading = false;
 if (result.type === 'redirect') {
+// Mostrar toast de éxito antes de redirigir
+const successMessage = mode === 'login' 
+	? '¡Bienvenido de nuevo! Sesión iniciada correctamente 🎉'
+	: '¡Cuenta creada exitosamente! Bienvenido a v•tickets 🎉';
+toast.success(successMessage);
 await invalidateAll();
-goto(result.location);
+// Pequeño delay para que se vea el toast
+setTimeout(() => goto(result.location), 800);
 }
 };
 }}>

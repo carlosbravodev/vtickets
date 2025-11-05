@@ -3,8 +3,33 @@
 	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
 	import { enhance } from '$app/forms';
+	import { invalidateAll } from '$app/navigation';
+	import { toast } from '$lib/stores/toast.svelte';
 	
 	let { data, form }: { data: PageData; form: ActionData } = $props();
+	
+	// Rastrear el último form para evitar duplicados en el mismo render
+	let lastFormTimestamp = $state(0);
+	
+	// Mostrar toast cuando hay resultado del servidor
+	$effect(() => {
+		if (form?.message) {
+			// Crear un identificador único basado en el tiempo
+			const currentTimestamp = Date.now();
+			
+			// Solo mostrar si ha pasado al menos 100ms desde el último (evita duplicados en mismo render)
+			if (currentTimestamp - lastFormTimestamp > 100) {
+				lastFormTimestamp = currentTimestamp;
+				
+				if (form.success) {
+					toast.success(form.message);
+				} else {
+					toast.error(form.message);
+				}
+			}
+		}
+	});
+	
 	let QRCodeStyling: any = null;
 	let isQRLibraryLoaded = $state(false);
 	
@@ -649,20 +674,26 @@
 				<h2 class="text-2xl font-bold text-gray-900">Información Personal</h2>
 			</div>
 
-			<div class="px-6 py-8">
-				{#if form?.message}
-					<div class="mb-6 p-4 rounded-lg {form.success ? 'bg-green-50 border border-green-200 text-green-800' : 'bg-red-50 border border-red-200 text-red-800'}">
-						<p class="text-sm font-medium">{form.message}</p>
-					</div>
-				{/if}
-
-				<form method="POST" action="?/updateProfile" use:enhance={() => {
+		<div class="px-6 py-8">
+			<form 
+				method="POST" 
+				action="?/updateProfile" 
+				use:enhance={() => {
 					isSubmitting = true;
-					return async ({ update }) => {
-						await update();
+					return async ({ result, update }) => {
+						// Si la actualización fue exitosa, recargar todos los datos primero
+						if (result.type === 'success') {
+							await invalidateAll();
+						}
+						
+						// Actualizar sin resetear el formulario
+						await update({ reset: false });
+						
 						isSubmitting = false;
 					};
-				}} class="space-y-6">
+				}}
+				class="space-y-6"
+			>
 					<!-- Nombre y Apellido -->
 					<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 						<div>
