@@ -82,7 +82,7 @@
 					<input
 						type="email"
 						id="email"
-						value={data.user.email}
+						value={data.user?.email || ''}
 						disabled
 						class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed"
 					/>
@@ -104,6 +104,41 @@
 					/>
 				</div>
 
+				<!-- Tipo de Documento y Número (OBLIGATORIO) -->
+				<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+					<div>
+						<label for="document_type" class="block text-sm font-bold text-gray-700 mb-2">
+							Tipo de Documento <span class="text-red-500">*</span>
+						</label>
+						<select
+							id="document_type"
+							name="document_type"
+							value={data.profile?.document_type || 'cedula'}
+							required
+							class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+						>
+							<option value="cedula">Cédula</option>
+							<option value="pasaporte">Pasaporte</option>
+							<option value="ruc">RUC</option>
+						</select>
+					</div>
+
+					<div>
+						<label for="document_number" class="block text-sm font-bold text-gray-700 mb-2">
+							Número de Documento <span class="text-red-500">*</span>
+						</label>
+						<input
+							type="text"
+							id="document_number"
+							name="document_number"
+							value={data.profile?.document_number || ''}
+							required
+							class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+							placeholder="1234567890"
+						/>
+					</div>
+				</div>
+
 				<!-- Campos opcionales -->
 				<details class="border border-gray-200 rounded-lg p-4">
 					<summary class="font-bold text-gray-700 cursor-pointer hover:text-indigo-600 transition-colors">
@@ -123,40 +158,6 @@
 								value={data.profile?.birth_date || ''}
 								class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
 							/>
-						</div>
-
-						<!-- Tipo de Documento y Número -->
-						<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-							<div>
-								<label for="document_type" class="block text-sm font-medium text-gray-700 mb-2">
-									Tipo de Documento
-								</label>
-								<select
-									id="document_type"
-									name="document_type"
-									value={data.profile?.document_type || ''}
-									class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-								>
-									<option value="">Seleccionar</option>
-									<option value="cedula">Cédula</option>
-									<option value="pasaporte">Pasaporte</option>
-									<option value="ruc">RUC</option>
-								</select>
-							</div>
-
-							<div>
-								<label for="document_number" class="block text-sm font-medium text-gray-700 mb-2">
-									Número de Documento
-								</label>
-								<input
-									type="text"
-									id="document_number"
-									name="document_number"
-									value={data.profile?.document_number || ''}
-									class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-									placeholder="1234567890"
-								/>
-							</div>
 						</div>
 
 						<!-- Ciudad y País -->

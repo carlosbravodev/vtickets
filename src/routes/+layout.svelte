@@ -145,7 +145,7 @@
       {:else}
         <button
           onclick={() =>
-            goto(`/login?redirectTo=${encodeURIComponent(currentPath)}`)}
+            goto(`/iniciar-sesion?redirectTo=${encodeURIComponent(currentPath)}`)}
           class="flex items-center bg-indigo-600 hover:bg-indigo-700 transition-colors duration-300 font-bold text-xl text-white py-2 px-4 rounded cursor-pointer"
         >
           <img
@@ -214,7 +214,7 @@
         {:else}
           <button
             onclick={() => {
-              goto(`/login?redirectTo=${encodeURIComponent(currentPath)}`);
+              goto(`/iniciar-sesion?redirectTo=${encodeURIComponent(currentPath)}`);
               toggleMenu();
             }}
             class="login-button-mobile"

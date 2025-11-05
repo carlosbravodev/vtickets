@@ -5,9 +5,9 @@ import { supabaseAdmin } from '$lib/supabaseAdmin';
 export const load: PageServerLoad = async ({ locals }) => {
 	const session = locals.session;
 
-	// Redirigir al login si no está autenticado
+	// Redirigir a iniciar sesión si no está autenticado
 	if (!session) {
-		throw redirect(303, '/login?redirectTo=/onboarding');
+		throw redirect(303, '/iniciar-sesion?redirectTo=/completar-perfil');
 	}
 
 	const userId = session.user.id;
@@ -20,7 +20,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		.single();
 
 	// Si el perfil ya está completo, redirigir a /cuenta
-	if (profile?.first_name && profile?.last_name && profile?.phone) {
+	if (profile?.first_name && profile?.last_name && profile?.phone && profile?.document_number) {
 		throw redirect(303, '/cuenta');
 	}
 
@@ -49,9 +49,9 @@ export const actions: Actions = {
 		const country = formData.get('country') as string;
 
 		// Validaciones básicas
-		if (!first_name || !last_name || !phone) {
+		if (!first_name || !last_name || !phone || !document_number) {
 			return fail(400, {
-				message: 'Nombre, apellido y teléfono son obligatorios',
+				message: 'Nombre, apellido, teléfono y número de documento son obligatorios',
 				first_name,
 				last_name,
 				phone
@@ -65,9 +65,9 @@ export const actions: Actions = {
 				first_name,
 				last_name,
 				phone,
+				document_type: document_type || 'cedula',
+				document_number,
 				birth_date: birth_date || null,
-				document_type: document_type || null,
-				document_number: document_number || null,
 				city: city || null,
 				country: country || 'Ecuador',
 				updated_at: new Date().toISOString()

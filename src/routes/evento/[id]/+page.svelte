@@ -21,7 +21,7 @@
 				eventHandler: (event: any) => {
 					if (event.event === 'Checkout.Success') {
 						// Redirigir a página de éxito cuando el pago se completa
-						goto('/success');
+						goto('/exito');
 					}
 				}
 			});
@@ -328,7 +328,7 @@
 								</p>
 								<div class="space-y-3">
 									<button
-										onclick={() => goto(`/login?redirectTo=${encodeURIComponent(currentPath)}`)}
+										onclick={() => goto(`/iniciar-sesion?redirectTo=${encodeURIComponent(currentPath)}`)}
 										class="w-full px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition-colors duration-200 flex items-center justify-center gap-2"
 									>
 										<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -338,7 +338,7 @@
 									</button>
 									<p class="text-sm text-gray-500">
 										¿No tienes cuenta? 
-										<button onclick={() => goto(`/login?redirectTo=${encodeURIComponent(currentPath)}`)} class="text-indigo-600 hover:text-indigo-700 font-semibold">
+										<button onclick={() => goto(`/iniciar-sesion?redirectTo=${encodeURIComponent(currentPath)}`)} class="text-indigo-600 hover:text-indigo-700 font-semibold">
 											Regístrate aquí
 										</button>
 									</p>

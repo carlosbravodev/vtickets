@@ -715,16 +715,53 @@
 					<!-- Teléfono -->
 					<div>
 						<label for="phone" class="block text-sm font-medium text-gray-700 mb-2">
-							Teléfono
+							Teléfono <span class="text-red-500">*</span>
 						</label>
 						<input
 							type="tel"
 							id="phone"
 							name="phone"
 							value={data.profile?.phone || ''}
+							required
 							class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
 							placeholder="+593 99 999 9999"
 						/>
+					</div>
+
+					<!-- Tipo de Documento y Número -->
+					<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+						<div>
+							<label for="document_type" class="block text-sm font-medium text-gray-700 mb-2">
+								Tipo de Documento <span class="text-red-500">*</span>
+							</label>
+							<select
+								id="document_type"
+								name="document_type"
+								value={data.profile?.document_type || 'cedula'}
+								required
+								class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+							>
+								<option value="cedula">Cédula</option>
+								<option value="pasaporte">Pasaporte</option>
+								<option value="ruc">RUC</option>
+							</select>
+						</div>
+
+						<!-- Número de Documento -->
+						<div>
+							<label for="document_number" class="block text-sm font-medium text-gray-700 mb-2">
+								Número de Documento <span class="text-red-500">*</span>
+							</label>
+							<input
+								type="text"
+								id="document_number"
+								name="document_number"
+								value={data.profile?.document_number || ''}
+								required
+								class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+								placeholder="1234567890"
+							/>
+						</div>
 					</div>
 
 					<!-- Fecha de Nacimiento -->
@@ -739,41 +776,6 @@
 							value={data.profile?.birth_date || ''}
 							class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
 						/>
-					</div>
-
-					<!-- Tipo de Documento -->
-					<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-						<div>
-							<label for="document_type" class="block text-sm font-medium text-gray-700 mb-2">
-								Tipo de Documento
-							</label>
-							<select
-								id="document_type"
-								name="document_type"
-								value={data.profile?.document_type || ''}
-								class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-							>
-								<option value="">Seleccionar</option>
-								<option value="cedula">Cédula</option>
-								<option value="pasaporte">Pasaporte</option>
-								<option value="ruc">RUC</option>
-							</select>
-						</div>
-
-						<!-- Número de Documento -->
-						<div>
-							<label for="document_number" class="block text-sm font-medium text-gray-700 mb-2">
-								Número de Documento
-							</label>
-							<input
-								type="text"
-								id="document_number"
-								name="document_number"
-								value={data.profile?.document_number || ''}
-								class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-								placeholder="1234567890"
-							/>
-						</div>
 					</div>
 
 					<!-- Ciudad y País -->
