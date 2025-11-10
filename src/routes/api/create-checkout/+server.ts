@@ -2,6 +2,7 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { env } from '$env/dynamic/private';
 import { env as publicEnv } from '$env/dynamic/public';
+import { supabaseAdmin } from '$lib/supabaseAdmin';
 
 export const POST: RequestHandler = async ({ request, locals }) => {
 	try {
@@ -20,8 +21,20 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		}
 
 		// Obtener buyer_id si el usuario está autenticado
-		// Nota: Esto funcionará cuando implementemos la Fase 2 (Hooks y Sesión)
 		const buyerId = locals.session?.user?.id || null;
+		const userEmail = locals.session?.user?.email || null;
+
+		// Obtener perfil del usuario si está autenticado
+		let userProfile = null;
+		if (buyerId) {
+			const { data: profile } = await supabaseAdmin
+				.from('profiles')
+				.select('first_name, last_name, document_number, city, country')
+				.eq('id', buyerId)
+				.single();
+			
+			userProfile = profile;
+		}
 
 		// Preparar custom data para el webhook
 		const customData: any = {
@@ -34,8 +47,26 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			customData.buyer_id = buyerId;
 		}
 
+		// Preparar datos de checkout prellenados
+		const checkoutData: any = {
+			custom: customData,
+			billing_address: {
+				country: 'EC' // Ecuador por defecto
+			}
+		};
+
+		// Prellenar datos del usuario si está autenticado y tiene perfil
+		if (userProfile && userEmail) {
+			checkoutData.email = userEmail;
+			checkoutData.name = `${userProfile.first_name} ${userProfile.last_name}`.trim();
+			
+			// Agregar número de documento como Tax Number (ID Fiscal)
+			if (userProfile.document_number) {
+				checkoutData.tax_number = userProfile.document_number;
+			}
+		}
+
 		// Crear checkout directamente con la API de Lemon Squeezy
-		// Esto NO requiere productos pre-configurados
 		const response = await fetch('https://api.lemonsqueezy.com/v1/checkouts', {
 			method: 'POST',
 			headers: {
@@ -48,23 +79,18 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 					type: 'checkouts',
 					attributes: {
 						custom_price: Math.round(totalAmount * 100), // Precio en centavos
-						checkout_data: {
-							billing_address: {
-								country: 'EC' // Ecuador por defecto
-							},
-							custom: customData
-						},
-						product_options: {
-							name: `🎫 ${eventTitle}`,
-							description: ticketDetails,
-							receipt_button_text: 'Ver mis entradas',
-							receipt_link_url: `${appUrl}/cuenta`,
-							receipt_thank_you_note: '¡Gracias por tu compra! Tus entradas han sido enviadas a tu correo.'
-						},
-						checkout_options: {
-							button_color: '#6366f1',
-							locale: 'es' // Idioma español
-						},
+						checkout_data: checkoutData,
+					product_options: {
+						name: `🎫 ${eventTitle}`,
+						description: ticketDetails,
+						receipt_button_text: 'Ver mis entradas',
+						receipt_link_url: `${appUrl}/cuenta`,
+						receipt_thank_you_note: '¡Gracias por tu compra! Tus entradas han sido enviadas a tu correo.'
+					},
+					checkout_options: {
+						button_color: '#6366f1',
+						locale: 'es' // Idioma español
+					},
 						preview: false,
 						test_mode: true
 					},
