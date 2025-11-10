@@ -157,19 +157,27 @@
 				})
 			});
 
-			const data = await response.json();
+		const data = await response.json();
 
-			if (data.error) {
-				console.error('Error details:', data.details);
-				alert('Error al crear el checkout. Por favor verifica tu configuración de Lemon Squeezy.');
-				isCreatingCheckout = false;
-				if (checkoutTimeout) clearTimeout(checkoutTimeout);
+		if (data.error) {
+			// Si hay un redirectTo, redirigir a esa página
+			if (data.redirectTo) {
+				console.log('Redirecting to:', data.redirectTo);
+				goto(data.redirectTo);
 				return;
 			}
+			
+			// Si no hay redirectTo, mostrar error
+			console.error('Error details:', data.details);
+			alert(data.message || 'Error al crear el checkout. Por favor verifica tu configuración.');
+			isCreatingCheckout = false;
+			if (checkoutTimeout) clearTimeout(checkoutTimeout);
+			return;
+		}
 
-			// Redirigir al checkout de Lemon Squeezy (sin parámetro de redirección)
-			// La redirección se manejará manualmente después del pago
-			window.location.href = data.checkoutUrl;
+		// Redirigir al checkout de Lemon Squeezy (sin parámetro de redirección)
+		// La redirección se manejará manualmente después del pago
+		window.location.href = data.checkoutUrl;
 		} catch (error) {
 			console.error('Error:', error);
 			alert('Error al procesar el pago. Por favor intenta de nuevo.');

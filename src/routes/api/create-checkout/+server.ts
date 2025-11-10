@@ -20,23 +20,33 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			return json({ error: 'Server configuration error' }, { status: 500 });
 		}
 
-		// Obtener buyer_id si el usuario está autenticado
-		const buyerId = locals.session?.user?.id || null;
-		const userEmail = locals.session?.user?.email || null;
+	// Obtener buyer_id si el usuario está autenticado
+	const buyerId = locals.session?.user?.id || null;
+	const userEmail = locals.session?.user?.email || null;
 
-		// Obtener perfil del usuario si está autenticado
-		let userProfile = null;
-		if (buyerId) {
-			const { data: profile } = await supabaseAdmin
-				.from('profiles')
-				.select('first_name, last_name, document_number, city, country')
-				.eq('id', buyerId)
-				.single();
-			
-			userProfile = profile;
-		}
+	// Verificar que el usuario esté autenticado
+	if (!buyerId || !userEmail) {
+		return json({ 
+			error: 'Usuario no autenticado',
+			redirectTo: '/iniciar-sesion'
+		}, { status: 401 });
+	}
 
-		// Preparar custom data para el webhook
+	// Obtener perfil del usuario
+	const { data: profile } = await supabaseAdmin
+		.from('profiles')
+		.select('first_name, last_name, document_number, city, country, phone')
+		.eq('id', buyerId)
+		.single();
+
+	// Verificar que el perfil esté completo
+	if (!profile?.first_name || !profile?.last_name || !profile?.document_number || !profile?.phone) {
+		return json({ 
+			error: 'Perfil incompleto',
+			message: 'Por favor completa tu perfil antes de realizar una compra',
+			redirectTo: '/completar-perfil'
+		}, { status: 400 });
+	}		// Preparar custom data para el webhook
 		const customData: any = {
 			event_id: eventId,
 			tickets: JSON.stringify(tickets)
@@ -55,18 +65,10 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			}
 		};
 
-		// Prellenar datos del usuario si está autenticado y tiene perfil
-		if (userProfile && userEmail) {
-			checkoutData.email = userEmail;
-			checkoutData.name = `${userProfile.first_name} ${userProfile.last_name}`.trim();
-			
-			// Agregar número de documento como Tax Number (ID Fiscal)
-			if (userProfile.document_number) {
-				checkoutData.tax_number = userProfile.document_number;
-			}
-		}
-
-		// Crear checkout directamente con la API de Lemon Squeezy
+	// Prellenar datos del usuario en el checkout
+	checkoutData.email = userEmail;
+	checkoutData.name = `${profile.first_name} ${profile.last_name}`.trim();
+	checkoutData.tax_number = profile.document_number;		// Crear checkout directamente con la API de Lemon Squeezy
 		const response = await fetch('https://api.lemonsqueezy.com/v1/checkouts', {
 			method: 'POST',
 			headers: {

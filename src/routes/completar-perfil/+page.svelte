@@ -44,10 +44,13 @@
 					
 					if (result.type === 'redirect') {
 						toast.success('¡Perfil completado exitosamente! Bienvenido a v•tickets 🎉');
-						setTimeout(() => goto('/cuenta'), 500);
+						setTimeout(() => goto(result.location), 500);
 					}
 				};
 			}} class="space-y-6">
+			<!-- Campo oculto para preservar redirectTo -->
+			<input type="hidden" name="redirectTo" value={data.redirectTo} />
+			
 				<!-- Nombres y Apellidos -->
 				<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 					<div>

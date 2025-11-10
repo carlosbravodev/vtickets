@@ -2,7 +2,7 @@ import type { PageServerLoad, Actions } from './$types';
 import { redirect, fail } from '@sveltejs/kit';
 import { supabaseAdmin } from '$lib/supabaseAdmin';
 
-export const load: PageServerLoad = async ({ locals }) => {
+export const load: PageServerLoad = async ({ locals, url }) => {
 	const session = locals.session;
 
 	// Redirigir a iniciar sesión si no está autenticado
@@ -19,19 +19,23 @@ export const load: PageServerLoad = async ({ locals }) => {
 		.eq('id', userId)
 		.single();
 
-	// Si el perfil ya está completo, redirigir a /cuenta
+	// Obtener el redirectTo de la URL
+	const redirectTo = url.searchParams.get('redirectTo') || '/cuenta';
+
+	// Si el perfil ya está completo, redirigir al destino
 	if (profile?.first_name && profile?.last_name && profile?.phone && profile?.document_number) {
-		throw redirect(303, '/cuenta');
+		throw redirect(303, redirectTo);
 	}
 
 	return {
 		user: session.user,
-		profile: profile || null
+		profile: profile || null,
+		redirectTo
 	};
 };
 
 export const actions: Actions = {
-	default: async ({ request, locals }) => {
+	default: async ({ request, locals, url }) => {
 		const session = locals.session;
 
 		if (!session) {
@@ -47,6 +51,7 @@ export const actions: Actions = {
 		const document_number = formData.get('document_number') as string;
 		const city = formData.get('city') as string;
 		const country = formData.get('country') as string;
+		const redirectTo = formData.get('redirectTo') as string || '/cuenta';
 
 		// Validaciones básicas
 		if (!first_name || !last_name || !phone || !document_number) {
@@ -79,7 +84,7 @@ export const actions: Actions = {
 			return fail(500, { message: 'Error al actualizar el perfil' });
 		}
 
-		// Redirigir a /cuenta después de completar
-		throw redirect(303, '/cuenta');
+		// Redirigir al destino original o a /cuenta
+		throw redirect(303, redirectTo);
 	}
 };
