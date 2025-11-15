@@ -4,13 +4,14 @@ import { supabaseAdmin } from '$lib/supabaseAdmin';
 
 export const load: PageServerLoad = async ({ locals, url }) => {
 	const session = locals.session;
+	const user = locals.user;
 
 	// Redirigir a iniciar sesión si no está autenticado
-	if (!session) {
+	if (!session || !user) {
 		throw redirect(303, '/iniciar-sesion?redirectTo=/completar-perfil');
 	}
 
-	const userId = session.user.id;
+	const userId = user.id;
 
 	// Obtener perfil actual
 	const { data: profile } = await supabaseAdmin
@@ -28,7 +29,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 	}
 
 	return {
-		user: session.user,
+		user: user,
 		profile: profile || null,
 		redirectTo
 	};
@@ -37,8 +38,9 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 export const actions: Actions = {
 	default: async ({ request, locals, url }) => {
 		const session = locals.session;
+		const user = locals.user;
 
-		if (!session) {
+		if (!session || !user) {
 			return fail(401, { message: 'No autorizado' });
 		}
 
@@ -77,7 +79,7 @@ export const actions: Actions = {
 				country: country || 'Ecuador',
 				updated_at: new Date().toISOString()
 			})
-			.eq('id', session.user.id);
+			.eq('id', user.id);
 
 		if (error) {
 			console.error('Error updating profile:', error);

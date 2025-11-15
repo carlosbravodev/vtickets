@@ -1,17 +1,19 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { supabase } from '$lib/supabase';
+import { logger } from '$lib/logger';
 
 export const GET: RequestHandler = async ({ locals }) => {
 	const session = locals.session;
+	const user = locals.user;
 
-	if (!session) {
+	if (!session || !user) {
 		return json({ error: 'No autenticado' }, { status: 401 });
 	}
 
-	const userId = session.user.id;
+	const userId = user.id;
 
-	console.log('🔍 Buscando órdenes para usuario:', userId);
+	logger.log('🔍 Buscando órdenes para usuario:', userId);
 
 	// Obtener órdenes con tickets
 	const { data: orders, error: ordersError } = await supabase

@@ -4,13 +4,14 @@ import { supabaseAdmin } from '$lib/supabaseAdmin';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const session = locals.session;
+	const user = locals.user;
 
 	// Redirigir a iniciar sesión si no está autenticado
-	if (!session) {
+	if (!session || !user) {
 		throw redirect(303, '/iniciar-sesion?redirectTo=/cuenta');
 	}
 
-	const userId = session.user.id;
+	const userId = user.id;
 
 	// Obtener todas las órdenes del usuario con tickets individuales
 	const { data: orders, error: ordersError } = await supabaseAdmin
@@ -87,7 +88,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 	return {
 		orders: ordersWithTicketDetails,
-		user: session.user,
+		user: user,
 		profile: profile || null
 	};
 };
@@ -95,8 +96,9 @@ export const load: PageServerLoad = async ({ locals }) => {
 export const actions: Actions = {
 	updateProfile: async ({ request, locals }) => {
 		const session = locals.session;
+		const user = locals.user;
 
-		if (!session) {
+		if (!session || !user) {
 			return fail(401, { message: 'No autenticado' });
 		}
 
@@ -132,7 +134,7 @@ export const actions: Actions = {
 					country: country || 'Ecuador',
 					updated_at: new Date().toISOString()
 				})
-				.eq('id', session.user.id);
+				.eq('id', user.id);
 
 			if (error) {
 				console.error('Error actualizando perfil:', error);

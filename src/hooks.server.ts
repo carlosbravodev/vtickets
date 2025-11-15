@@ -64,9 +64,9 @@ return resolve(event);
 };
 
 const profileGuard: Handle = async ({ event, resolve }) => {
-	const { session } = await event.locals.safeGetSession();
+	const { session, user } = await event.locals.safeGetSession();
 
-	if (session?.user) {
+	if (session && user) {
 		// Rutas excluidas del chequeo de perfil completo
 		// - Rutas públicas: eventos, inicio
 		// - Rutas de autenticación: login, callback
@@ -81,7 +81,7 @@ const profileGuard: Handle = async ({ event, resolve }) => {
 				const { data: profile } = await supabaseAdmin
 					.from('profiles')
 					.select('first_name, last_name, phone, document_number')
-					.eq('id', session.user.id)
+					.eq('id', user.id)
 					.single();
 
 				if (!profile?.first_name || !profile?.last_name || !profile?.phone || !profile?.document_number) {
