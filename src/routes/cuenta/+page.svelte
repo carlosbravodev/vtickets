@@ -6,7 +6,7 @@
 	import { invalidateAll } from '$app/navigation';
 	import { toast } from '$lib/stores/toast.svelte';
 	
-	let { data, form }: { data: PageData; form: ActionData } = $props();
+	let { data, form }: { data: any; form: any } = $props();
 	
 	// Rastrear el último form para evitar duplicados en el mismo render
 	let lastFormTimestamp = $state(0);
