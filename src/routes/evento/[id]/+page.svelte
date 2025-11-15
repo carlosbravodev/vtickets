@@ -394,40 +394,40 @@
 									</button>
 								{:else}
 									<div class="flex items-center justify-between gap-2">
-										<!-- Botón disminuir -->
-										<button
-											onclick={() => decreaseQuantity(ticket.id)}
-											class="shrink-0 w-10 h-10 flex items-center justify-center bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors duration-200"
-											aria-label="Disminuir cantidad"
-										>
-											<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-												<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
-											</svg>
-										</button>
+									<!-- Botón disminuir -->
+									<button
+										onclick={() => decreaseQuantity(ticket.id)}
+										disabled={isCreatingCheckout}
+										class="shrink-0 w-10 h-10 flex items-center justify-center bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-red-300"
+										aria-label="Disminuir cantidad"
+									>
+										<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
+										</svg>
+									</button>
 
-										<!-- Input de cantidad -->
-										<div class="flex-1 text-center">
-											<input
-												type="number"
-												value={selectedTickets[ticket.id]}
-												readonly
-												class="w-full py-2 px-4 text-center text-lg font-bold bg-white border-2 border-indigo-300 rounded-lg focus:outline-none"
-											/>
-										</div>
-
-										<!-- Botón aumentar -->
-										<button
-											onclick={() => increaseQuantity(ticket.id, ticket.available_tickets)}
-											class="shrink-0 w-10 h-10 flex items-center justify-center bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors duration-200"
-											aria-label="Aumentar cantidad"
-										>
-											<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-												<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-											</svg>
-										</button>
+									<!-- Input de cantidad -->
+									<div class="flex-1 text-center">
+										<input
+											type="number"
+											value={selectedTickets[ticket.id]}
+											readonly
+											class="w-full py-2 px-4 text-center text-lg font-bold bg-white border-2 border-indigo-300 rounded-lg focus:outline-none"
+										/>
 									</div>
 
-									<!-- Subtotal para este tipo de ticket -->
+									<!-- Botón aumentar -->
+									<button
+										onclick={() => increaseQuantity(ticket.id, ticket.available_tickets)}
+										disabled={isCreatingCheckout}
+										class="shrink-0 w-10 h-10 flex items-center justify-center bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-green-300"
+										aria-label="Aumentar cantidad"
+									>
+										<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+										</svg>
+									</button>
+								</div>									<!-- Subtotal para este tipo de ticket -->
 									<div class="mt-3 text-center text-sm text-gray-600">
 										Subtotal: <span class="font-bold text-indigo-600">${(selectedTickets[ticket.id] * parseFloat(ticket.price)).toFixed(2)}</span>
 									</div>
