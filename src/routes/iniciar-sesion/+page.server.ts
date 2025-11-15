@@ -1,62 +1,161 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions } from './$types';
+import { logger } from '$lib/logger';
+
+// Función para traducir errores de Supabase a español
+function translateSupabaseError(error: any): string {
+	const errorMessage = error?.message?.toLowerCase() || '';
+	
+	// Errores de autenticación
+	if (errorMessage.includes('invalid login credentials') || errorMessage.includes('invalid credentials')) {
+		return 'Credenciales incorrectas. Por favor, verifica tu email y contraseña.';
+	}
+	
+	if (errorMessage.includes('email not confirmed')) {
+		return 'Por favor confirma tu correo electrónico antes de iniciar sesión.';
+	}
+	
+	if (errorMessage.includes('user already registered') || errorMessage.includes('already exists')) {
+		return 'Este correo electrónico ya está registrado. Intenta iniciar sesión.';
+	}
+	
+	if (errorMessage.includes('password')) {
+		return 'La contraseña debe tener al menos 6 caracteres.';
+	}
+	
+	if (errorMessage.includes('rate limit')) {
+		return 'Demasiados intentos. Por favor espera un momento e inténtalo de nuevo.';
+	}
+	
+	if (errorMessage.includes('network') || errorMessage.includes('fetch')) {
+		return 'Error de conexión. Por favor verifica tu internet e inténtalo de nuevo.';
+	}
+	
+	// Error genérico si no se reconoce
+	return `Error inesperado: ${error.message || 'Por favor intenta de nuevo más tarde.'}`;
+}
 
 export const actions: Actions = {
 	login: async ({ request, locals: { supabase } }) => {
-		const formData = await request.formData();
-		const email = formData.get('email') as string;
-		const password = formData.get('password') as string;
-		const redirectTo = formData.get('redirectTo') as string || '/';
+		try {
+			const formData = await request.formData();
+			const email = formData.get('email') as string;
+			const password = formData.get('password') as string;
+			const redirectTo = formData.get('redirectTo') as string || '/';
 
-		const { error } = await supabase.auth.signInWithPassword({
-			email,
-			password
-		});
+			// Validación básica
+			if (!email || !password) {
+				return fail(400, {
+					email,
+					message: 'Por favor completa todos los campos.',
+					success: false
+				});
+			}
 
-		if (error) {
-			return fail(400, {
+			const { error } = await supabase.auth.signInWithPassword({
 				email,
-				message: 'Credenciales incorrectas. Por favor, verifica tu email y contraseña.',
+				password
+			});
+
+			if (error) {
+				logger.error('Login error:', error);
+				return fail(400, {
+					email,
+					message: translateSupabaseError(error),
+					success: false
+				});
+			}
+
+			redirect(303, redirectTo);
+		} catch (error) {
+			// Si es un redirect intencional, dejarlo pasar
+			if (error && typeof error === 'object' && 'status' in error && error.status === 303) {
+				throw error;
+			}
+			
+			logger.error('Unexpected error in login:', error);
+			return fail(500, {
+				message: 'Error interno del servidor. Por favor intenta de nuevo.',
 				success: false
 			});
 		}
-
-		redirect(303, redirectTo);
 	},
 
 	registro: async ({ request, locals: { supabase } }) => {
-		const formData = await request.formData();
-		const email = formData.get('email') as string;
-		const password = formData.get('password') as string;
-		const redirectTo = formData.get('redirectTo') as string || '/';
+		try {
+			const formData = await request.formData();
+			const email = formData.get('email') as string;
+			const password = formData.get('password') as string;
+			const redirectTo = formData.get('redirectTo') as string || '/';
 
-		const { data, error } = await supabase.auth.signUp({
-			email,
-			password,
-			options: {
-				emailRedirectTo: `${new URL(request.url).origin}/auth/callback?redirectTo=${encodeURIComponent(redirectTo)}`
+			// Validación básica
+			if (!email || !password) {
+				return fail(400, {
+					email,
+					message: 'Por favor completa todos los campos.',
+					success: false
+				});
 			}
-		});
 
-		if (error) {
-			return fail(400, {
+			// Validación de formato de email
+			const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+			if (!emailRegex.test(email)) {
+				return fail(400, {
+					email,
+					message: 'Por favor ingresa un correo electrónico válido.',
+					success: false
+				});
+			}
+
+			// Validación de longitud de contraseña
+			if (password.length < 6) {
+				return fail(400, {
+					email,
+					message: 'La contraseña debe tener al menos 6 caracteres.',
+					success: false
+				});
+			}
+
+			const { data, error } = await supabase.auth.signUp({
 				email,
-				message: `Error al crear la cuenta: ${error.message}`,
+				password,
+				options: {
+					emailRedirectTo: `${new URL(request.url).origin}/auth/callback?redirectTo=${encodeURIComponent(redirectTo)}`
+				}
+			});
+
+			if (error) {
+				logger.error('Registration error:', error);
+				return fail(400, {
+					email,
+					message: translateSupabaseError(error),
+					success: false
+				});
+			}
+			
+			// Si se creó una sesión inmediatamente (email confirmation disabled)
+			if (data.session) {
+				redirect(303, redirectTo);
+			}
+
+			// Si requiere confirmación de email
+			return {
+				email,
+				message:
+					'¡Cuenta creada exitosamente! Por favor, revisa tu correo para confirmar tu cuenta.',
+				success: true
+			};
+		} catch (error) {
+			// Si es un redirect intencional, dejarlo pasar
+			if (error && typeof error === 'object' && 'status' in error && error.status === 303) {
+				throw error;
+			}
+			
+			logger.error('Unexpected error in registration:', error);
+			return fail(500, {
+				message: 'Error interno del servidor. Por favor intenta de nuevo.',
 				success: false
 			});
 		}
-		
-		// Si se creó una sesión inmediatamente (email confirmation disabled)
-		if (data.session) {
-			redirect(303, redirectTo);
-		}
-
-		// Si requiere confirmación de email
-		return {
-			email,
-			message:
-				'¡Cuenta creada exitosamente! Por favor, revisa tu correo para confirmar tu cuenta.',
-			success: true
-		};
 	}
 };
