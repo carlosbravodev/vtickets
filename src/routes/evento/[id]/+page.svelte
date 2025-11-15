@@ -5,12 +5,16 @@
 	import { page } from '$app/stores';
 	import { onMount } from 'svelte';
 	import { logger } from '$lib/logger';
+	import { toast } from '$lib/stores/toast.svelte';
 	
 	let { data } = $props();
 	const { event, user } = data;
 	
 	// Verificar si el usuario está autenticado
 	let isAuthenticated = $derived(!!user);
+	
+	// Verificar si el evento ya pasó
+	let isEventPast = $derived(new Date(event.event_date) < new Date());
 	
 	// Obtener la URL actual para redirección después del login
 	let currentPath = $derived($page.url.pathname);
@@ -164,13 +168,14 @@
 			// Si hay un redirectTo, redirigir a esa página
 			if (data.redirectTo) {
 				logger.log('Redirecting to:', data.redirectTo);
+				toast.warning(data.message || 'Redirigiendo...', 5000);
 				goto(data.redirectTo);
 				return;
 			}
 			
 			// Si no hay redirectTo, mostrar error
 			logger.error('Error details:', data.details);
-			alert(data.message || 'Error al crear el checkout. Por favor verifica tu configuración.');
+			toast.error(data.message || 'Error al crear el checkout. Por favor verifica tu configuración.', 6000);
 			isCreatingCheckout = false;
 			if (checkoutTimeout) clearTimeout(checkoutTimeout);
 			return;
@@ -180,8 +185,8 @@
 		// La redirección se manejará manualmente después del pago
 		window.location.href = data.checkoutUrl;
 		} catch (error) {
-			console.error('Error:', error);
-			alert('Error al procesar el pago. Por favor intenta de nuevo.');
+			logger.error('Error:', error);
+			toast.error('Error al procesar el pago. Por favor intenta de nuevo.', 5000);
 			isCreatingCheckout = false;
 			if (checkoutTimeout) clearTimeout(checkoutTimeout);
 		}
@@ -223,7 +228,11 @@
 				<h1 class="text-4xl md:text-5xl font-bold text-white mb-4 drop-shadow-lg">
 					{event.title}
 				</h1>
-				{#if event.is_active}
+				{#if isEventPast}
+					<span class="inline-block bg-gray-600 text-white text-sm font-semibold px-4 py-2 rounded-full">
+						Evento Finalizado
+					</span>
+				{:else if event.is_active}
 					<span class="inline-block bg-green-500 text-white text-sm font-semibold px-4 py-2 rounded-full">
 						Evento Activo
 					</span>
@@ -265,21 +274,6 @@
 						</div>
 					</div>
 				{/if}
-
-				<!-- Entradas disponibles -->
-				{#if event.total_tickets}
-					<div class="flex items-start space-x-4">
-						<div class="shrink-0 w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-							<svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
-							</svg>
-						</div>
-						<div>
-							<h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1">Entradas Totales</h3>
-							<p class="text-lg text-gray-900">{event.total_tickets.toLocaleString()}</p>
-						</div>
-					</div>
-				{/if}
 			</div>
 
 			<!-- Descripción -->
@@ -304,7 +298,7 @@
 										</div>
 										<div>
 											<h3 class="font-semibold text-gray-900">{ticket.name}</h3>
-											<p class="text-sm text-gray-500">{ticket.available_tickets} disponibles</p>
+											<p class="text-sm text-green-600 font-medium">Disponible</p>
 										</div>
 									</div>
 									<div class="text-right">
@@ -320,6 +314,32 @@
 				<!-- Sección de Compra de Entradas -->
 				<div class="mb-8 pb-8 border-b border-gray-200 relative">
 					<h2 class="text-2xl font-bold text-gray-900 mb-6">Comprar Entradas</h2>
+					
+					<!-- Overlay si el evento ya pasó (prioridad máxima) -->
+					{#if isEventPast}
+						<div class="absolute inset-0 bg-white/80 backdrop-blur-sm z-20 rounded-xl flex items-center justify-center" in:fade={{ duration: 300 }}>
+							<div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md mx-4 text-center border-2 border-gray-300" in:fly={{ y: 20, duration: 400, delay: 100 }}>
+								<div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+									<svg class="w-8 h-8 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+									</svg>
+								</div>
+								<h3 class="text-2xl font-bold text-gray-900 mb-3">Evento Finalizado</h3>
+								<p class="text-gray-600 mb-6">
+									Lo sentimos, este evento ya ha pasado y las entradas ya no están disponibles para la compra.
+								</p>
+								<button
+									onclick={goBack}
+									class="w-full px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white font-semibold rounded-lg transition-colors duration-200 flex items-center justify-center gap-2"
+								>
+									<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+									</svg>
+									Ver Otros Eventos
+								</button>
+							</div>
+						</div>
+					{/if}
 					
 					<!-- Overlay de blur si no está autenticado -->
 					{#if !isAuthenticated}
@@ -377,11 +397,11 @@
 								</div>
 
 								<!-- Disponibilidad -->
-								<div class="flex items-center text-sm text-gray-600 mb-4">
-									<svg class="w-5 h-5 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<div class="flex items-center text-sm text-green-600 font-medium mb-4">
+									<svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
 									</svg>
-									<span>{ticket.available_tickets} disponibles</span>
+									<span>Disponible</span>
 								</div>
 
 								<!-- Botón de selección o controles de cantidad -->
