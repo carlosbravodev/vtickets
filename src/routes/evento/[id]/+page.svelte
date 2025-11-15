@@ -91,7 +91,7 @@
 	}
 
 	function goBack() {
-		goto('/');
+		goto('/eventos');
 	}
 
 	function selectTicket(ticketId: string) {

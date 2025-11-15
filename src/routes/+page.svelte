@@ -1,10 +1,23 @@
 <script lang="ts">
 	import { fade } from 'svelte/transition';
+	import { onMount } from 'svelte';
 	import Hero from '$lib/components/Hero.svelte';
 	import EventSection from '$lib/components/EventSection.svelte';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
+	
+	// Estado de carga para mejorar la percepción de UX
+	let isLoading = $state(true);
+	
+	onMount(() => {
+		// Pequeño delay para mostrar skeletons brevemente
+		const timer = setTimeout(() => {
+			isLoading = false;
+		}, 300);
+		
+		return () => clearTimeout(timer);
+	});
 </script>
 
 <div class="page-container">
@@ -13,11 +26,12 @@
 
 	<!-- Próximos Eventos Section -->
 	<div class="first-section">
-		{#if data?.upcomingEvents?.length}
+		{#if data?.upcomingEvents?.length || isLoading}
 			<EventSection 
 				title="Próximos Eventos" 
-				events={data.upcomingEvents}
+				events={data.upcomingEvents || []}
 				maxCards={10}
+				isLoading={isLoading}
 			/>
 		{:else}
 			<div class="py-8 text-center">
@@ -27,20 +41,22 @@
 	</div>
 
 	<!-- Eventos en Guayaquil Section -->
-	{#if data?.guayaquilEvents?.length}
+	{#if data?.guayaquilEvents?.length || isLoading}
 		<EventSection 
 			title="Eventos en Guayaquil" 
-			events={data.guayaquilEvents}
+			events={data.guayaquilEvents || []}
 			maxCards={10}
+			isLoading={isLoading}
 		/>
 	{/if}
 
 	<!-- Eventos en Quito Section -->
-	{#if data?.quitoEvents?.length}
+	{#if data?.quitoEvents?.length || isLoading}
 		<EventSection 
 			title="Eventos en Quito" 
-			events={data.quitoEvents}
+			events={data.quitoEvents || []}
 			maxCards={10}
+			isLoading={isLoading}
 		/>
 	{/if}
 

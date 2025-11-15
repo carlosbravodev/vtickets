@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { generateEventSlug } from '$lib/utils/slug';
+	import EventSkeleton from './EventSkeleton.svelte';
 
 	interface Event {
 		id: string;
@@ -16,9 +17,10 @@
 		title: string;
 		events: Event[];
 		maxCards?: number;
+		isLoading?: boolean;
 	}
 
-	let { title, events, maxCards = 10 }: Props = $props();
+	let { title, events, maxCards = 10, isLoading = false }: Props = $props();
 
 	let scrollContainer: HTMLDivElement;
 
@@ -74,8 +76,13 @@
 		</div>
 		
 		<div class="events-grid" bind:this={scrollContainer}>
-			{#each displayEvents as event (event.id)}
-				<article class="event-card">
+			{#if isLoading}
+				{#each Array(Math.min(5, maxCards)) as _, i (i)}
+					<EventSkeleton />
+				{/each}
+			{:else}
+				{#each displayEvents as event (event.id)}
+					<article class="event-card">
 					<!-- Imagen del evento -->
 					<a 
 						href={`/evento/${generateEventSlug(event, sortedEvents)}`} 
@@ -146,6 +153,7 @@
 					</div>
 				</article>
 			{/each}
+			{/if}
 		</div>
 	</div>
 </section>
