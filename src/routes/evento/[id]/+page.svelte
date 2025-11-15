@@ -4,6 +4,7 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
 	import { onMount } from 'svelte';
+	import { logger } from '$lib/logger';
 	
 	let { data } = $props();
 	const { event, user } = data;
@@ -128,7 +129,7 @@
 		// Timeout de seguridad: resetear después de 3 minutos si no se completa
 		checkoutTimeout = window.setTimeout(() => {
 			if (isCreatingCheckout) {
-				console.log('Checkout timeout - resetting state');
+				logger.log('Checkout timeout - resetting state');
 				isCreatingCheckout = false;
 			}
 		}, 180000); // 3 minutos
@@ -162,13 +163,13 @@
 		if (data.error) {
 			// Si hay un redirectTo, redirigir a esa página
 			if (data.redirectTo) {
-				console.log('Redirecting to:', data.redirectTo);
+				logger.log('Redirecting to:', data.redirectTo);
 				goto(data.redirectTo);
 				return;
 			}
 			
 			// Si no hay redirectTo, mostrar error
-			console.error('Error details:', data.details);
+			logger.error('Error details:', data.details);
 			alert(data.message || 'Error al crear el checkout. Por favor verifica tu configuración.');
 			isCreatingCheckout = false;
 			if (checkoutTimeout) clearTimeout(checkoutTimeout);

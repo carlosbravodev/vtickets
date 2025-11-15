@@ -5,6 +5,7 @@ import { supabase } from '$lib/supabase';
 import { supabaseAdmin } from '$lib/supabaseAdmin';
 import { env } from '$env/dynamic/private';
 import { generateTickets } from '$lib/ticketGenerator';
+import { logger } from '$lib/logger';
 
 export const POST: RequestHandler = async ({ request }) => {
 	try {
@@ -19,7 +20,7 @@ export const POST: RequestHandler = async ({ request }) => {
 		const webhookSecret = env.LEMON_SQUEEZY_WEBHOOK_SECRET;
 		
 		if (!webhookSecret) {
-			console.error('LEMON_SQUEEZY_WEBHOOK_SECRET not configured');
+			logger.error('LEMON_SQUEEZY_WEBHOOK_SECRET not configured');
 			return json({ error: 'Server configuration error' }, { status: 500 });
 		}
 
@@ -33,7 +34,7 @@ export const POST: RequestHandler = async ({ request }) => {
 		const event = JSON.parse(rawBody);
 		const eventName = event.meta.event_name;
 
-		console.log(`📨 Webhook received: ${eventName}`);
+		logger.info(`📨 Webhook received: ${eventName}`);
 
 		// Procesar evento de pago exitoso
 		if (eventName === 'order_created') {
@@ -45,10 +46,10 @@ export const POST: RequestHandler = async ({ request }) => {
 			const totalAmount = parseFloat(event.data.attributes.total) / 100;
 			const userEmail = event.data.attributes.user_email;
 
-			console.log(`   Order Number: #${orderNumber}`);
-			console.log(`   Order ID: ${orderIdentifier}`);
-			console.log(`   Status: ${status}`);
-			console.log(`   Amount: $${totalAmount}`);
+			logger.info(`   Order Number: #${orderNumber}`);
+			logger.info(`   Order ID: ${orderIdentifier}`);
+			logger.info(`   Status: ${status}`);
+			logger.info(`   Amount: $${totalAmount}`);
 
 			if (status === 'paid') {
 				// Extraer información personalizada

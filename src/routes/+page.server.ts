@@ -1,5 +1,6 @@
 import { supabase } from '$lib/supabase';
 import type { PageServerLoad } from './$types';
+import { logger } from '$lib/logger';
 
 export const load: PageServerLoad = async ({ parent }) => {
   // Obtener datos del layout (session y user)
@@ -20,7 +21,7 @@ export const load: PageServerLoad = async ({ parent }) => {
     .limit(10);
 
   if (error) {
-    console.error('Error fetching upcoming events:', error);
+    logger.error('Error fetching upcoming events:', error);
     return { 
       upcomingEvents: [],
       error: error.message 
@@ -35,7 +36,7 @@ export const load: PageServerLoad = async ({ parent }) => {
       : 0
   })) || [];
 
-  console.log('Upcoming events loaded:', eventsWithPrice?.length || 0);
+  logger.log('Upcoming events loaded:', eventsWithPrice?.length || 0);
 
   // Obtener eventos en Guayaquil (ordenados por fecha ascendente)
   const { data: guayaquilEvents, error: guayaquilError } = await supabase
@@ -60,10 +61,10 @@ export const load: PageServerLoad = async ({ parent }) => {
   })) || [];
 
   if (guayaquilError) {
-    console.error('Error fetching Guayaquil events:', guayaquilError);
+    logger.error('Error fetching Guayaquil events:', guayaquilError);
   }
 
-  console.log('Guayaquil events loaded:', guayaquilEventsWithPrice?.length || 0);
+  logger.log('Guayaquil events loaded:', guayaquilEventsWithPrice?.length || 0);
 
   // Obtener eventos en Quito (ordenados por fecha ascendente)
   const { data: quitoEvents, error: quitoError } = await supabase
@@ -88,10 +89,10 @@ export const load: PageServerLoad = async ({ parent }) => {
   })) || [];
 
   if (quitoError) {
-    console.error('Error fetching Quito events:', quitoError);
+    logger.error('Error fetching Quito events:', quitoError);
   }
 
-  console.log('Quito events loaded:', quitoEventsWithPrice?.length || 0);
+  logger.log('Quito events loaded:', quitoEventsWithPrice?.length || 0);
 
   return {
     upcomingEvents: eventsWithPrice,

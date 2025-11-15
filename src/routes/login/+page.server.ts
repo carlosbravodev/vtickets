@@ -1,5 +1,6 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions } from './$types';
+import { logger } from '$lib/logger';
 
 export const actions: Actions = {
 	login: async ({ request, locals: { supabase } }) => {
@@ -8,9 +9,9 @@ export const actions: Actions = {
 		const password = formData.get('password') as string;
 		const redirectTo = formData.get('redirectTo') as string || '/';
 
-		console.log('🔑 ============ LOGIN INICIADO ============');
-		console.log('📧 Email:', email);
-		console.log('🎯 RedirectTo:', redirectTo);
+		logger.log('🔑 ============ LOGIN INICIADO ============');
+		logger.log('📧 Email:', email);
+		logger.log('🎯 RedirectTo:', redirectTo);
 
 		const { data, error } = await supabase.auth.signInWithPassword({
 			email,
@@ -18,7 +19,7 @@ export const actions: Actions = {
 		});
 
 		if (error) {
-			console.error('❌ Error en login:', error.message);
+			logger.error('❌ Error en login:', error.message);
 			return fail(400, {
 				email,
 				message: 'Credenciales incorrectas. Por favor, verifica tu email y contraseña.',
@@ -26,9 +27,9 @@ export const actions: Actions = {
 			});
 		}
 
-		console.log('✅ Login exitoso, usuario:', data.user?.id);
-		console.log('🔄 Redirigiendo a:', redirectTo);
-		console.log('⚠️  El middleware verificará el perfil después');
+		logger.log('✅ Login exitoso, usuario:', data.user?.id);
+		logger.log('🔄 Redirigiendo a:', redirectTo);
+		logger.log('⚠️  El middleware verificará el perfil después');
 
 		// Redirigir a la página original o al home
 		redirect(303, redirectTo);
@@ -40,9 +41,9 @@ export const actions: Actions = {
 		const password = formData.get('password') as string;
 		const redirectTo = formData.get('redirectTo') as string || '/';
 
-		console.log('📝 ============ REGISTRO INICIADO ============');
-		console.log('📧 Email:', email);
-		console.log('🎯 RedirectTo:', redirectTo);
+		logger.log('📝 ============ REGISTRO INICIADO ============');
+		logger.log('📧 Email:', email);
+		logger.log('🎯 RedirectTo:', redirectTo);
 
 		const { data, error } = await supabase.auth.signUp({
 			email,
@@ -53,7 +54,7 @@ export const actions: Actions = {
 		});
 
 		if (error) {
-			console.error('❌ Error en registro:', error.message);
+			logger.error('❌ Error en registro:', error.message);
 			return fail(400, {
 				email,
 				message: `Error al crear la cuenta: ${error.message}`,
@@ -61,19 +62,19 @@ export const actions: Actions = {
 			});
 		}
 
-		console.log('✅ Usuario creado:', data.user?.id);
-		console.log('🔐 Sesión creada:', !!data.session);
+		logger.log('✅ Usuario creado:', data.user?.id);
+		logger.log('🔐 Sesión creada:', !!data.session);
 		
 		// Si se creó una sesión inmediatamente (email confirmation disabled)
 		// redirigir al usuario para que el middleware lo mande a completar perfil
 		if (data.session) {
-			console.log('🔄 Sesión activa, redirigiendo a:', redirectTo);
-			console.log('⚠️  El middleware debería detectar perfil incompleto y redirigir a /completar-perfil');
+			logger.log('🔄 Sesión activa, redirigiendo a:', redirectTo);
+			logger.log('⚠️  El middleware debería detectar perfil incompleto y redirigir a /completar-perfil');
 			redirect(303, redirectTo);
 		}
 
 		// Si requiere confirmación de email
-		console.log('📧 Se requiere confirmación por email');
+		logger.log('📧 Se requiere confirmación por email');
 		return {
 			email,
 			message:
