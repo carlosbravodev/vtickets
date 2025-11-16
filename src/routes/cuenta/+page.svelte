@@ -33,8 +33,8 @@
 	let QRCodeStyling: any = null;
 	let isQRLibraryLoaded = $state(false);
 	
-	// Estado de las pestañas (por defecto "perfil")
-	let activeTab = $state<'entradas' | 'perfil'>('perfil');
+	// Estado de las pestañas (por defecto "entradas")
+	let activeTab = $state<'entradas' | 'perfil'>('entradas');
 	let isSubmitting = $state(false);
 
 	// Cargar la librería solo en el cliente
@@ -234,16 +234,6 @@
 		<div class="mb-6 border-b border-gray-200">
 			<nav class="flex space-x-8" aria-label="Tabs">
 				<button
-					onclick={() => activeTab = 'perfil'}
-					class="tab-button {activeTab === 'perfil' ? 'tab-active' : 'tab-inactive'}"
-				>
-					<svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-					</svg>
-					Mi Perfil
-				</button>
-				
-				<button
 					onclick={() => activeTab = 'entradas'}
 					class="tab-button {activeTab === 'entradas' ? 'tab-active' : 'tab-inactive'}"
 				>
@@ -256,6 +246,16 @@
 							{data.orders.length}
 						</span>
 					{/if}
+				</button>
+				
+				<button
+					onclick={() => activeTab = 'perfil'}
+					class="tab-button {activeTab === 'perfil' ? 'tab-active' : 'tab-inactive'}"
+				>
+					<svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+					</svg>
+					Mi Perfil
 				</button>
 			</nav>
 		</div>
