@@ -26,58 +26,6 @@
 			day: 'numeric'
 		});
 	}
-
-	// Generar archivo .ics para calendario y abrirlo automáticamente
-	function addToCalendar() {
-		const event = Array.isArray(order.event) ? order.event[0] : order.event;
-		const startDate = new Date(event.event_date);
-		const endDate = new Date(startDate.getTime() + 2 * 60 * 60 * 1000); // +2 horas
-
-		const formatICSDate = (date: Date) => {
-			return date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
-		};
-
-		const icsContent = [
-			'BEGIN:VCALENDAR',
-			'VERSION:2.0',
-			'PRODID:-//VTickets//Event Calendar//ES',
-			'CALSCALE:GREGORIAN',
-			'METHOD:PUBLISH',
-			'BEGIN:VEVENT',
-			`UID:${order.id}@vtickets.app`,
-			`DTSTART:${formatICSDate(startDate)}`,
-			`DTEND:${formatICSDate(endDate)}`,
-			`SUMMARY:${event.title}`,
-			`DESCRIPTION:Entrada comprada en VTickets - Orden #${order.order_number}`,
-			`LOCATION:${event.location || ''}`,
-			`STATUS:CONFIRMED`,
-			'END:VEVENT',
-			'END:VCALENDAR'
-		].join('\r\n');
-
-		// Crear blob y URL
-		const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
-		const url = URL.createObjectURL(blob);
-		
-		// Crear link temporal y simular click
-		const link = document.createElement('a');
-		link.href = url;
-		link.download = `${event.title.replace(/\s+/g, '_')}.ics`;
-		
-		// En dispositivos móviles, intentar abrir directamente
-		if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-			// En móviles, el archivo .ics se abre automáticamente con la app de calendario
-			link.click();
-		} else {
-			// En escritorio, descargar el archivo que luego se puede abrir
-			link.click();
-		}
-		
-		// Limpiar
-		setTimeout(() => {
-			URL.revokeObjectURL(url);
-		}, 100);
-	}
 </script>
 
 <svelte:head>
@@ -205,27 +153,17 @@
 						</div>
 					</div>
 
-					<!-- Botones de acción -->
-					<div class="grid md:grid-cols-2 gap-4">
+					<!-- Botón de acción -->
+					<div class="flex justify-center">
 						<a
 							href="/cuenta"
-							class="flex items-center justify-center gap-2 px-6 py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl transition-colors duration-200 shadow-lg hover:shadow-xl"
+							class="flex items-center justify-center gap-2 px-8 py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl transition-colors duration-200 shadow-lg hover:shadow-xl"
 						>
 							<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
 							</svg>
 							Ver Mis Entradas
 						</a>
-
-						<button
-							onclick={addToCalendar}
-							class="flex items-center justify-center gap-2 px-6 py-4 bg-white border-2 border-gray-300 hover:border-indigo-600 text-gray-700 hover:text-indigo-600 font-bold rounded-xl transition-all duration-200"
-						>
-							<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-							</svg>
-							Agregar a Calendario
-						</button>
 					</div>
 				</div>
 			</div>

@@ -206,60 +206,6 @@
 				return status;
 		}
 	};
-
-	// Agregar evento al calendario
-	function addToCalendar(event: any, orderNumber: string) {
-		const eventData = Array.isArray(event) ? event[0] : event;
-		if (!eventData?.event_date) return;
-
-		const startDate = new Date(eventData.event_date);
-		const endDate = new Date(startDate.getTime() + 2 * 60 * 60 * 1000); // +2 horas
-
-		const formatICSDate = (date: Date) => {
-			return date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
-		};
-
-		const icsContent = [
-			'BEGIN:VCALENDAR',
-			'VERSION:2.0',
-			'PRODID:-//VTickets//Event Calendar//ES',
-			'CALSCALE:GREGORIAN',
-			'METHOD:PUBLISH',
-			'BEGIN:VEVENT',
-			`UID:${orderNumber}@vtickets.app`,
-			`DTSTART:${formatICSDate(startDate)}`,
-			`DTEND:${formatICSDate(endDate)}`,
-			`SUMMARY:${eventData.title}`,
-			`DESCRIPTION:Entrada comprada en VTickets - Orden #${orderNumber}`,
-			`LOCATION:${eventData.location || ''}`,
-			`STATUS:CONFIRMED`,
-			'END:VEVENT',
-			'END:VCALENDAR'
-		].join('\r\n');
-
-		// Crear blob y URL
-		const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
-		const url = URL.createObjectURL(blob);
-		
-		// Crear link temporal y simular click
-		const link = document.createElement('a');
-		link.href = url;
-		link.download = `${eventData.title.replace(/\s+/g, '_')}.ics`;
-		
-		// En dispositivos móviles, intentar abrir directamente
-		if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-			// En móviles, el archivo .ics se abre automáticamente con la app de calendario
-			link.click();
-		} else {
-			// En escritorio, descargar el archivo que luego se puede abrir
-			link.click();
-		}
-		
-		// Limpiar
-		setTimeout(() => {
-			URL.revokeObjectURL(url);
-		}, 100);
-	}
 </script>
 
 <svelte:head>
@@ -449,25 +395,10 @@
 									<p class="text-xs text-gray-500">
 										Comprado el {formatDate(order.created_at)}
 									</p>
-									<p class="text-xs text-gray-400">
-										Orden #{order.order_number || order.lemon_squeezy_order_id}
-									</p>
-									
-									<!-- Botón Agregar a Calendario -->
-									{#if event?.event_date}
-										<div class="mt-3">
-											<button
-												onclick={() => addToCalendar(order.event, order.order_number || order.lemon_squeezy_order_id)}
-												class="inline-flex items-center gap-2 px-4 py-2 bg-white border-2 border-indigo-600 text-indigo-600 hover:bg-indigo-600 hover:text-white font-semibold rounded-lg transition-all duration-200 text-sm"
-											>
-												<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-													<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-												</svg>
-												Agregar a Calendario
-											</button>
-										</div>
-									{/if}
-								</div>
+								<p class="text-xs text-gray-400">
+									Orden #{order.order_number || order.lemon_squeezy_order_id}
+								</p>
+							</div>
 							</div>
 
 							<!-- Tickets Individuales con QR -->
