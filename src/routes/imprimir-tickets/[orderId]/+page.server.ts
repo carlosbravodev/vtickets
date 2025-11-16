@@ -18,17 +18,14 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			id,
 			order_number,
 			lemon_squeezy_order_id,
-			user_id,
+			buyer_id,
 			event:events (
 				id,
 				title,
 				description,
 				event_date,
-				event_time,
-				venue_name,
-				venue_address,
-				venue_city,
-				banner_url
+				location,
+				image_url
 			),
 			tickets (
 				id,
@@ -36,7 +33,6 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 				qr_token,
 				holder_name,
 				holder_email,
-				holder_identification,
 				ticket_type:ticket_types (
 					id,
 					name,
@@ -53,7 +49,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	}
 
 	// Verificar que el usuario sea dueño de la orden
-	if (order.user_id !== session.user.id) {
+	if (order.buyer_id !== session.user.id) {
 		throw error(403, 'No tienes permiso para ver esta orden');
 	}
 

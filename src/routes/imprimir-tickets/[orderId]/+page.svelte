@@ -15,11 +15,6 @@
 		});
 	};
 	
-	const formatTime = (timeString: string) => {
-		if (!timeString) return '';
-		return timeString.slice(0, 5);
-	};
-	
 	// Auto-abrir diálogo de impresión cuando la página carga
 	onMount(() => {
 		// Esperar un momento para que se renderice todo
@@ -45,10 +40,10 @@
 		<div class="ticket-page" class:page-break={index < data.tickets.length - 1}>
 			<div class="ticket-card">
 				<!-- Banner del evento -->
-				{#if data.event.banner_url}
+				{#if data.event.image_url}
 					<div class="ticket-banner">
 						<img 
-							src={optimizeSupabaseImage(data.event.banner_url, { width: 800, height: 300 })} 
+							src={optimizeSupabaseImage(data.event.image_url, { width: 800, height: 300 })} 
 							alt={data.event.title}
 						/>
 					</div>
@@ -68,30 +63,13 @@
 							</div>
 						{/if}
 						
-						{#if data.event.event_time}
-							<div class="detail-row">
-								<svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-								</svg>
-								<span>{formatTime(data.event.event_time)}</span>
-							</div>
-						{/if}
-						
-						{#if data.event.venue_name}
+						{#if data.event.location}
 							<div class="detail-row">
 								<svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
 									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
 								</svg>
-								<div>
-									<div>{data.event.venue_name}</div>
-									{#if data.event.venue_address}
-										<div class="text-sm text-gray-600">{data.event.venue_address}</div>
-									{/if}
-									{#if data.event.venue_city}
-										<div class="text-sm text-gray-600">{data.event.venue_city}</div>
-									{/if}
-								</div>
+								<span>{data.event.location}</span>
 							</div>
 						{/if}
 					</div>
@@ -103,15 +81,11 @@
 					<div class="holder-details">
 						<div class="holder-row">
 							<span class="label">Nombre:</span>
-							<span class="value">{ticket.holder_name}</span>
+							<span class="value">{ticket.holder_name || 'No especificado'}</span>
 						</div>
 						<div class="holder-row">
 							<span class="label">Email:</span>
-							<span class="value">{ticket.holder_email}</span>
-						</div>
-						<div class="holder-row">
-							<span class="label">Identificación:</span>
-							<span class="value">{ticket.holder_identification}</span>
+							<span class="value">{ticket.holder_email || 'No especificado'}</span>
 						</div>
 						<div class="holder-row">
 							<span class="label">Tipo de Entrada:</span>
@@ -368,6 +342,10 @@
 		}
 
 		.no-print {
+			display: none !important;
+		}
+
+		.print-header {
 			display: none !important;
 		}
 
