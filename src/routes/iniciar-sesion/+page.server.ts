@@ -116,15 +116,16 @@ export const actions: Actions = {
 				});
 			}
 
-			const { data, error } = await supabase.auth.signUp({
-				email,
-				password,
-				options: {
-					emailRedirectTo: `${new URL(request.url).origin}/auth/callback?redirectTo=${encodeURIComponent(redirectTo)}`
+		const { data, error } = await supabase.auth.signUp({
+			email,
+			password,
+			options: {
+				emailRedirectTo: `${new URL(request.url).origin}/auth/callback?redirectTo=${encodeURIComponent(redirectTo)}`,
+				data: {
+					role: 'buyer' // Asignar rol de comprador automáticamente
 				}
-			});
-
-			if (error) {
+			}
+		});			if (error) {
 				logger.error('Registration error:', error);
 				return fail(400, {
 					email,
