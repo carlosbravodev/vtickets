@@ -54,6 +54,30 @@ return name === 'content-range' || name === 'x-supabase-api-version';
 });
 };
 
+// Middleware para detectar subdomain
+const subdomainDetection: Handle = async ({ event, resolve }) => {
+	// Obtener el host de la petición
+	const host = event.request.headers.get('host') || '';
+	
+	// Detectar si estamos en el subdomain de admin
+	const isAdminSubdomain = host.startsWith('admin.') || host.startsWith('admin-');
+	
+	// Almacenar en locals para usar en toda la app
+	event.locals.isAdminSubdomain = isAdminSubdomain;
+	
+	// Log para debugging en desarrollo (cuando el host incluye localhost o vercel preview)
+	const isDevelopment = host.includes('localhost') || host.includes('vercel.app');
+	if (isDevelopment) {
+		logger.log('Subdomain detection:', {
+			host,
+			isAdminSubdomain,
+			path: event.url.pathname
+		});
+	}
+	
+	return resolve(event);
+};
+
 const authGuard: Handle = async ({ event, resolve }) => {
 	try {
 		const { session, user } = await event.locals.safeGetSession();
@@ -154,4 +178,4 @@ const profileGuard: Handle = async ({ event, resolve }) => {
 	}
 };
 
-export const handle: Handle = sequence(supabase, authGuard, profileGuard);
+export const handle: Handle = sequence(supabase, subdomainDetection, authGuard, profileGuard);

@@ -10,6 +10,7 @@ declare global {
       safeGetSession: () => Promise<{ session: Session | null; user: User | null }>;
       session: Session | null;
       user: User | null;
+      isAdminSubdomain: boolean; // Detecta si estamos en admin.vtickets.com
     }
     interface PageData {
       session: Session | null;
