@@ -27,6 +27,9 @@
 
   // Obtener la URL actual para redirección
   let currentPath = $derived($page.url.pathname);
+  
+  // Verificar si estamos en la sección de organizadores
+  let isOrganizerSection = $derived(currentPath.startsWith('/organizador'));
 
   function toggleMenu() {
     isMenuOpen = !isMenuOpen;
@@ -63,9 +66,10 @@
   <link rel="icon" href={favicon} />
 </svelte:head>
 
+{#if !isOrganizerSection}
 <header class="bg-white shadow sticky top-0 z-50">
   <nav class="flex justify-between items-center max-w-7xl mx-auto px-4 py-4">
-    <div class="flex items-end gap-8">
+    <div class="flex items-center gap-8">
       <a href="/">
         <img
           src={logoNavbar}
@@ -73,11 +77,16 @@
           class="h-10 w-auto min-w-28"
         />
       </a>
-      <div class="hidden md:flex items-center gap-8">
+      <div class="hidden md:flex items-center gap-6">
         <a
           href="/eventos"
           class="text-xl font-bold hover:text-gray-600 transition-colors duration-300"
           >Eventos</a
+        >
+        <a
+          href="/organizador/iniciar-sesion"
+          class="text-sm font-semibold text-gray-500 hover:text-indigo-600 transition-colors duration-300"
+          >Para Organizadores →</a
         >
       </div>
     </div>
@@ -87,12 +96,12 @@
         <div class="relative">
           <button
             onclick={toggleUserMenu}
-            class="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 transition-colors duration-300 font-bold text-xl text-white py-2 px-4 rounded cursor-pointer"
+            class="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 transition-colors duration-300 font-bold text-lg text-white py-2 px-4 rounded cursor-pointer"
           >
             <img
               src={userIcon}
               alt="Icono de usuario"
-              class="inline-block h-6 w-6"
+              class="h-6 w-6"
             />
             <span class="max-w-[150px] truncate"
               >{displayName}</span
@@ -147,12 +156,12 @@
         <button
           onclick={() =>
             goto(`/iniciar-sesion?redirectTo=${encodeURIComponent(currentPath)}`)}
-          class="flex items-center bg-indigo-600 hover:bg-indigo-700 transition-colors duration-300 font-bold text-xl text-white py-2 px-4 rounded cursor-pointer"
+          class="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 transition-colors duration-300 font-bold text-lg text-white py-2 px-4 rounded cursor-pointer"
         >
           <img
             src={userIcon}
             alt="Icono de usuario"
-            class="inline-block mr-2"
+            class="h-6 w-6"
           />
           Entrar
         </button>
@@ -193,6 +202,9 @@
     <div class="mobile-menu-container">
       <div class="mobile-menu-content">
         <a href="/eventos" class="menu-link" onclick={toggleMenu}>Eventos</a>
+        <a href="/organizador/iniciar-sesion" class="menu-link-secondary" onclick={toggleMenu}>
+          Para Organizadores →
+        </a>
 
         {#if isAuthenticated}
           <div class="menu-divider"></div>
@@ -228,6 +240,7 @@
     </div>
   {/if}
 </header>
+{/if}
 
 {@render children?.()}
 
@@ -297,6 +310,27 @@
   .menu-link:hover {
     background: #f3f4f6;
     color: #667eea;
+  }
+
+  /* Link secundario (para organizadores) */
+  .menu-link-secondary {
+    display: block;
+    padding: 0.75rem 1rem;
+    color: #6b7280;
+    font-weight: 500;
+    font-size: 0.875rem;
+    text-decoration: none;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    text-align: center;
+  }
+
+  .menu-link-secondary:hover {
+    background: #eef2ff;
+    color: #667eea;
+    border-color: #667eea;
   }
 
   /* Divisor */

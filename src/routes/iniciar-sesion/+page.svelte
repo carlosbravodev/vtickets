@@ -49,7 +49,7 @@ isLoading = true;
 const { error } = await supabase.auth.signInWithOAuth({
 provider: provider,
 options: {
-redirectTo: `${location.origin}/auth/callback?redirectTo=${encodeURIComponent(redirectTo)}`
+redirectTo: `${location.origin}/auth/callback?redirectTo=${encodeURIComponent(redirectTo)}&authType=buyer`
 }
 });
 

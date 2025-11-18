@@ -305,6 +305,17 @@ Consulta el archivo [LEMON_SQUEEZY_SETUP.md](./LEMON_SQUEEZY_SETUP.md) para inst
 - [ ] Sistema de reembolsos
 - [ ] Exportación de asistentes
 
+## 📚 Documentación Adicional
+
+Este proyecto cuenta con documentación detallada sobre componentes específicos:
+
+- **[Sistema de Autenticación Independiente](./SISTEMA_AUTENTICACION_INDEPENDIENTE.md)** - Implementación completa del sistema de roles para compradores y organizadores con OAuth
+- **[Arquitectura de Autenticación](./ARQUITECTURA_AUTH.md)** - Diagramas y flujos del sistema de autenticación
+- **[Sistema de Toast](./TOAST_SYSTEM.md)** - Sistema de notificaciones visuales
+- **[Flujo de Compra](./PURCHASE_FLOW.md)** - Proceso completo de checkout
+- **[Setup de Webhooks](./WEBHOOK_SETUP.md)** - Configuración de webhooks de Lemon Squeezy
+- **[Roadmap](./ROADMAP.md)** - Funcionalidades planificadas y en desarrollo
+
 ## 🤝 Contribuir
 
 Las contribuciones son bienvenidas. Por favor:

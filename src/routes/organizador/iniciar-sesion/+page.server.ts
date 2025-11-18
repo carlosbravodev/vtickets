@@ -1,6 +1,7 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { logger } from '$lib/logger';
+import { supabaseAdmin } from '$lib/supabaseAdmin';
 
 // Función para traducir errores de Supabase a español
 function translateSupabaseError(error: any): string {
@@ -63,7 +64,7 @@ export const actions: Actions = {
 				});
 			}
 
-			const { error } = await supabase.auth.signInWithPassword({
+			const { data: authData, error } = await supabase.auth.signInWithPassword({
 				email,
 				password
 			});
@@ -75,6 +76,40 @@ export const actions: Actions = {
 					message: translateSupabaseError(error),
 					success: false
 				});
+			}
+
+			// ⭐ VALIDACIÓN DE ROL: Verificar que el usuario sea organizador
+			if (authData?.user) {
+				const { data: profile, error: profileError } = await supabase
+					.from('profiles')
+					.select('role')
+					.eq('id', authData.user.id)
+					.single();
+
+				if (profileError) {
+					logger.error('Error fetching profile role:', profileError);
+					// Cerrar sesión si hay error
+					await supabase.auth.signOut();
+					return fail(500, {
+						email,
+						message: 'Error al verificar permisos. Por favor intenta de nuevo.',
+						success: false
+					});
+				}
+
+				// Verificar que el rol sea 'organizer'
+				if (profile?.role !== 'organizer') {
+					logger.warn('Buyer tried to login as organizer:', { email, role: profile?.role });
+					// Cerrar sesión
+					await supabase.auth.signOut();
+					return fail(403, {
+						email,
+						message: 'Esta cuenta es de comprador. Por favor usa el login de compradores en vtickets.com',
+						success: false
+					});
+				}
+
+				logger.log('Organizer logged in successfully:', { email, userId: authData.user.id });
 			}
 
 			// Redirigir al dashboard de organizador
@@ -125,6 +160,25 @@ export const actions: Actions = {
 					message: 'La contraseña debe tener al menos 6 caracteres.',
 					success: false
 				});
+			}
+
+			// ⭐ VALIDACIÓN PREVIA: Verificar si el email ya existe con rol de buyer
+			const { data: existingProfile } = await supabaseAdmin
+				.from('profiles')
+				.select('role')
+				.eq('email', email)
+				.single();
+
+			if (existingProfile) {
+				if (existingProfile.role === 'buyer') {
+					logger.warn('Buyer tried to register as organizer:', { email });
+					return fail(400, {
+						email,
+						message: 'Este correo ya está registrado como comprador. Por favor usa el login de compradores en vtickets.com',
+						success: false
+					});
+				}
+				// Si ya es organizador, Supabase manejará el error de "email already exists"
 			}
 
 			// Crear cuenta con rol de organizador

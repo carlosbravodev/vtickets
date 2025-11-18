@@ -109,6 +109,100 @@ const authGuard: Handle = async ({ event, resolve }) => {
 	}
 };
 
+// Middleware para proteger rutas según rol del usuario
+const roleGuard: Handle = async ({ event, resolve }) => {
+	try {
+		const { session, user } = await event.locals.safeGetSession();
+
+		if (session && user) {
+			// Obtener el rol del usuario desde la base de datos
+			const { data: profile } = await supabaseAdmin
+				.from('profiles')
+				.select('role')
+				.eq('id', user.id)
+				.single();
+
+			const userRole = profile?.role;
+
+			// PROTECCIÓN 1: Organizadores no pueden acceder a rutas de compradores
+			if (userRole === 'organizer') {
+				const buyerRoutes = ['/cuenta', '/exito', '/completar-perfil'];
+				const isBuyerRoute = buyerRoutes.some(route => event.url.pathname.startsWith(route));
+				
+				if (isBuyerRoute) {
+					logger.warn('Organizer tried to access buyer route:', {
+						userId: user.id,
+						email: user.email,
+						path: event.url.pathname
+					});
+					
+					// Redirigir al dashboard de organizador
+					throw redirect(303, '/organizador');
+				}
+			}
+
+			// PROTECCIÓN 2: Compradores no pueden acceder a rutas de organizadores
+			if (userRole === 'buyer') {
+				if (event.url.pathname.startsWith('/organizador')) {
+					logger.warn('Buyer tried to access organizer route:', {
+						userId: user.id,
+						email: user.email,
+						path: event.url.pathname
+					});
+					
+					// Redirigir a la página de inicio o cuenta
+					throw redirect(303, '/cuenta');
+				}
+			}
+
+			// PROTECCIÓN 3: Redirección basada en subdomain (solo en producción)
+			const isAdminSubdomain = event.locals.isAdminSubdomain;
+			const host = event.request.headers.get('host') || '';
+			const isProduction = !host.includes('localhost') && !host.includes('127.0.0.1');
+
+			// Solo hacer redirecciones de subdomain en producción
+			if (isProduction) {
+				if (isAdminSubdomain && userRole === 'buyer') {
+					logger.warn('Buyer accessed admin subdomain:', {
+						userId: user.id,
+						email: user.email
+					});
+					// Redirigir al dominio principal
+					throw redirect(303, 'https://vtickets.com/cuenta');
+				}
+
+				if (!isAdminSubdomain && userRole === 'organizer') {
+					logger.warn('Organizer accessed main domain:', {
+						userId: user.id,
+						email: user.email
+					});
+					// Redirigir al subdomain de admin
+					throw redirect(303, 'https://admin.vtickets.com/organizador');
+				}
+			} else {
+				// En desarrollo, solo loggear pero NO redirigir
+				if (userRole === 'organizer') {
+					logger.log('Development: Organizer access allowed on localhost', {
+						userId: user.id,
+						path: event.url.pathname
+					});
+				}
+			}
+		}
+
+		return resolve(event);
+	} catch (error) {
+		// Si es un redirect intencional, dejarlo pasar
+		if (error && typeof error === 'object' && 'status' in error && error.status === 303) {
+			throw error;
+		}
+		
+		// Cualquier otro error, loggearlo y dejar continuar
+		logger.error('Error in roleGuard', error, { path: event.url.pathname });
+		return resolve(event);
+	}
+};
+
 const profileGuard: Handle = async ({ event, resolve }) => {
 	try {
 		const { session, user } = await event.locals.safeGetSession();
@@ -178,4 +272,4 @@ const profileGuard: Handle = async ({ event, resolve }) => {
 	}
 };
 
-export const handle: Handle = sequence(supabase, subdomainDetection, authGuard, profileGuard);
+export const handle: Handle = sequence(supabase, subdomainDetection, authGuard, roleGuard, profileGuard);
