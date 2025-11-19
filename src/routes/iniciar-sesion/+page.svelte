@@ -46,7 +46,8 @@ mode = mode === 'login' ? 'registro' : 'login';
 
 async function handleOAuthLogin(provider: 'google' | 'facebook') {
 isLoading = true;
-const { error } = await supabase.auth.signInWithOAuth({
+try {
+const { data, error } = await supabase.auth.signInWithOAuth({
 provider: provider,
 options: {
 redirectTo: `${location.origin}/auth/callback?redirectTo=${encodeURIComponent(redirectTo)}&authType=buyer`
@@ -56,8 +57,15 @@ redirectTo: `${location.origin}/auth/callback?redirectTo=${encodeURIComponent(re
 if (error) {
 console.error('Error con OAuth:', error.message);
 toast.error(`Error al iniciar sesión con ${provider}: ${error.message}`);
-}
 isLoading = false;
+}
+// Si no hay error, la redirección a OAuth se hace automáticamente
+// No seteamos isLoading = false porque la página se va a recargar
+} catch (err) {
+console.error('Error inesperado con OAuth:', err);
+toast.error('Error al conectar con el proveedor');
+isLoading = false;
+}
 }
 </script>
 

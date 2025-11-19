@@ -36,13 +36,22 @@ function translateSupabaseError(error: any): string {
 	return `Error inesperado: ${error.message || 'Por favor intenta de nuevo más tarde.'}`;
 }
 
-export const load: PageServerLoad = async ({ locals }) => {
+export const load: PageServerLoad = async ({ locals: { supabase, safeGetSession } }) => {
 	// Si ya está autenticado como organizador, redirigir al dashboard
-	const { session, user } = await locals.safeGetSession();
+	const { session, user } = await safeGetSession();
 	
 	if (session && user) {
-		// Aquí después verificaremos el rol, por ahora solo redirigimos
-		redirect(303, '/organizador');
+		// Verificar que sea organizador
+		const { data: profile } = await supabase
+			.from('profiles')
+			.select('role')
+			.eq('id', user.id)
+			.single();
+		
+		// Solo redirigir si es organizador
+		if (profile?.role === 'organizer') {
+			redirect(303, '/organizador');
+		}
 	}
 	
 	return {};

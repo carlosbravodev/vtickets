@@ -1,5 +1,5 @@
 import { fail, redirect } from '@sveltejs/kit';
-import type { Actions } from './$types';
+import type { Actions, PageServerLoad } from './$types';
 import { logger } from '$lib/logger';
 import { supabaseAdmin } from '$lib/supabaseAdmin';
 
@@ -35,6 +35,29 @@ function translateSupabaseError(error: any): string {
 	// Error genérico si no se reconoce
 	return `Error inesperado: ${error.message || 'Por favor intenta de nuevo más tarde.'}`;
 }
+
+export const load: PageServerLoad = async ({ locals: { supabase, safeGetSession }, url }) => {
+	// Si ya está autenticado como comprador, redirigir
+	const { session, user } = await safeGetSession();
+	
+	if (session && user) {
+		// Verificar que sea comprador
+		const { data: profile } = await supabase
+			.from('profiles')
+			.select('role')
+			.eq('id', user.id)
+			.single();
+		
+		// Solo redirigir si es comprador
+		if (profile?.role === 'buyer') {
+			// Redirigir a la página solicitada o a la home
+			const redirectTo = url.searchParams.get('redirectTo') || '/';
+			redirect(303, redirectTo);
+		}
+	}
+	
+	return {};
+};
 
 export const actions: Actions = {
 	login: async ({ request, locals: { supabase } }) => {

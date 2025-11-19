@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { PageData, ActionData } from './$types';
 	import { enhance } from '$app/forms';
+	import { goto, invalidateAll } from '$app/navigation';
 	import { supabase } from '$lib/supabaseClient';
 	import { toast } from '$lib/stores/toast.svelte';
 
@@ -11,24 +12,54 @@
 	let isLoading = $state(false);
 	let showPassword = $state(false);
 
+	// Rastrear el último form para evitar duplicados en el mismo render
+	let lastFormTimestamp = $state(0);
+
+	// Mostrar toast cuando hay un mensaje del servidor
+	$effect(() => {
+		if (form?.message) {
+			// Crear un identificador único basado en el contenido del form
+			const currentTimestamp = Date.now();
+			
+			// Solo mostrar si ha pasado al menos 100ms desde el último (evita duplicados en mismo render)
+			if (currentTimestamp - lastFormTimestamp > 100) {
+				lastFormTimestamp = currentTimestamp;
+				
+				if (form.success) {
+					toast.success(form.message);
+				} else {
+					toast.error(form.message);
+				}
+			}
+		}
+	});
+
 	function toggleMode() {
 		mode = mode === 'login' ? 'registro' : 'login';
 	}
 
 	async function handleOAuthLogin(provider: 'google' | 'facebook') {
 		isLoading = true;
-		const { error } = await supabase.auth.signInWithOAuth({
-			provider: provider,
-			options: {
-				redirectTo: `${location.origin}/auth/callback?redirectTo=/organizador&authType=organizer`
-			}
-		});
+		try {
+			const { data, error } = await supabase.auth.signInWithOAuth({
+				provider: provider,
+				options: {
+					redirectTo: `${location.origin}/auth/callback?redirectTo=/organizador&authType=organizer`
+				}
+			});
 
-		if (error) {
-			console.error('Error con OAuth:', error.message);
-			toast.error(`Error al iniciar sesión con ${provider}: ${error.message}`);
+			if (error) {
+				console.error('Error con OAuth:', error.message);
+				toast.error(`Error al iniciar sesión con ${provider}: ${error.message}`);
+				isLoading = false;
+			}
+			// Si no hay error, la redirección a OAuth se hace automáticamente
+			// No seteamos isLoading = false porque la página se va a recargar
+		} catch (err) {
+			console.error('Error inesperado con OAuth:', err);
+			toast.error('Error al conectar con el proveedor');
+			isLoading = false;
 		}
-		isLoading = false;
 	}
 </script>
 
@@ -54,15 +85,6 @@
 				</p>
 			</div>
 
-			<!-- Mensajes de Error/Éxito -->
-			{#if form?.message}
-				<div class="mb-6 p-4 rounded-lg {form.success ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}">
-					<p class="text-sm {form.success ? 'text-green-800' : 'text-red-800'}">
-						{form.message}
-					</p>
-				</div>
-			{/if}
-
 			<!-- Formulario -->
 			<form 
 				method="POST" 
@@ -73,7 +95,16 @@
 						await update();
 						isLoading = false;
 						if (result.type === 'redirect') {
-							// La redirección se manejará automáticamente
+							// Mostrar toast de éxito antes de redirigir
+							const successMessage = mode === 'login' 
+								? '¡Bienvenido de nuevo! Sesión iniciada correctamente 🎉'
+								: '¡Cuenta de organizador creada exitosamente! Bienvenido a v•tickets 🎉';
+							toast.success(successMessage);
+							await invalidateAll();
+							// Pequeño delay para que se vea el toast
+							setTimeout(async () => {
+								await goto(result.location);
+							}, 800);
 						}
 					};
 				}}
@@ -226,7 +257,7 @@
 			<!-- Link a la app de compradores -->
 			<div class="mt-4 text-center">
 				<a 
-					href="https://vtickets.com" 
+					href="/iniciar-sesion" 
 					class="text-sm text-purple-600 hover:text-purple-700 font-medium"
 				>
 					← ¿Buscas comprar tickets? Ir a la tienda

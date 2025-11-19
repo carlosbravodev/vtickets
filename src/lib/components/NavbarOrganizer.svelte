@@ -3,11 +3,13 @@
   import userIcon from "$lib/assets/icons/user.svg";
   import { supabase } from "$lib/supabaseClient";
   import { goto, invalidateAll } from "$app/navigation";
+  import { page } from "$app/stores";
   import type { User } from "@supabase/supabase-js";
 
-  let { user, profile } = $props<{
+  let { user, profile, availableRoles = [] } = $props<{
     user: User | null;
     profile: { first_name?: string; last_name?: string; email?: string } | null;
+    availableRoles?: string[];
   }>();
 
   let isMenuOpen = $state(false);
@@ -15,6 +17,12 @@
 
   // Usuario autenticado
   let isAuthenticated = $derived(!!user);
+
+  // Detectar si el usuario también tiene rol de comprador
+  let hasBuyerRole = $derived(availableRoles.includes("buyer"));
+
+  // Obtener ruta actual para links activos
+  let currentPath = $derived($page.url.pathname);
 
   // Nombre a mostrar
   let displayName = $derived(
@@ -57,22 +65,24 @@
       <div class="hidden md:flex items-center gap-6">
         <a
           href="/organizador/eventos"
-          class="text-lg font-bold text-purple-100 hover:text-white transition-colors duration-300"
+          class="text-lg font-bold {currentPath.startsWith('/organizador/eventos') ? 'text-white border-b-2 border-white pb-1' : 'text-purple-100 hover:text-white'} transition-colors duration-300"
         >
           Mis Eventos
         </a>
         <a
           href="/organizador/estadisticas"
-          class="text-lg font-bold text-purple-100 hover:text-white transition-colors duration-300"
+          class="text-lg font-bold {currentPath.startsWith('/organizador/estadisticas') ? 'text-white border-b-2 border-white pb-1' : 'text-purple-100 hover:text-white'} transition-colors duration-300"
         >
           Estadísticas
         </a>
-        <a
-          href="/"
-          class="text-sm font-semibold text-purple-200 hover:text-white transition-colors duration-300"
-        >
-          ← Ir a Tienda
-        </a>
+        {#if !isAuthenticated}
+          <a
+            href="/"
+            class="text-sm font-semibold text-purple-200 hover:text-white transition-colors duration-300"
+          >
+            ← Ir a Tienda
+          </a>
+        {/if}
       </div>
     </div>
 
@@ -133,9 +143,23 @@
               >
                 Configuración
               </a>
+              {#if hasBuyerRole}
+                <a
+                  href="/"
+                  class="block px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 border-t border-gray-200"
+                  onclick={() => (showUserMenu = false)}
+                >
+                  <div class="flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                    </svg>
+                    <span>Cambiar a Comprador</span>
+                  </div>
+                </a>
+              {/if}
               <button
                 onclick={handleLogout}
-                class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+                class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 border-t border-gray-200"
               >
                 Cerrar sesión
               </button>
@@ -190,10 +214,18 @@
   {#if isMenuOpen}
     <div class="mobile-menu-container">
       <div class="mobile-menu-content">
-        <a href="/organizador/eventos" class="menu-link" onclick={toggleMenu}>
+        <a 
+          href="/organizador/eventos" 
+          class="menu-link {currentPath.startsWith('/organizador/eventos') ? 'font-bold text-purple-600' : ''}" 
+          onclick={toggleMenu}
+        >
           Mis Eventos
         </a>
-        <a href="/organizador/estadisticas" class="menu-link" onclick={toggleMenu}>
+        <a 
+          href="/organizador/estadisticas" 
+          class="menu-link {currentPath.startsWith('/organizador/estadisticas') ? 'font-bold text-purple-600' : ''}" 
+          onclick={toggleMenu}
+        >
           Estadísticas
         </a>
         <a href="/" class="menu-link-secondary" onclick={toggleMenu}>
@@ -212,6 +244,14 @@
           <a href="/organizador/configuracion" class="menu-link" onclick={toggleMenu}>
             Configuración
           </a>
+          {#if hasBuyerRole}
+            <a href="/" class="menu-link-switch" onclick={toggleMenu}>
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+              </svg>
+              Cambiar a Comprador
+            </a>
+          {/if}
           <button
             onclick={() => {
               handleLogout();
@@ -363,6 +403,29 @@
   .logout-link:hover {
     background: #fef2f2;
     color: #b91c1c;
+  }
+
+  /* Link de cambio de contexto (cambiar a comprador) */
+  .menu-link-switch {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.875rem 1rem;
+    color: #2563eb;
+    font-weight: 600;
+    font-size: 0.875rem;
+    text-decoration: none;
+    border-radius: 10px;
+    transition: all 0.2s ease;
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    margin: 0.25rem 0;
+  }
+
+  .menu-link-switch:hover {
+    background: #dbeafe;
+    color: #1d4ed8;
+    border-color: #93c5fd;
   }
 
   .login-button-mobile {

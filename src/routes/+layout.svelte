@@ -4,6 +4,7 @@
   import userIcon from "$lib/assets/icons/user.svg";
   import { supabase } from "$lib/supabaseClient";
   import Toast from "$lib/components/Toast.svelte";
+  import RoleWarningBanner from "$lib/components/RoleWarningBanner.svelte";
 
   let { children, data } = $props();
   import "../app.css";
@@ -16,7 +17,14 @@
   // Usuario y sesión reactivos
   let user = $derived(data.user);
   let profile = $derived(data.profile);
+  let profiles = $derived(data.profiles || []);
+  let availableRoles = $derived(data.availableRoles || []);
   let isAuthenticated = $derived(!!user);
+  
+  // Verificar si el usuario tiene ambos roles
+  let hasBothRoles = $derived(availableRoles.includes('buyer') && availableRoles.includes('organizer'));
+  let hasOrganizerRole = $derived(availableRoles.includes('organizer'));
+  let hasBuyerRole = $derived(availableRoles.includes('buyer'));
   
   // Nombre a mostrar: nombre completo o email
   let displayName = $derived(
@@ -66,6 +74,15 @@
   <link rel="icon" href={favicon} />
 </svelte:head>
 
+<!-- Banner de advertencia si está en la sección equivocada -->
+{#if isAuthenticated && !isOrganizerSection}
+  <RoleWarningBanner 
+    currentSection="buyer"
+    userHasRole={hasBuyerRole}
+    availableRoles={availableRoles}
+  />
+{/if}
+
 {#if !isOrganizerSection}
 <header class="bg-white shadow sticky top-0 z-50">
   <nav class="flex justify-between items-center max-w-7xl mx-auto px-4 py-4">
@@ -83,11 +100,13 @@
           class="text-xl font-bold hover:text-gray-600 transition-colors duration-300"
           >Eventos</a
         >
-        <a
-          href="/organizador/iniciar-sesion"
-          class="text-sm font-semibold text-gray-500 hover:text-indigo-600 transition-colors duration-300"
-          >Para Organizadores →</a
-        >
+        {#if !isAuthenticated}
+          <a
+            href="/organizador/iniciar-sesion"
+            class="text-sm font-semibold text-gray-500 hover:text-indigo-600 transition-colors duration-300"
+            >Para Organizadores →</a
+          >
+        {/if}
       </div>
     </div>
 
@@ -143,9 +162,25 @@
               >
                 Mi cuenta
               </a>
+              
+              {#if hasOrganizerRole}
+                <a
+                  href="/organizador"
+                  class="block px-4 py-2 text-sm text-purple-600 hover:bg-purple-50 border-t border-gray-200"
+                  onclick={() => (showUserMenu = false)}
+                >
+                  <div class="flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                    </svg>
+                    <span class="font-semibold">Cambiar a Organizador</span>
+                  </div>
+                </a>
+              {/if}
+              
               <button
                 onclick={handleLogout}
-                class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+                class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 border-t border-gray-200"
               >
                 Cerrar sesión
               </button>
@@ -202,9 +237,11 @@
     <div class="mobile-menu-container">
       <div class="mobile-menu-content">
         <a href="/eventos" class="menu-link" onclick={toggleMenu}>Eventos</a>
-        <a href="/organizador/iniciar-sesion" class="menu-link-secondary" onclick={toggleMenu}>
-          Para Organizadores →
-        </a>
+        {#if !isAuthenticated}
+          <a href="/organizador/iniciar-sesion" class="menu-link-secondary" onclick={toggleMenu}>
+            Para Organizadores →
+          </a>
+        {/if}
 
         {#if isAuthenticated}
           <div class="menu-divider"></div>
