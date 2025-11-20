@@ -210,13 +210,13 @@ export const actions = {
 								is_active: true
 							});
 					}
-				}
-			} catch (error) {
-				return fail(500, { message: 'Error al actualizar los tipos de tickets' });
 			}
+		} catch (error) {
+			return fail(500, { message: 'Error al actualizar los tipos de tickets' });
 		}
-
-		// Redirigir al evento actualizado (con el nuevo slug si cambió)
-		redirect(303, `/organizador/eventos/${newSlug}?success=updated`);
 	}
+
+	// Redirigir a la lista de eventos del organizador
+	redirect(303, '/organizador/eventos?toast=success&message=Evento actualizado exitosamente');
+}
 } satisfies Actions;
