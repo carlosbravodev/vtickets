@@ -21,8 +21,9 @@ export const load: PageServerLoad = async ({ locals }) => {
 		redirect(303, '/');
 	}
 
-	// Obtener eventos creados por este organizador
-	const { data: events, error } = await supabaseAdmin
+	// Obtener eventos con estadísticas usando la vista materializada
+	// Esta consulta es mucho más eficiente que calcular stats por separado
+	const { data: eventsData, error } = await supabaseAdmin
 		.from('events')
 		.select(`
 			id,
@@ -33,12 +34,16 @@ export const load: PageServerLoad = async ({ locals }) => {
 			location,
 			image_url,
 			slug,
+			total_tickets,
 			created_at,
 			ticket_types (
 				id,
 				name,
 				price,
-				available_tickets
+				initial_quantity,
+				sold_tickets,
+				available_tickets,
+				is_active
 			)
 		`)
 		.eq('created_by', user.id)
@@ -53,45 +58,39 @@ export const load: PageServerLoad = async ({ locals }) => {
 		};
 	}
 
-	// Calcular estadísticas por evento
-	const eventsWithStats = await Promise.all(
-		(events || []).map(async (event) => {
-			// Contar tickets vendidos para este evento
-			const { data: tickets, error: ticketsError } = await supabaseAdmin
-				.from('tickets')
-				.select('id, ticket_type_id')
-				.eq('event_id', event.id);
+	// Obtener estadísticas de la vista materializada
+	const { data: statistics, error: statsError } = await supabaseAdmin
+		.from('event_statistics')
+		.select('*')
+		.eq('created_by', user.id);
 
-			if (ticketsError) {
-				console.error('Error fetching tickets for event:', event.id, ticketsError);
-			}
+	if (statsError) {
+		console.error('Error fetching event statistics:', statsError);
+	}
 
-			const totalTicketsSold = tickets?.length || 0;
-
-			// Calcular total de tickets disponibles
-			const totalTicketsAvailable = event.ticket_types?.reduce(
-				(sum, type) => sum + (type.available_tickets || 0),
-				0
-			) || 0;
-
-			// Calcular ingresos totales (aproximado por tickets vendidos)
-			const { data: orders, error: ordersError } = await supabaseAdmin
-				.from('orders')
-				.select('total_amount')
-				.eq('event_id', event.id);
-
-			const totalRevenue = orders?.reduce((sum, order) => sum + order.total_amount, 0) || 0;
-
-			return {
-				...event,
-				stats: {
-					totalTicketsSold,
-					totalTicketsAvailable,
-					totalRevenue
-				}
-			};
-		})
+	// Crear un mapa de estadísticas por event_id para lookup rápido
+	const statsMap = new Map(
+		statistics?.map(stat => [stat.event_id, stat]) || []
 	);
+
+	// Combinar eventos con sus estadísticas
+	const eventsWithStats = (eventsData || []).map((event) => {
+		const stats = statsMap.get(event.id);
+		
+		return {
+			...event,
+			stats: {
+				totalTicketsSold: stats?.total_tickets_sold || 0,
+				totalTicketsAvailable: stats?.total_tickets_available || 0,
+				totalRevenue: Number(stats?.total_revenue || 0),
+				totalOrders: stats?.total_orders || 0,
+				uniqueBuyers: stats?.unique_buyers || 0,
+				occupancyPercentage: Number(stats?.occupancy_percentage || 0),
+				avgTicketPrice: Number(stats?.avg_ticket_price || 0),
+				lastUpdated: stats?.last_updated
+			}
+		};
+	});
 
 	return {
 		user,

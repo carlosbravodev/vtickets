@@ -135,19 +135,77 @@
 							</div>
 
 							<!-- Estadísticas -->
-							<div class="grid grid-cols-2 gap-4 mb-4 p-4 bg-gray-50 rounded-lg">
-								<div>
-									<p class="text-xs text-gray-500 font-semibold">Vendidos</p>
-									<p class="text-2xl font-bold text-purple-600">
-										{event.stats.totalTicketsSold}
-									</p>
+							<div class="space-y-3 mb-4">
+								<!-- Estadística principal: Tickets -->
+								<div class="p-4 bg-linear-to-br from-purple-50 to-purple-100 rounded-lg border border-purple-200">
+									<div class="flex items-center justify-between mb-2">
+										<span class="text-xs font-semibold text-purple-700 uppercase">Tickets</span>
+										{#if event.stats.occupancyPercentage > 0}
+											<span class="text-xs font-bold text-purple-600">
+												{event.stats.occupancyPercentage.toFixed(0)}% ocupado
+											</span>
+										{/if}
+									</div>
+									<div class="flex items-baseline gap-2">
+										<span class="text-3xl font-bold text-purple-900">
+											{event.stats.totalTicketsSold}
+										</span>
+										<span class="text-sm text-purple-700">
+											/ {event.stats.totalTicketsSold + event.stats.totalTicketsAvailable}
+										</span>
+									</div>
+									{#if event.stats.occupancyPercentage > 0}
+										<div class="mt-2 w-full bg-purple-200 rounded-full h-2 overflow-hidden">
+											<div 
+												class="h-full bg-purple-600 rounded-full transition-all duration-500"
+												style="width: {Math.min(event.stats.occupancyPercentage, 100)}%"
+											></div>
+										</div>
+									{/if}
 								</div>
-								<div>
-									<p class="text-xs text-gray-500 font-semibold">Ingresos</p>
-									<p class="text-lg font-bold text-green-600">
-										{formatCurrency(event.stats.totalRevenue)}
-									</p>
+
+								<!-- Estadísticas secundarias -->
+								<div class="grid grid-cols-3 gap-2">
+									<!-- Ingresos -->
+									<div class="p-3 bg-green-50 rounded-lg border border-green-200">
+										<p class="text-[10px] text-green-700 font-semibold mb-1">Ingresos</p>
+										<p class="text-sm font-bold text-green-900">
+											{formatCurrency(event.stats.totalRevenue)}
+										</p>
+									</div>
+
+									<!-- Órdenes -->
+									{#if event.stats.totalOrders !== undefined}
+										<div class="p-3 bg-blue-50 rounded-lg border border-blue-200">
+											<p class="text-[10px] text-blue-700 font-semibold mb-1">Órdenes</p>
+											<p class="text-sm font-bold text-blue-900">
+												{event.stats.totalOrders}
+											</p>
+										</div>
+									{/if}
+
+									<!-- Compradores únicos -->
+									{#if event.stats.uniqueBuyers !== undefined}
+										<div class="p-3 bg-orange-50 rounded-lg border border-orange-200">
+											<p class="text-[10px] text-orange-700 font-semibold mb-1">Compradores</p>
+											<p class="text-sm font-bold text-orange-900">
+												{event.stats.uniqueBuyers}
+											</p>
+										</div>
+									{/if}
 								</div>
+
+								<!-- Precio promedio si está disponible -->
+								{#if event.stats.avgTicketPrice && event.stats.avgTicketPrice > 0}
+									<div class="text-center p-2 bg-gray-50 rounded-lg">
+										<span class="text-xs text-gray-600">
+											Precio promedio: 
+											<span class="font-bold text-gray-900">
+												{formatCurrency(event.stats.avgTicketPrice)}
+											</span>
+										</span>
+									</div>
+								{/if}
 							</div>
 
 							<!-- Acciones -->

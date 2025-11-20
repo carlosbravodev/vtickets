@@ -220,7 +220,9 @@ export const actions = {
 				event_id: event.id,
 				name: ticket.name.trim(),
 				price: ticket.price,
-				available_tickets: ticket.quantity
+				initial_quantity: ticket.quantity,
+				available_tickets: ticket.quantity,
+				is_active: true
 			}));
 
 			const { error: ticketsError } = await supabase
