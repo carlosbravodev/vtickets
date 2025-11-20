@@ -6,6 +6,7 @@
 		title: string;
 		description: string;
 		event_date: string;
+		venue?: string;
 		location: string;
 		image_url: string;
 		slug: string;

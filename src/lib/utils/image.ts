@@ -11,11 +11,12 @@ export function optimizeSupabaseImage(
 		height?: number;
 		quality?: number;
 		format?: 'webp' | 'avif' | 'jpg';
+		resize?: 'cover' | 'contain' | 'fill';
 	} = {}
 ): string {
 	if (!url) return '';
 
-	const { width = 800, height, quality = 80, format = 'webp' } = options;
+	const { width = 800, height, quality = 80, format = 'webp', resize = 'cover' } = options;
 
 	// Detectar si es una imagen de Unsplash
 	if (url.includes('unsplash.com')) {
@@ -47,12 +48,144 @@ export function optimizeSupabaseImage(
 		
 		if (width) params.set('width', width.toString());
 		if (height) params.set('height', height.toString());
-		if (quality) params.set('quality', quality.toString());
-		if (format) params.set('format', format);
+		params.set('quality', quality.toString());
+		params.set('format', format);
+		params.set('resize', resize);
 
 		return `${url}?${params.toString()}`;
 	}
 
 	// Si es de otro proveedor, retornar sin modificar
 	return url;
+}
+
+/**
+ * Comprime una imagen en el cliente antes de subirla
+ * Reduce el tamaño del archivo manteniendo calidad aceptable
+ * @param file - Archivo de imagen original
+ * @param options - Opciones de compresión
+ * @returns Promise con el archivo comprimido
+ */
+export async function compressImage(
+	file: File,
+	options: {
+		maxWidth?: number;
+		maxHeight?: number;
+		quality?: number;
+		targetFormat?: 'webp' | 'jpeg';
+	} = {}
+): Promise<File> {
+	const { maxWidth = 1920, maxHeight = 1080, quality = 0.85, targetFormat = 'webp' } = options;
+
+	return new Promise((resolve, reject) => {
+		const reader = new FileReader();
+		
+		reader.onload = (e) => {
+			const img = new Image();
+			
+			img.onload = () => {
+				// Calcular nuevas dimensiones manteniendo aspecto
+				let width = img.width;
+				let height = img.height;
+				
+				if (width > maxWidth) {
+					height = (height * maxWidth) / width;
+					width = maxWidth;
+				}
+				
+				if (height > maxHeight) {
+					width = (width * maxHeight) / height;
+					height = maxHeight;
+				}
+				
+				// Crear canvas para redimensionar
+				const canvas = document.createElement('canvas');
+				canvas.width = width;
+				canvas.height = height;
+				
+				const ctx = canvas.getContext('2d');
+				if (!ctx) {
+					reject(new Error('No se pudo obtener contexto 2D'));
+					return;
+				}
+				
+				// Dibujar imagen redimensionada
+				ctx.drawImage(img, 0, 0, width, height);
+				
+				// Convertir a blob
+				canvas.toBlob(
+					(blob) => {
+						if (!blob) {
+							reject(new Error('Error al comprimir imagen'));
+							return;
+						}
+						
+						// Crear nuevo archivo con nombre original pero extensión correcta
+						const originalName = file.name.split('.')[0];
+						const extension = targetFormat === 'webp' ? 'webp' : 'jpg';
+						const compressedFile = new File(
+							[blob],
+							`${originalName}.${extension}`,
+							{ type: `image/${targetFormat}` }
+						);
+						
+						resolve(compressedFile);
+					},
+					`image/${targetFormat}`,
+					quality
+				);
+			};
+			
+			img.onerror = () => reject(new Error('Error al cargar imagen'));
+			img.src = e.target?.result as string;
+		};
+		
+		reader.onerror = () => reject(new Error('Error al leer archivo'));
+		reader.readAsDataURL(file);
+	});
+}
+
+/**
+ * Genera un srcset responsivo para imágenes de Supabase
+ * @param url - URL base de la imagen
+ * @param sizes - Array de anchos deseados
+ */
+export function generateResponsiveSrcSet(
+	url: string,
+	sizes: number[] = [400, 800, 1200, 1920]
+): string {
+	if (!url || !url.includes('supabase.co/storage')) {
+		return '';
+	}
+
+	return sizes
+		.map((size) => `${optimizeSupabaseImage(url, { width: size, quality: 80 })} ${size}w`)
+		.join(', ');
+}
+
+/**
+ * Valida que el archivo sea una imagen y no exceda el tamaño máximo
+ * @param file - Archivo a validar
+ * @param maxSizeMB - Tamaño máximo en MB (default: 5)
+ */
+export function validateImageFile(file: File, maxSizeMB: number = 5): { valid: boolean; error?: string } {
+	// Validar tipo
+	const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/avif'];
+	if (!validTypes.includes(file.type)) {
+		return {
+			valid: false,
+			error: 'Formato no válido. Solo se permiten: JPG, PNG, WebP, AVIF'
+		};
+	}
+
+	// Validar tamaño
+	const maxSize = maxSizeMB * 1024 * 1024; // Convertir a bytes
+	if (file.size > maxSize) {
+		return {
+			valid: false,
+			error: `La imagen no debe superar ${maxSizeMB}MB. Tamaño actual: ${(file.size / 1024 / 1024).toFixed(2)}MB`
+		};
+	}
+
+	return { valid: true };
 }

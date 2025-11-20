@@ -1,8 +1,9 @@
-import { redirect, type ServerLoad } from '@sveltejs/kit';
+import { redirect } from '@sveltejs/kit';
+import type { PageServerLoad } from './$types';
 import { supabaseAdmin } from '$lib/supabaseAdmin';
 import { logger } from '$lib/logger';
 
-export const load: ServerLoad = async ({ locals }) => {
+export const load: PageServerLoad = async ({ locals }) => {
 	try {
 		const session = locals.session;
 		const user = locals.user;
@@ -31,6 +32,7 @@ export const load: ServerLoad = async ({ locals }) => {
 					title,
 					description,
 					event_date,
+					venue,
 					location,
 					image_url
 				),

@@ -2,7 +2,7 @@ import type { LayoutServerLoad } from './$types';
 import { supabaseAdmin } from '$lib/supabaseAdmin';
 
 export const load: LayoutServerLoad = async ({ locals: { session, user } }) => {
-	let profiles = [];
+	let profiles: any[] = [];
 	let organizerProfile = null;
 
 	// Cargar TODOS los perfiles del usuario si está autenticado
@@ -23,7 +23,7 @@ export const load: LayoutServerLoad = async ({ locals: { session, user } }) => {
 	return {
 		session,
 		user,
-		profile: organizerProfile, // El perfil de organizador
+		profile: organizerProfile || null, // El perfil de organizador o null
 		profiles, // Todos los perfiles del usuario
 		availableRoles: profiles.map(p => p.role), // ['buyer', 'organizer'] o solo uno
 		hasOrganizerRole: !!organizerProfile // true/false si tiene rol de organizador

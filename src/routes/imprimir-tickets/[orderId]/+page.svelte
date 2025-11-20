@@ -87,14 +87,14 @@
 							<span class="label">Nombre:</span>
 							<span class="value">{ticket.holder_name || 'No especificado'}</span>
 						</div>
-						<div class="holder-row">
-							<span class="label">Email:</span>
-							<span class="value">{ticket.holder_email || 'No especificado'}</span>
-						</div>
-						<div class="holder-row">
-							<span class="label">Tipo de Entrada:</span>
-							<span class="value">{ticket.ticket_type.name}</span>
-						</div>
+				<div class="holder-row">
+					<span class="label">Email:</span>
+					<span class="value">{ticket.holder_email || 'No especificado'}</span>
+				</div>
+				<div class="holder-row">
+					<span class="label">Tipo de Entrada:</span>
+					<span class="value">{ticket.ticket_type.name}</span>
+				</div>
 					</div>
 				</div>
 

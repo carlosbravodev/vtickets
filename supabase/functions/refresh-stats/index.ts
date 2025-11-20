@@ -1,6 +1,7 @@
 // Edge Function para refrescar la vista materializada de estadísticas
 // Se puede llamar manualmente o mediante un cron job
 
+// @ts-ignore - Deno imports
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.0';
 
 const corsHeaders = {
@@ -8,6 +9,7 @@ const corsHeaders = {
 	'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// @ts-ignore - Deno global
 Deno.serve(async (req) => {
 	// Handle CORS preflight
 	if (req.method === 'OPTIONS') {
@@ -28,8 +30,11 @@ Deno.serve(async (req) => {
 		}
 
 		// Crear cliente de Supabase con service_role
+		// @ts-ignore - Deno global
 		const supabase = createClient(
+			// @ts-ignore - Deno global
 			Deno.env.get('SUPABASE_URL') ?? '',
+			// @ts-ignore - Deno global
 			Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
 			{
 				auth: {

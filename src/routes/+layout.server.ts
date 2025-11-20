@@ -2,7 +2,7 @@ import type { LayoutServerLoad } from './$types';
 import { supabaseAdmin } from '$lib/supabaseAdmin';
 
 export const load: LayoutServerLoad = async ({ locals: { session, user } }) => {
-	let profiles = [];
+	let profiles: any[] = [];
 	let primaryProfile = null;
 
 	// Cargar TODOS los perfiles del usuario si está autenticado

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { toast } from '$lib/stores/toast.svelte';
+	import { compressImage, validateImageFile } from '$lib/utils/image';
 	import type { ActionData } from './$types';
 
 	let { form, data }: { form: ActionData; data: any } = $props();
@@ -8,6 +9,7 @@
 	// Estados del formulario
 	let currentStep = $state(1);
 	let isSubmitting = $state(false);
+	let isCompressingImage = $state(false);
 
 	// Datos del evento
 	let eventData = $state({
@@ -57,27 +59,49 @@
 		}
 	}
 
-	function handleImageChange(e: Event) {
+	async function handleImageChange(e: Event) {
 		const target = e.target as HTMLInputElement;
 		if (target.files?.[0]) {
 			const file = target.files[0];
 
-			// Validar tamaño (5MB)
-			if (file.size > 5 * 1024 * 1024) {
-				toast.error('La imagen no puede superar los 5MB');
+			// Validar archivo
+			const validation = validateImageFile(file, 5);
+			if (!validation.valid) {
+				toast.error(validation.error || 'Error al validar imagen');
 				target.value = '';
 				return;
 			}
 
-			// Validar tipo
-			if (!['image/jpeg', 'image/jpg', 'image/png', 'image/webp'].includes(file.type)) {
-				toast.error('Solo se permiten imágenes JPEG, PNG o WebP');
-				target.value = '';
-				return;
-			}
+			try {
+				isCompressingImage = true;
+				toast.info('Optimizando imagen...');
 
-			eventData.image = file;
-			eventData.imagePreview = URL.createObjectURL(file);
+				// Comprimir imagen antes de guardar
+				const compressedFile = await compressImage(file, {
+					maxWidth: 1920,
+					maxHeight: 1080,
+					quality: 0.85,
+					targetFormat: 'webp'
+				});
+
+				// Mostrar información de compresión
+				const originalSizeMB = (file.size / 1024 / 1024).toFixed(2);
+				const compressedSizeMB = (compressedFile.size / 1024 / 1024).toFixed(2);
+				const savings = ((1 - compressedFile.size / file.size) * 100).toFixed(0);
+				
+				toast.success(
+					`Imagen optimizada: ${originalSizeMB}MB → ${compressedSizeMB}MB (${savings}% reducido)`
+				);
+
+				eventData.image = compressedFile;
+				eventData.imagePreview = URL.createObjectURL(compressedFile);
+			} catch (error) {
+				console.error('Error comprimiendo imagen:', error);
+				toast.error('Error al optimizar la imagen. Intenta con otra.');
+				target.value = '';
+			} finally {
+				isCompressingImage = false;
+			}
 		}
 	}
 
@@ -442,17 +466,18 @@
 								<div class="relative">
 									<img
 										src={eventData.imagePreview}
-										alt="Preview"
-										class="max-h-96 mx-auto rounded-lg shadow-lg"
-									/>
-									<button
-										type="button"
-										onclick={() => {
-											eventData.image = null;
-											eventData.imagePreview = null;
-										}}
-										class="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-2 shadow-lg transition-all"
-									>
+									alt="Preview"
+									class="max-h-96 mx-auto rounded-lg shadow-lg"
+								/>
+								<button
+									type="button"
+									onclick={() => {
+										eventData.image = null;
+										eventData.imagePreview = null;
+									}}
+									aria-label="Eliminar imagen del evento"
+									class="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-2 shadow-lg transition-all"
+								>
 										<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 											<path
 												stroke-linecap="round"
@@ -552,24 +577,24 @@
 								<h3 class="text-lg font-bold text-gray-900 mb-4">Ticket #{index + 1}</h3>
 
 								<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-									<div>
-										<label class="block text-sm font-semibold text-gray-700 mb-2">
-											Nombre del Ticket *
-										</label>
-										<input
-											type="text"
-											bind:value={ticket.name}
-											required
-											class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-											placeholder="Ej: General, VIP, Platino"
-										/>
-									</div>
-
-									<div>
-										<label class="block text-sm font-semibold text-gray-700 mb-2"> Precio * </label>
+						<div>
+							<label for="ticket-name-{index}" class="block text-sm font-semibold text-gray-700 mb-2">
+								Nombre del Ticket *
+							</label>
+							<input
+								id="ticket-name-{index}"
+								type="text"
+								bind:value={ticket.name}
+								required
+								class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+								placeholder="Ej: General, VIP, Platino"
+							/>
+						</div>									<div>
+										<label for="ticket-price-{index}" class="block text-sm font-semibold text-gray-700 mb-2"> Precio * </label>
 										<div class="relative">
 											<span class="absolute left-3 top-2.5 text-gray-600 font-semibold">S/</span>
 											<input
+												id="ticket-price-{index}"
 												type="number"
 												bind:value={ticket.price}
 												min="0"
@@ -582,10 +607,11 @@
 									</div>
 
 									<div>
-										<label class="block text-sm font-semibold text-gray-700 mb-2">
+										<label for="ticket-quantity-{index}" class="block text-sm font-semibold text-gray-700 mb-2">
 											Cantidad *
 										</label>
 										<input
+											id="ticket-quantity-{index}"
 											type="number"
 											bind:value={ticket.quantity}
 											min="1"
@@ -597,10 +623,11 @@
 								</div>
 
 								<div class="mt-4">
-									<label class="block text-sm font-semibold text-gray-700 mb-2">
+									<label for="ticket-desc-{index}" class="block text-sm font-semibold text-gray-700 mb-2">
 										Descripción (opcional)
 									</label>
 									<textarea
+										id="ticket-desc-{index}"
 										bind:value={ticket.description}
 										rows="2"
 										class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"

@@ -5,6 +5,7 @@
 	import { enhance } from '$app/forms';
 	import { invalidateAll } from '$app/navigation';
 	import { toast } from '$lib/stores/toast.svelte';
+	import { optimizeSupabaseImage } from '$lib/utils/image';
 	
 	let { data, form }: { data: any; form: any } = $props();
 	
@@ -297,20 +298,21 @@
 				</div>
 			{:else}
 			<div class="divide-y divide-gray-200">
-				{#each data.orders as order}
-					{@const event = Array.isArray(order.event) ? order.event[0] : order.event}
-					<div class="px-6 py-6 hover:bg-gray-50 transition-colors">
-						<div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-							<!-- Info del Evento -->
-							<div class="flex-1">
-								<div class="flex items-start gap-4">
-									{#if event?.image_url}
-										<img
-											src={event.image_url}
-											alt={event.title}
-											class="w-24 h-24 object-cover rounded-lg shrink-0"
-										/>
-									{/if}
+			{#each data.orders as order}
+				{@const event = Array.isArray(order.event) ? order.event[0] : order.event}
+				<div class="px-6 py-6 hover:bg-gray-50 transition-colors">
+					<div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+						<!-- Info del Evento -->
+						<div class="flex-1">
+							<div class="flex items-start gap-4">
+								{#if event?.image_url}
+									<img
+										src={optimizeSupabaseImage(event.image_url, { width: 200, height: 200 })}
+										alt={event.title}
+										class="w-24 h-24 object-cover rounded-lg shrink-0"
+										loading="lazy"
+									/>
+								{/if}
 									<div class="flex-1">
 										<h3 class="text-lg font-bold text-gray-900 mb-1">
 											{event?.title || 'Evento'}
