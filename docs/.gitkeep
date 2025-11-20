@@ -1,0 +1,17 @@
+# Documentación Interna
+
+Esta carpeta contiene documentación técnica y de desarrollo del proyecto VTickets.
+
+**Nota:** Esta carpeta y su contenido están excluidos del repositorio git (ver `.gitignore`).
+
+## Archivos Incluidos
+
+- `ESTADO_PROYECTO.md` - Estado actual y progreso del proyecto
+- `ROADMAP.md` - Plan de desarrollo y features futuras
+- `SISTEMA_AUTENTICACION_INDEPENDIENTE.md` - Documentación del sistema de roles
+- `ARQUITECTURA_AUTH.md` - Diagramas y flujos de autenticación
+- `TOAST_SYSTEM.md` - Sistema de notificaciones
+- `PURCHASE_FLOW.md` - Flujo de compra
+- `WEBHOOK_SETUP.md` - Configuración de webhooks
+- `CHECKOUT_PREFILL.md` - Prellenado de datos en checkout
+- `README.md` - Documentación pública del proyecto
