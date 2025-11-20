@@ -69,12 +69,6 @@
         >
           Mis Eventos
         </a>
-        <a
-          href="/organizador/estadisticas"
-          class="text-lg font-bold {currentPath.startsWith('/organizador/estadisticas') ? 'text-white border-b-2 border-white pb-1' : 'text-purple-100 hover:text-white'} transition-colors duration-300"
-        >
-          Estadísticas
-        </a>
         {#if !isAuthenticated}
           <a
             href="/"
@@ -220,13 +214,6 @@
           onclick={toggleMenu}
         >
           Mis Eventos
-        </a>
-        <a 
-          href="/organizador/estadisticas" 
-          class="menu-link {currentPath.startsWith('/organizador/estadisticas') ? 'font-bold text-purple-600' : ''}" 
-          onclick={toggleMenu}
-        >
-          Estadísticas
         </a>
         <a href="/" class="menu-link-secondary" onclick={toggleMenu}>
           ← Ir a Tienda
