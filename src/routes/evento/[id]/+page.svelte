@@ -260,7 +260,7 @@
 				</div>
 
 				<!-- Ubicación -->
-				{#if event.location}
+				{#if event.location || event.venue}
 					<div class="flex items-start space-x-4">
 						<div class="shrink-0 w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
 							<svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -270,7 +270,14 @@
 						</div>
 						<div>
 							<h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1">Ubicación</h3>
-							<p class="text-lg text-gray-900">{event.location}</p>
+							{#if event.venue}
+								<p class="text-lg font-semibold text-gray-900">{event.venue}</p>
+								{#if event.location}
+									<p class="text-md text-gray-600">{event.location}</p>
+								{/if}
+							{:else}
+								<p class="text-lg text-gray-900">{event.location}</p>
+							{/if}
 						</div>
 					</div>
 				{/if}

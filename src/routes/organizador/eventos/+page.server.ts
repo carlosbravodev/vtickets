@@ -29,8 +29,10 @@ export const load: PageServerLoad = async ({ locals }) => {
 			title,
 			description,
 			event_date,
+			venue,
 			location,
 			image_url,
+			slug,
 			created_at,
 			ticket_types (
 				id,

@@ -2,8 +2,30 @@
 	import type { PageData } from './$types';
 	import { optimizeSupabaseImage } from '$lib/utils/image';
 	import { fade } from 'svelte/transition';
+	import { page } from '$app/stores';
+	import { toast } from '$lib/stores/toast.svelte';
+	import { onMount } from 'svelte';
 
 	let { data }: { data: PageData } = $props();
+
+	// Ordenar eventos por fecha del evento (más próximos primero)
+	let sortedEvents = $derived(
+		data.events ? [...data.events].sort((a, b) => 
+			new Date(a.event_date).getTime() - new Date(b.event_date).getTime()
+		) : []
+	);
+
+	// Mostrar mensaje de éxito si viene de crear evento
+	onMount(() => {
+		const success = $page.url.searchParams.get('success');
+		const eventSlug = $page.url.searchParams.get('event');
+		
+		if (success === 'created' && eventSlug) {
+			toast.success('¡Evento creado exitosamente! 🎉');
+			// Limpiar URL
+			window.history.replaceState({}, '', '/organizador/eventos');
+		}
+	});
 
 	function formatDateTime(dateString: string) {
 		const date = new Date(dateString);
@@ -56,10 +78,10 @@
 
 	<!-- Contenido -->
 	<div class="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-		{#if data.events && data.events.length > 0}
+		{#if sortedEvents && sortedEvents.length > 0}
 			<!-- Lista de eventos -->
 			<div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-				{#each data.events as event (event.id)}
+				{#each sortedEvents as event (event.id)}
 					<article
 						in:fade={{ duration: 300 }}
 						class="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300"
@@ -102,7 +124,13 @@
 										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
 										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
 									</svg>
-									<span class="line-clamp-1">{event.location}</span>
+									<span class="line-clamp-1">
+										{#if event.venue}
+											{event.venue}{event.location ? `, ${event.location}` : ''}
+										{:else}
+											{event.location || 'Ubicación por definir'}
+										{/if}
+									</span>
 								</div>
 							</div>
 

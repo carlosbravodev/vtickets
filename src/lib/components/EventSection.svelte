@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { generateEventSlug } from '$lib/utils/slug';
 	import EventSkeleton from './EventSkeleton.svelte';
 
 	interface Event {
@@ -9,6 +8,7 @@
 		event_date: string;
 		location: string;
 		image_url: string;
+		slug: string;
 		created_at: string;
 		min_price?: number;
 	}
@@ -24,10 +24,10 @@
 
 	let scrollContainer: HTMLDivElement;
 
-	// Ordenar eventos por created_at para generar slugs consistentes
+	// Ordenar eventos por fecha del evento (más próximos primero)
 	let sortedEvents = $derived(
 		[...events].sort((a, b) => 
-			new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+			new Date(a.event_date).getTime() - new Date(b.event_date).getTime()
 		)
 	);
 
@@ -85,7 +85,7 @@
 					<article class="event-card">
 					<!-- Imagen del evento -->
 					<a 
-						href={`/evento/${generateEventSlug(event, sortedEvents)}`} 
+						href={`/evento/${event.slug}`} 
 						class="event-image-link"
 					>
 						<div class="event-image-wrapper">
@@ -101,7 +101,7 @@
 					<!-- Contenido del evento -->
 					<div class="event-content">
 						<a 
-							href={`/evento/${generateEventSlug(event, sortedEvents)}`}
+							href={`/evento/${event.slug}`}
 							class="event-title-link"
 						>
 							<h3 class="event-title">{event.title}</h3>
@@ -128,13 +128,19 @@
 								})}</span>
 							</div>
 
-							<div class="event-meta-item">
-								<svg class="icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-									<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-									<circle cx="12" cy="10" r="3"></circle>
-								</svg>
-								<span>{event.location}</span>
-							</div>
+						<div class="event-meta-item">
+							<svg class="icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+								<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+								<circle cx="12" cy="10" r="3"></circle>
+							</svg>
+							<span>
+								{#if event.venue}
+									{event.venue}{event.location ? `, ${event.location}` : ''}
+								{:else}
+									{event.location || 'Ubicación por definir'}
+								{/if}
+							</span>
+						</div>
 						</div>
 
 						<div class="event-footer">
@@ -144,7 +150,7 @@
 							</div>
 							
 							<a 
-								href={`/evento/${generateEventSlug(event, sortedEvents)}`}
+								href={`/evento/${event.slug}`}
 								class="event-button"
 							>
 								Ver detalles

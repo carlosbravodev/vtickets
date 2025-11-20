@@ -1,15 +1,14 @@
 <script lang="ts">
   import { optimizeSupabaseImage } from "$lib/utils/image";
-  import { generateEventSlug } from "$lib/utils/slug";
   import { fade, fly } from "svelte/transition";
 
   let { data } = $props();
 
-  // Ordenar eventos por fecha de creación para generar slugs consistentes
+  // Ordenar eventos por fecha del evento (más próximos primero)
   let sortedEvents = $derived(
     [...data.events].sort(
       (a, b) =>
-        new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+        new Date(a.event_date).getTime() - new Date(b.event_date).getTime()
     )
   );
 
@@ -50,7 +49,7 @@
           >
             <!-- Imagen con overlay en hover -->
             <a
-              href={`/evento/${generateEventSlug(event, sortedEvents)}`}
+              href={`/evento/${event.slug}`}
               class="relative overflow-hidden block"
             >
               <div
@@ -79,7 +78,7 @@
             <div class="p-6 flex flex-col grow">
               <!-- Título -->
               <a
-                href={`/evento/${generateEventSlug(event, sortedEvents)}`}
+                href={`/evento/${event.slug}`}
                 class="group/title"
               >
                 <h3
@@ -109,7 +108,7 @@
                     >{formatDateTime(event.event_date)}</time
                   >
                 </div>
-                {#if event.location}
+                {#if event.location || event.venue}
                   <div class="flex items-center text-gray-600 text-sm">
                     <svg
                       class="w-5 h-5 mr-2 text-indigo-500"
@@ -130,7 +129,13 @@
                         d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
                       />
                     </svg>
-                    <span class="line-clamp-1">{event.location}</span>
+                    <span class="line-clamp-1">
+                      {#if event.venue}
+                        {event.venue}{event.location ? `, ${event.location}` : ''}
+                      {:else}
+                        {event.location || 'Ubicación por definir'}
+                      {/if}
+                    </span>
                   </div>
                 {/if}
               </div>
@@ -142,7 +147,7 @@
 
               <!-- Botón -->
               <a
-                href={`/evento/${generateEventSlug(event, sortedEvents)}`}
+                href={`/evento/${event.slug}`}
                 class="inline-flex items-center justify-center px-6 py-3 text-sm font-semibold text-white bg-linear-to-r from-indigo-600 to-purple-600 rounded-lg hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-4 focus:ring-indigo-300 transition-all duration-200 shadow-md hover:shadow-lg mt-auto"
               >
                 Ver detalles

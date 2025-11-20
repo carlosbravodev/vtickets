@@ -32,26 +32,3 @@ export function slugify(text: string): string {
 		.replace(/^-+/, '') // Eliminar guiones del inicio
 		.replace(/-+$/, ''); // Eliminar guiones del final
 }
-
-/**
- * Genera un slug único para un evento considerando duplicados
- * @param event - El evento con título y created_at
- * @param allEvents - Todos los eventos para comparar
- * @returns El slug único
- */
-export function generateEventSlug(event: any, allEvents: any[]): string {
-	const baseSlug = slugify(event.title);
-	
-	// Contar cuántos eventos tienen el mismo slug base (creados antes que este)
-	const duplicates = allEvents.filter((e: any) => {
-		const eventSlug = slugify(e.title);
-		return eventSlug === baseSlug && new Date(e.created_at) < new Date(event.created_at);
-	});
-
-	// Si hay duplicados, añadir número secuencial
-	if (duplicates.length > 0) {
-		return `${baseSlug}-${duplicates.length + 1}`;
-	}
-
-	return baseSlug;
-}
