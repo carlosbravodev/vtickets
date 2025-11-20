@@ -82,18 +82,22 @@
 					maxHeight: 1080,
 					quality: 0.85,
 					targetFormat: 'webp'
-				});
+			});
 
-				// Mostrar información de compresión
-				const originalSizeMB = (file.size / 1024 / 1024).toFixed(2);
-				const compressedSizeMB = (compressedFile.size / 1024 / 1024).toFixed(2);
-				const savings = ((1 - compressedFile.size / file.size) * 100).toFixed(0);
-				
-				toast.success(
-					`Imagen optimizada: ${originalSizeMB}MB → ${compressedSizeMB}MB (${savings}% reducido)`
-				);
-
-				eventData.image = compressedFile;
+			// Mostrar información de compresión
+			const originalSizeMB = (file.size / 1024 / 1024).toFixed(2);
+			const compressedSizeMB = (compressedFile.size / 1024 / 1024).toFixed(2);
+			const savings = ((1 - compressedFile.size / file.size) * 100).toFixed(0);
+			
+			console.log('🖼️ Image compression:', {
+				original: { name: file.name, size: file.size, type: file.type },
+				compressed: { name: compressedFile.name, size: compressedFile.size, type: compressedFile.type },
+				savings: savings + '%'
+			});
+			
+			toast.success(
+				`Imagen optimizada: ${originalSizeMB}MB → ${compressedSizeMB}MB (${savings}% reducido)`
+			);				eventData.image = compressedFile;
 				eventData.imagePreview = URL.createObjectURL(compressedFile);
 			} catch (error) {
 				console.error('Error comprimiendo imagen:', error);
@@ -202,6 +206,13 @@
 			isSubmitting = false;
 			return;
 		}
+
+		console.log('📤 About to upload image:', {
+			name: eventData.image.name,
+			size: eventData.image.size,
+			sizeMB: (eventData.image.size / 1024 / 1024).toFixed(2) + 'MB',
+			type: eventData.image.type
+		});
 
 		try {
 			// Crear FormData manualmente con todos los campos

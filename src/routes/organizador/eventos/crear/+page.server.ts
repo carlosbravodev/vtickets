@@ -107,6 +107,14 @@ export const actions = {
 			return fail(400, { message: 'La imagen es obligatoria', field: 'image' });
 		}
 
+		// Log del tamaño de imagen recibida
+		console.log('📸 Image received:', {
+			name: imageFile.name,
+			size: imageFile.size,
+			sizeMB: (imageFile.size / 1024 / 1024).toFixed(2) + 'MB',
+			type: imageFile.type
+		});
+
 		// Tipos de tickets (JSON string)
 		const ticketTypesJson = formData.get('ticket_types') as string;
 		let ticketTypes: Array<{

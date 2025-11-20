@@ -109,34 +109,61 @@ export async function compressImage(
 					return;
 				}
 				
-				// Dibujar imagen redimensionada
-				ctx.drawImage(img, 0, 0, width, height);
-				
-				// Convertir a blob
-				canvas.toBlob(
-					(blob) => {
-						if (!blob) {
-							reject(new Error('Error al comprimir imagen'));
+			// Dibujar imagen redimensionada
+			ctx.drawImage(img, 0, 0, width, height);
+			
+			// Intentar convertir a WebP primero, si falla usar JPEG
+			const tryFormat = targetFormat === 'webp' ? 'image/webp' : 'image/jpeg';
+			const fallbackFormat = 'image/jpeg';
+			
+			// Convertir a blob
+			canvas.toBlob(
+				(blob) => {
+					if (!blob) {
+						// Si falla con WebP, intentar con JPEG
+						if (tryFormat === 'image/webp') {
+							console.warn('WebP conversion failed, falling back to JPEG');
+							canvas.toBlob(
+								(jpegBlob) => {
+									if (!jpegBlob) {
+										reject(new Error('Error al comprimir imagen'));
+										return;
+									}
+									
+									const originalName = file.name.split('.')[0];
+									const compressedFile = new File(
+										[jpegBlob],
+										`${originalName}.jpg`,
+										{ type: 'image/jpeg' }
+									);
+									
+									resolve(compressedFile);
+								},
+								fallbackFormat,
+								quality
+							);
 							return;
 						}
 						
-						// Crear nuevo archivo con nombre original pero extensión correcta
-						const originalName = file.name.split('.')[0];
-						const extension = targetFormat === 'webp' ? 'webp' : 'jpg';
-						const compressedFile = new File(
-							[blob],
-							`${originalName}.${extension}`,
-							{ type: `image/${targetFormat}` }
-						);
-						
-						resolve(compressedFile);
-					},
-					`image/${targetFormat}`,
-					quality
-				);
-			};
-			
-			img.onerror = () => reject(new Error('Error al cargar imagen'));
+						reject(new Error('Error al comprimir imagen'));
+						return;
+					}
+					
+					// Crear nuevo archivo con nombre original pero extensión correcta
+					const originalName = file.name.split('.')[0];
+					const extension = tryFormat === 'image/webp' ? 'webp' : 'jpg';
+					const compressedFile = new File(
+						[blob],
+						`${originalName}.${extension}`,
+						{ type: tryFormat }
+					);
+					
+					resolve(compressedFile);
+				},
+				tryFormat,
+				quality
+			);
+		};			img.onerror = () => reject(new Error('Error al cargar imagen'));
 			img.src = e.target?.result as string;
 		};
 		
