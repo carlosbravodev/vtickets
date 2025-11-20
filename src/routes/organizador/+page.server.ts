@@ -2,6 +2,19 @@ import type { PageServerLoad } from './$types';
 import { redirect } from '@sveltejs/kit';
 import { supabaseAdmin } from '$lib/supabaseAdmin';
 
+type OrderWithEvent = {
+	id: string;
+	order_number: string;
+	buyer_email: string;
+	total_amount: string;
+	status: string;
+	created_at: string;
+	events: {
+		title: string;
+		slug: string;
+	} | null;
+};
+
 export const load: PageServerLoad = async ({ locals }) => {
 	const { session, user } = await locals.safeGetSession();
 	
@@ -47,7 +60,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		.limit(5);
 
 	// Obtener últimas 10 órdenes de todos los eventos
-	const { data: recentOrders } = await supabaseAdmin
+	const { data } = await supabaseAdmin
 		.from('orders')
 		.select(`
 			id,
@@ -56,7 +69,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 			total_amount,
 			status,
 			created_at,
-			events (
+			events!inner (
 				title,
 				slug
 			)
@@ -66,11 +79,16 @@ export const load: PageServerLoad = async ({ locals }) => {
 		.order('created_at', { ascending: false })
 		.limit(10);
 
+	const recentOrders: OrderWithEvent[] = (data || []).map(order => ({
+		...order,
+		events: Array.isArray(order.events) ? order.events[0] : order.events
+	}));
+
 	return {
 		user,
 		globalStats,
 		topEvents,
 		activeEvents: activeEvents || [],
-		recentOrders: recentOrders || []
+		recentOrders
 	};
 };
