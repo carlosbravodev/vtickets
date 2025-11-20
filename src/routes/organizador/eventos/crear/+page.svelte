@@ -89,12 +89,6 @@
 			const compressedSizeMB = (compressedFile.size / 1024 / 1024).toFixed(2);
 			const savings = ((1 - compressedFile.size / file.size) * 100).toFixed(0);
 			
-			console.log('🖼️ Image compression:', {
-				original: { name: file.name, size: file.size, type: file.type },
-				compressed: { name: compressedFile.name, size: compressedFile.size, type: compressedFile.type },
-				savings: savings + '%'
-			});
-			
 			toast.success(
 				`Imagen optimizada: ${originalSizeMB}MB → ${compressedSizeMB}MB (${savings}% reducido)`
 			);				eventData.image = compressedFile;
@@ -197,7 +191,6 @@
 		
 		if (!validateStep3()) return;
 
-		console.log('📝 Starting form submission');
 		isSubmitting = true;
 
 		// Validar imagen
@@ -207,14 +200,7 @@
 			return;
 		}
 
-		console.log('📤 About to upload image:', {
-			name: eventData.image.name,
-			size: eventData.image.size,
-			sizeMB: (eventData.image.size / 1024 / 1024).toFixed(2) + 'MB',
-			type: eventData.image.type
-		});
-
-		try {
+		try{
 			// Crear FormData manualmente con todos los campos
 			const formData = new FormData();
 			formData.append('name', eventData.name);
@@ -231,39 +217,33 @@
 			// Enviar con fetch (sin el ?/default)
 			const response = await fetch('', {
 				method: 'POST',
-				body: formData
-			});
+			body: formData
+		});
 
-			console.log('📥 Response status:', response.status);
+		// Si es redirect (303), SvelteKit lo maneja automáticamente
+		if (response.redirected || response.status === 303) {
+			toast.success('¡Evento creado exitosamente! 🎉');
+			window.location.href = response.url;
+			return;
+		}
 
-			// Si es redirect (303), SvelteKit lo maneja automáticamente
-			if (response.redirected || response.status === 303) {
-				toast.success('¡Evento creado exitosamente! 🎉');
-				window.location.href = response.url;
-				return;
-			}
+		const result = await response.json();
 
-			const result = await response.json();
-			console.log('📥 Response received:', result);
-
-			if (response.ok) {
-				toast.success('¡Evento creado exitosamente! 🎉');
-				// Esperar un poco y navegar
-				setTimeout(() => {
-					goto('/organizador/eventos?success=created');
-				}, 500);
-			} else if (result.type === 'failure' || result.data) {
-				console.error('❌ Failure:', result.data || result);
-				toast.error(result.data?.message || result.message || 'Error al crear el evento');
-				isSubmitting = false;
-			} else {
-				console.error('❌ Unknown error');
-				toast.error('Error desconocido al crear el evento');
-				isSubmitting = false;
-			}
-		} catch (error) {
-			console.error('💥 Error in form submission:', error);
-			toast.error('Error al enviar el formulario');
+		if (response.ok) {
+			toast.success('¡Evento creado exitosamente! 🎉');
+			// Esperar un poco y navegar
+			setTimeout(() => {
+				goto('/organizador/eventos?success=created');
+			}, 500);
+		} else if (result.type === 'failure' || result.data) {
+			toast.error(result.data?.message || result.message || 'Error al crear el evento');
+			isSubmitting = false;
+		} else {
+			toast.error('Error desconocido al crear el evento');
+			isSubmitting = false;
+		}
+	} catch (error) {
+		toast.error('Error al enviar el formulario');
 			isSubmitting = false;
 		}
 	}

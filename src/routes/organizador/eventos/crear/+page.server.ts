@@ -37,16 +37,6 @@ export const actions = {
 
 		const formData = await request.formData();
 
-		// Log para debugging
-		console.log('FormData entries:');
-		for (const [key, value] of formData.entries()) {
-			if (value instanceof File) {
-				console.log(`${key}:`, value.name, value.size, value.type);
-			} else {
-				console.log(`${key}:`, value);
-			}
-		}
-
 		// Datos básicos del evento
 		const name = formData.get('name') as string;
 		const description = formData.get('description') as string;
@@ -106,14 +96,6 @@ export const actions = {
 		if (!imageFile || imageFile.size === 0) {
 			return fail(400, { message: 'La imagen es obligatoria', field: 'image' });
 		}
-
-		// Log del tamaño de imagen recibida
-		console.log('📸 Image received:', {
-			name: imageFile.name,
-			size: imageFile.size,
-			sizeMB: (imageFile.size / 1024 / 1024).toFixed(2) + 'MB',
-			type: imageFile.type
-		});
 
 		// Tipos de tickets (JSON string)
 		const ticketTypesJson = formData.get('ticket_types') as string;
@@ -178,7 +160,6 @@ export const actions = {
 			let slugCounter = 1;
 
 			// Verificar si el slug ya existe
-			console.log('🔍 Checking slug uniqueness...');
 			while (true) {
 				const { data: existingEvent } = await supabase
 					.from('events')
@@ -192,10 +173,7 @@ export const actions = {
 				slugCounter++;
 			}
 
-			console.log('✅ Slug generated:', slug);
-
 			// 3. Crear evento
-			console.log('📝 Creating event...');
 			const { data: event, error: eventError } = await supabase
 				.from('events')
 				.insert({
@@ -213,17 +191,14 @@ export const actions = {
 				.single();
 
 			if (eventError) {
-				console.error('❌ Event creation failed:', eventError);
 				// Si falla, eliminar la imagen subida
 				await supabase.storage.from('event-images').remove([uploadResult.path]);
 				return fail(500, { message: `Error al crear el evento: ${eventError.message}` });
 			}
 
-			console.log('✅ Event created:', event.id);
 			eventSlug = event.slug; // Guardar el slug para usar después del try-catch
 
 			// 4. Crear tipos de tickets
-			console.log('🎫 Creating ticket types...', ticketTypes.length);
 			const ticketsToInsert = ticketTypes.map((ticket) => ({
 				event_id: event.id,
 				name: ticket.name.trim(),
@@ -238,17 +213,12 @@ export const actions = {
 				.insert(ticketsToInsert);
 
 			if (ticketsError) {
-				console.error('❌ Tickets creation failed:', ticketsError);
 				// Rollback: eliminar evento e imagen
 				await supabase.from('events').delete().eq('id', event.id);
 				await supabase.storage.from('event-images').remove([uploadResult.path]);
 				return fail(500, { message: `Error al crear los tipos de tickets: ${ticketsError.message}` });
 			}
-
-			console.log('✅ All tickets created successfully');
-			console.log('🎉 Event creation completed!');
 		} catch (error) {
-			console.error('💥 Unexpected error creating event:', error);
 			return fail(500, { 
 				message: 'Error inesperado al crear el evento',
 				debug: error instanceof Error ? error.message : String(error)

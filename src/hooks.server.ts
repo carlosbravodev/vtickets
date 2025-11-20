@@ -29,7 +29,7 @@ event.locals.safeGetSession = async () => {
 		} = await event.locals.supabase.auth.getUser();
 		
 		if (error) {
-			logger.error('Error getting user in safeGetSession', error);
+			// Error obteniendo usuario (puede ser normal si no hay sesión)
 			return { session: null, user: null };
 		}
 		
@@ -64,16 +64,6 @@ const subdomainDetection: Handle = async ({ event, resolve }) => {
 	
 	// Almacenar en locals para usar en toda la app
 	event.locals.isAdminSubdomain = isAdminSubdomain;
-	
-	// Log para debugging en desarrollo (cuando el host incluye localhost o vercel preview)
-	const isDevelopment = host.includes('localhost') || host.includes('vercel.app');
-	if (isDevelopment) {
-		logger.log('Subdomain detection:', {
-			host,
-			isAdminSubdomain,
-			path: event.url.pathname
-		});
-	}
 	
 	return resolve(event);
 };
@@ -129,15 +119,21 @@ const roleGuard: Handle = async ({ event, resolve }) => {
 				const buyerRoutes = ['/cuenta', '/exito', '/completar-perfil'];
 				const isBuyerRoute = buyerRoutes.some(route => event.url.pathname.startsWith(route));
 				
-				if (isBuyerRoute) {
+				// También bloquear acceso a páginas principales de compradores
+				const isBuyerPage = 
+					event.url.pathname === '/' || 
+					event.url.pathname === '/eventos' ||
+					event.url.pathname.startsWith('/evento/');
+				
+				if (isBuyerRoute || isBuyerPage) {
 					logger.warn('Organizer tried to access buyer route:', {
 						userId: user.id,
 						email: user.email,
 						path: event.url.pathname
 					});
 					
-					// Redirigir al dashboard de organizador
-					throw redirect(303, '/organizador');
+					// Redirigir al dashboard de organizador con mensaje de toast
+					throw redirect(303, '/organizador?toast=error&message=' + encodeURIComponent('Tu cuenta de organizador no tiene acceso a esta sección'));
 				}
 			}
 
@@ -150,44 +146,28 @@ const roleGuard: Handle = async ({ event, resolve }) => {
 						path: event.url.pathname
 					});
 					
-					// Redirigir a la página de inicio o cuenta
-					throw redirect(303, '/cuenta');
+					// Redirigir a la página de cuenta con mensaje de toast
+					throw redirect(303, '/cuenta?toast=error&message=' + encodeURIComponent('Tu cuenta de comprador no tiene acceso a esta sección'));
 				}
 			}
 
-			// PROTECCIÓN 3: Redirección basada en subdomain (solo en producción)
+			// PROTECCIÓN 3: Redirección basada en subdomain (TEMPORALMENTE DESHABILITADA)
+			// TODO: Habilitar cuando el dominio admin.vtickets.com esté configurado
+			/*
 			const isAdminSubdomain = event.locals.isAdminSubdomain;
 			const host = event.request.headers.get('host') || '';
 			const isProduction = !host.includes('localhost') && !host.includes('127.0.0.1');
 
-			// Solo hacer redirecciones de subdomain en producción
 			if (isProduction) {
 				if (isAdminSubdomain && userRole === 'buyer') {
-					logger.warn('Buyer accessed admin subdomain:', {
-						userId: user.id,
-						email: user.email
-					});
-					// Redirigir al dominio principal
 					throw redirect(303, 'https://vtickets.com/cuenta');
 				}
 
 				if (!isAdminSubdomain && userRole === 'organizer') {
-					logger.warn('Organizer accessed main domain:', {
-						userId: user.id,
-						email: user.email
-					});
-					// Redirigir al subdomain de admin
 					throw redirect(303, 'https://admin.vtickets.com/organizador');
 				}
-			} else {
-				// En desarrollo, solo loggear pero NO redirigir
-				if (userRole === 'organizer') {
-					logger.log('Development: Organizer access allowed on localhost', {
-						userId: user.id,
-						path: event.url.pathname
-					});
-				}
 			}
+			*/
 		}
 
 		return resolve(event);

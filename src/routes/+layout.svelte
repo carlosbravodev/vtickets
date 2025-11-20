@@ -5,6 +5,7 @@
   import { supabase } from "$lib/supabaseClient";
   import Toast from "$lib/components/Toast.svelte";
   import RoleWarningBanner from "$lib/components/RoleWarningBanner.svelte";
+  import { toast } from "$lib/stores/toast.svelte";
 
   let { children, data } = $props();
   import "../app.css";
@@ -13,6 +14,40 @@
 
   let isMenuOpen = $state(false);
   let showUserMenu = $state(false);
+
+  // Control para evitar mostrar el mismo toast múltiples veces
+  let lastToastShown = $state('');
+
+  // Detectar mensajes de toast en la URL
+  $effect(() => {
+    const toastType = $page.url.searchParams.get('toast');
+    const toastMessage = $page.url.searchParams.get('message');
+    
+    // Crear un identificador único para este toast
+    const toastId = `${toastType}-${toastMessage}`;
+    
+    if (toastType && toastMessage && toastId !== lastToastShown) {
+      // Marcar este toast como mostrado
+      lastToastShown = toastId;
+      
+      // Mostrar el toast según el tipo
+      if (toastType === 'error') {
+        toast.error(toastMessage);
+      } else if (toastType === 'success') {
+        toast.success(toastMessage);
+      } else if (toastType === 'warning') {
+        toast.warning(toastMessage);
+      } else {
+        toast.info(toastMessage);
+      }
+      
+      // Limpiar los parámetros de la URL sin recargar la página
+      const newUrl = new URL($page.url);
+      newUrl.searchParams.delete('toast');
+      newUrl.searchParams.delete('message');
+      window.history.replaceState({}, '', newUrl.toString());
+    }
+  });
 
   // Usuario y sesión reactivos
   let user = $derived(data.user);

@@ -36,8 +36,6 @@ export const load: PageServerLoad = async ({ parent }) => {
       : 0
   })) || [];
 
-  logger.log('Upcoming events loaded:', eventsWithPrice?.length || 0);
-
   // Obtener eventos en Guayaquil (ordenados por fecha ascendente)
   const { data: guayaquilEvents, error: guayaquilError } = await supabase
     .from('events')
@@ -64,8 +62,6 @@ export const load: PageServerLoad = async ({ parent }) => {
     logger.error('Error fetching Guayaquil events:', guayaquilError);
   }
 
-  logger.log('Guayaquil events loaded:', guayaquilEventsWithPrice?.length || 0);
-
   // Obtener eventos en Quito (ordenados por fecha ascendente)
   const { data: quitoEvents, error: quitoError } = await supabase
     .from('events')
@@ -91,8 +87,6 @@ export const load: PageServerLoad = async ({ parent }) => {
   if (quitoError) {
     logger.error('Error fetching Quito events:', quitoError);
   }
-
-  logger.log('Quito events loaded:', quitoEventsWithPrice?.length || 0);
 
   return {
     upcomingEvents: eventsWithPrice,
