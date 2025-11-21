@@ -30,30 +30,28 @@
 		try {
 			errorMessage = '';
 			
+			// Primero solicitar permisos de cámara explícitamente
+			try {
+				const stream = await navigator.mediaDevices.getUserMedia({ 
+					video: { facingMode: 'environment' } 
+				});
+				// Detener el stream inmediatamente, solo queríamos los permisos
+				stream.getTracks().forEach(track => track.stop());
+			} catch (permError) {
+				throw new Error('No se pudo acceder a la cámara. Por favor, permite el acceso a la cámara en la configuración de tu navegador.');
+			}
+			
 			// Inicializar Html5Qrcode si no existe
 			if (!html5QrCode) {
 				html5QrCode = new Html5Qrcode('qr-reader');
 			}
 
-			// Obtener lista de cámaras disponibles
-			const devices = await Html5Qrcode.getCameras();
-			
-			if (!devices || devices.length === 0) {
-				throw new Error('No se encontraron cámaras disponibles');
-			}
+			// Usar facingMode en lugar de deviceId para mejor compatibilidad
+			const constraints = { facingMode: 'environment' };
 
-			// Buscar la cámara trasera (environment) o usar la primera disponible
-			const backCamera = devices.find(device => 
-				device.label.toLowerCase().includes('back') || 
-				device.label.toLowerCase().includes('rear') ||
-				device.label.toLowerCase().includes('trasera')
-			);
-			
-			cameraId = backCamera?.id || devices[0].id;
-
-			// Iniciar el escáner
+			// Iniciar el escáner con constraints
 			await html5QrCode.start(
-				cameraId,
+				constraints,
 				qrConfig,
 				(decodedText) => {
 					// QR detectado
