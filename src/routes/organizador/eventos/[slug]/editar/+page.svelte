@@ -211,20 +211,26 @@
 				body: formData
 			});
 
-			// Si hay redirección (status 303), seguirla
-			if (response.redirected) {
-				window.location.href = response.url;
+			// Si hubo éxito, redirigir
+			if (response.ok || response.redirected) {
+				toast.success('Evento actualizado exitosamente');
+				// Pequeña pausa para que se vea el toast
+				setTimeout(() => {
+					goto('/organizador/eventos');
+				}, 800);
 				return;
 			}
 
-			// Si hay error, mostrar mensaje
-			if (!response.ok) {
+			// Si hay error, intentar obtener el mensaje
+			try {
 				const result = await response.json();
 				toast.error(result.message || 'Error al actualizar el evento');
+			} catch {
+				toast.error('Error al actualizar el evento');
 			}
 		} catch (error) {
+			console.error('Error submitting form:', error);
 			toast.error('Error al actualizar el evento');
-		} finally {
 			isSubmitting = false;
 		}
 	}
