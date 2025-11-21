@@ -211,12 +211,15 @@
 				body: formData
 			});
 
-			const result = await response.json();
+			// Si hay redirección (status 303), seguirla
+			if (response.redirected) {
+				window.location.href = response.url;
+				return;
+			}
 
-			if (response.ok) {
-				toast.success('Evento actualizado exitosamente');
-				// La redirección se maneja en el servidor
-			} else {
+			// Si hay error, mostrar mensaje
+			if (!response.ok) {
+				const result = await response.json();
 				toast.error(result.message || 'Error al actualizar el evento');
 			}
 		} catch (error) {
