@@ -71,7 +71,7 @@
 			<div class="grid gap-6 md:grid-cols-2">
 				{#each data.events as event}
 					<a
-						href="/verificar/{event.id}"
+						href="/organizador/verificar/{event.id}"
 						class="bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow overflow-hidden group"
 					>
 						<!-- Imagen del evento -->

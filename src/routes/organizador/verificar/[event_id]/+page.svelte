@@ -1,8 +1,18 @@
 <script lang="ts">
 	import { page } from '$app/stores';
 	import { toast } from '$lib/stores/toast.svelte';
+	import { syncStore } from '$lib/stores/sync.svelte';
 	import QrScanner from '$lib/components/QrScanner.svelte';
 	import type { PageData } from './$types';
+	import { onMount } from 'svelte';
+	import { 
+		cacheEvent, 
+		cacheTickets, 
+		findTicketByCode, 
+		addToVerificationQueue,
+		isOnline,
+		getCachedTickets 
+	} from '$lib/utils/offline';
 
 	let { data }: { data: PageData } = $props();
 
@@ -17,8 +27,57 @@
 		success: boolean;
 		message: string;
 		ticket?: any;
+		isOffline?: boolean;
 	} | null>(null);
 	let showResult = $state(false);
+	let offlineMode = $state(!isOnline());
+
+	// Inicializar
+	onMount(() => {
+		// Cachear el evento actual
+		cacheEvent(data.event).then(() => {
+			// Cargar tickets del evento para cache offline
+			return fetch(`/api/verificar/tickets/${data.event.id}`)
+				.then((response) => {
+					if (response.ok) {
+						return response.json();
+					}
+					throw new Error('No se pudo cargar tickets');
+				})
+				.then((tickets) => cacheTickets(data.event.id, tickets))
+				.then(() => {
+					console.log('✅ Tickets cacheados para uso offline');
+				})
+				.catch(() => {
+					console.log('ℹ️ No se pudieron cachear tickets (modo offline?)');
+				});
+		});
+
+		// Inicializar store de sincronización
+		syncStore.init();
+
+		// Listener para detectar cambios en conexión
+		window.addEventListener('online', handleOnline);
+		window.addEventListener('offline', handleOffline);
+
+		return () => {
+			window.removeEventListener('online', handleOnline);
+			window.removeEventListener('offline', handleOffline);
+		};
+	});
+
+	// Manejar cambio a online
+	function handleOnline() {
+		offlineMode = false;
+		toast.success('Conexión restaurada');
+		syncStore.syncAll();
+	}
+
+	// Manejar cambio a offline
+	function handleOffline() {
+		offlineMode = true;
+		toast.warning('Modo offline activado');
+	}
 
 	// Formatear fecha
 	function formatDate(dateString: string) {
@@ -90,6 +149,114 @@
 			// Detener escaneo mientras procesamos
 			await stopScan();
 
+			// ========== MODO OFFLINE ==========
+			if (offlineMode || !isOnline()) {
+				console.log('📵 Modo offline: validando localmente');
+				
+				// Buscar ticket en caché
+				const cachedTicket = await findTicketByCode(qrData.ticket_id);
+				
+				if (!cachedTicket) {
+					verificationResult = {
+						success: false,
+						message: 'Ticket no encontrado en caché offline',
+						isOffline: true
+					};
+					showResult = true;
+					
+					if (navigator.vibrate) {
+						navigator.vibrate([400, 100, 400]);
+					}
+					
+					setTimeout(() => {
+						showResult = false;
+						isProcessing = false;
+					}, 3000);
+					return;
+				}
+
+				// Validar que pertenece al evento
+				if (cachedTicket.event_id !== data.event.id) {
+					verificationResult = {
+						success: false,
+						message: 'Ticket de otro evento',
+						isOffline: true
+					};
+					showResult = true;
+					
+					if (navigator.vibrate) {
+						navigator.vibrate([400, 100, 400]);
+					}
+					
+					setTimeout(() => {
+						showResult = false;
+						isProcessing = false;
+					}, 3000);
+					return;
+				}
+
+				// Validar que no esté ya verificado
+				if (cachedTicket.verified) {
+					verificationResult = {
+						success: false,
+						message: 'Ticket ya verificado (offline)',
+						ticket: cachedTicket,
+						isOffline: true
+					};
+					showResult = true;
+					
+					if (navigator.vibrate) {
+						navigator.vibrate([400, 100, 400]);
+					}
+					
+					setTimeout(() => {
+						showResult = false;
+						isProcessing = false;
+					}, 3000);
+					return;
+				}
+
+				// Agregar a la cola de sincronización
+				const userId = data.event.created_by; // Asumimos que está disponible
+				await addToVerificationQueue(
+					cachedTicket.id,
+					data.event.id,
+					userId,
+					undefined,
+					{ user_agent: navigator.userAgent }
+				);
+
+				// Incrementar contador en el store
+				syncStore.incrementPending();
+
+				// Actualizar estadísticas localmente
+				data.stats.verified += 1;
+				data.stats.pending -= 1;
+				data.stats.percentage = Math.round((data.stats.verified / data.stats.total) * 100);
+
+				// Mostrar éxito
+				verificationResult = {
+					success: true,
+					message: '✓ Verificado (pendiente de sincronización)',
+					ticket: cachedTicket,
+					isOffline: true
+				};
+				showResult = true;
+
+				if (navigator.vibrate) {
+					navigator.vibrate([100, 50, 100]);
+				}
+
+				setTimeout(() => {
+					showResult = false;
+					verificationResult = null;
+					isProcessing = false;
+				}, 4000);
+
+				return;
+			}
+
+			// ========== MODO ONLINE ==========
 			// Llamar a la API de validación
 			const validateResponse = await fetch('/api/verificar/validate', {
 				method: 'POST',
@@ -204,14 +371,67 @@
 		<!-- Header -->
 		<div class="mb-6">
 			<a
-				href="/verificar"
+				href="/organizador/verificar"
 				class="inline-flex items-center text-sm text-gray-600 hover:text-gray-900 mb-4"
 			>
 				← Volver a eventos
 			</a>
 			
 			<div class="bg-white rounded-lg shadow-md p-6">
-				<h1 class="text-2xl font-bold text-gray-900">{data.event.title}</h1>
+				<!-- Indicador Online/Offline -->
+				<div class="mb-4 flex items-center justify-between">
+					<h1 class="text-2xl font-bold text-gray-900">{data.event.title}</h1>
+					
+					<div class="flex items-center gap-3">
+						<!-- Botón Historial -->
+						<a
+							href="/organizador/verificar/{data.event.id}/historial"
+							class="flex items-center text-gray-600 bg-gray-100 px-3 py-1 rounded-full text-sm hover:bg-gray-200 transition"
+						>
+							<svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+							</svg>
+							Historial
+						</a>
+
+						<!-- Estado de conexión -->
+						{#if offlineMode}
+							<div class="flex items-center text-amber-600 bg-amber-50 px-3 py-1 rounded-full text-sm">
+								<svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636a9 9 0 010 12.728m0 0l-2.829-2.829m2.829 2.829L21 21M15.536 8.464a5 5 0 010 7.072m0 0l-2.829-2.829m-4.243 2.829a4.978 4.978 0 01-1.414-2.83m-1.414 5.658a9 9 0 01-2.167-9.238m7.824 2.167a1 1 0 111.414 1.414m-1.414-1.414L3 3m8.293 8.293l1.414 1.414" />
+								</svg>
+								Offline
+							</div>
+						{:else}
+							<div class="flex items-center text-green-600 bg-green-50 px-3 py-1 rounded-full text-sm">
+								<div class="w-2 h-2 bg-green-600 rounded-full mr-2 animate-pulse"></div>
+								Online
+							</div>
+						{/if}
+
+						<!-- Contador de pendientes -->
+						{#if syncStore.pendingCount > 0}
+							<button
+								onclick={() => syncStore.syncAll()}
+								disabled={syncStore.isSyncing}
+								class="flex items-center text-blue-600 bg-blue-50 px-3 py-1 rounded-full text-sm hover:bg-blue-100 disabled:opacity-50"
+							>
+								{#if syncStore.isSyncing}
+									<svg class="animate-spin w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+									</svg>
+									Sincronizando...
+								{:else}
+									<svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+									</svg>
+									{syncStore.pendingCount} pendiente{syncStore.pendingCount !== 1 ? 's' : ''}
+								{/if}
+							</button>
+						{/if}
+					</div>
+				</div>
+
 				<div class="mt-2 flex items-center text-sm text-gray-600">
 					<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -305,6 +525,14 @@
 								<h3 class="text-lg font-bold text-green-900">
 									{verificationResult.message}
 								</h3>
+								{#if verificationResult.isOffline}
+									<p class="mt-1 text-sm text-amber-700 flex items-center">
+										<svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+										</svg>
+										Se sincronizará cuando haya conexión
+									</p>
+								{/if}
 								{#if verificationResult.ticket}
 									<div class="mt-3 text-sm text-green-800 space-y-1">
 										<p><strong>Código:</strong> {verificationResult.ticket.ticket_code}</p>
