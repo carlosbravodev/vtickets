@@ -49,6 +49,9 @@
 	let recentScans = $state<ScanRecord[]>([]);
 	const MAX_RECENT_SCANS = 5;
 	
+	// Flash de última verificación (para UI minimalista)
+	let lastScanFlash = $state<{ name: string; type: string; success: boolean } | null>(null);
+	
 	// Estadísticas reactivas
 	let stats = $state({
 		total: data.stats.total,
@@ -232,6 +235,17 @@
 	// Agregar a lista de escaneos recientes
 	function addToRecentScans(record: ScanRecord) {
 		recentScans = [record, ...recentScans].slice(0, MAX_RECENT_SCANS);
+		
+		// Mostrar flash temporal (2 segundos) para UI minimalista
+		lastScanFlash = {
+			name: record.name,
+			type: record.type,
+			success: record.success && !record.already_verified
+		};
+		
+		setTimeout(() => {
+			lastScanFlash = null;
+		}, 2000);
 	}
 
 	// Formatear tiempo relativo (ej: "2s ago")
@@ -499,7 +513,69 @@
 	<title>Verificar: {data.event.title} - VTickets</title>
 </svelte:head>
 
-<div class="min-h-screen bg-gray-50 py-6 px-4 sm:px-6 lg:px-8">
+{#if isScanning || isProcessing}
+	<!-- Vista Minimalista Extremo (Modo Escaneando) -->
+	<div class="h-screen flex flex-col bg-gray-900">
+		<!-- Header compacto -->
+		<header class="bg-gray-800 px-4 py-3 flex items-center justify-between border-b border-gray-700">
+			<button 
+				onclick={stopScan}
+				class="text-white hover:text-gray-300 transition"
+				aria-label="Cerrar escáner"
+			>
+				<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+				</svg>
+			</button>
+			
+			<div class="flex-1 text-center">
+				<h1 class="text-white font-semibold text-lg truncate">{data.event.title}</h1>
+			</div>
+			
+			<div class="text-white font-mono text-sm">
+				{stats.verified}/{stats.total}
+			</div>
+		</header>
+
+		<!-- Cámara fullscreen -->
+		<main class="flex-1 relative bg-black">
+			<QrScanner
+				bind:this={scannerRef}
+				bind:scannerState
+				onScanSuccess={handleScanSuccess}
+				onScanError={handleScanError}
+			/>
+		</main>
+
+		<!-- Flash de última verificación (2 segundos) -->
+		{#if lastScanFlash}
+			<footer 
+				class="absolute bottom-0 left-0 right-0 px-4 py-6 bg-linear-to-t from-black/80 to-transparent"
+				style="animation: fadeInUp 0.3s ease-out;"
+			>
+				<div 
+					class="bg-white/10 backdrop-blur-md rounded-lg p-4 border-2"
+					class:border-green-400={lastScanFlash.success}
+					class:border-red-400={!lastScanFlash.success}
+				>
+					<div class="flex items-center gap-3">
+						{#if lastScanFlash.success}
+							<span class="text-4xl">✓</span>
+						{:else}
+							<span class="text-4xl">✗</span>
+						{/if}
+						<div class="flex-1">
+							<p class="text-white font-semibold text-lg">{lastScanFlash.name}</p>
+							<p class="text-gray-300 text-sm">{lastScanFlash.type}</p>
+						</div>
+					</div>
+				</div>
+			</footer>
+		{/if}
+	</div>
+{:else}
+	<!-- Vista Normal (Modo No Escaneando) -->
+	<div class="min-h-screen bg-gray-50 py-6 px-4 sm:px-6 lg:px-8">
 	<div class="max-w-4xl mx-auto">
 		<!-- Header -->
 		<div class="mb-6">
@@ -766,6 +842,7 @@
 		{/if}
 	</div>
 </div>
+{/if}
 
 <style>
 	@keyframes slideDown {
@@ -783,6 +860,17 @@
 		from {
 			opacity: 0;
 			transform: translateY(-10px);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0);
+		}
+	}
+	
+	@keyframes fadeInUp {
+		from {
+			opacity: 0;
+			transform: translateY(20px);
 		}
 		to {
 			opacity: 1;
