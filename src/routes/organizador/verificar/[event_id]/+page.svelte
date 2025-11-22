@@ -50,7 +50,7 @@
 	const MAX_RECENT_SCANS = 5;
 	
 	// Flash de última verificación (para UI minimalista)
-	let lastScanFlash = $state<{ name: string; type: string; success: boolean } | null>(null);
+	let lastScanFlash = $state<{ name: string; type: string; success: boolean; already_verified?: boolean } | null>(null);
 	
 	// Estadísticas reactivas
 	let stats = $state({
@@ -240,7 +240,8 @@
 		lastScanFlash = {
 			name: record.name,
 			type: record.type,
-			success: record.success && !record.already_verified
+			success: record.success && !record.already_verified,
+			already_verified: record.already_verified
 		};
 		
 		setTimeout(() => {
@@ -439,8 +440,8 @@
 				// Agregar a lista de recientes
 				addToRecentScans({
 					id: scanResult.ticket.id,
-					name: scanResult.ticket.holder_name || 'Sin nombre',
-					type: scanResult.ticket.type || 'General',
+					name: scanResult.ticket.holder_name || scanResult.ticket.holder_email || 'Sin información',
+					type: scanResult.ticket.type || 'Entrada General',
 					timestamp: Date.now(),
 					success: true
 				});
@@ -464,8 +465,8 @@
 				if (scanResult.ticket) {
 					addToRecentScans({
 						id: scanResult.ticket.id,
-						name: scanResult.ticket.holder_name || 'Sin nombre',
-						type: scanResult.ticket.type || 'General',
+						name: scanResult.ticket.holder_name || scanResult.ticket.holder_email || 'Sin información',
+						type: scanResult.ticket.type || 'Entrada General',
 						timestamp: Date.now(),
 						success: false,
 						already_verified: isAlreadyVerified
@@ -550,23 +551,43 @@
 		<!-- Flash de última verificación (2 segundos) -->
 		{#if lastScanFlash}
 			<footer 
-				class="absolute bottom-0 left-0 right-0 px-4 py-6 bg-linear-to-t from-black/80 to-transparent"
+				class="absolute bottom-0 left-0 right-0 px-6 py-8 bg-linear-to-t from-black/90 to-transparent pointer-events-none"
 				style="animation: fadeInUp 0.3s ease-out;"
 			>
 				<div 
-					class="bg-white/10 backdrop-blur-md rounded-lg p-4 border-2"
-					class:border-green-400={lastScanFlash.success}
-					class:border-red-400={!lastScanFlash.success}
+					class="bg-white rounded-2xl p-6 shadow-2xl border-4"
+					class:border-green-500={lastScanFlash.success}
+					class:border-amber-500={lastScanFlash.already_verified}
+					class:border-red-500={!lastScanFlash.success && !lastScanFlash.already_verified}
 				>
-					<div class="flex items-center gap-3">
-						{#if lastScanFlash.success}
-							<span class="text-4xl">✓</span>
-						{:else}
-							<span class="text-4xl">✗</span>
-						{/if}
-						<div class="flex-1">
-							<p class="text-white font-semibold text-lg">{lastScanFlash.name}</p>
-							<p class="text-gray-300 text-sm">{lastScanFlash.type}</p>
+					<div class="flex items-center gap-4">
+						<!-- Icono -->
+						<div 
+							class="shrink-0 w-16 h-16 rounded-full flex items-center justify-center text-3xl font-bold"
+							class:bg-green-100={lastScanFlash.success}
+							class:bg-amber-100={lastScanFlash.already_verified}
+							class:bg-red-100={!lastScanFlash.success && !lastScanFlash.already_verified}
+						>
+							{#if lastScanFlash.success}
+								<span class="text-green-600">✓</span>
+							{:else if lastScanFlash.already_verified}
+								<span class="text-amber-600">⚠</span>
+							{:else}
+								<span class="text-red-600">✗</span>
+							{/if}
+						</div>
+						
+						<!-- Información -->
+						<div class="flex-1 min-w-0">
+							<p class="text-gray-900 font-bold text-xl truncate">{lastScanFlash.name}</p>
+							<p class="text-gray-600 text-base mt-1">{lastScanFlash.type}</p>
+							{#if lastScanFlash.already_verified}
+								<p class="text-amber-700 text-sm font-semibold mt-1">Ya verificado anteriormente</p>
+							{:else if lastScanFlash.success}
+								<p class="text-green-700 text-sm font-semibold mt-1">Verificado exitosamente</p>
+							{:else}
+								<p class="text-red-700 text-sm font-semibold mt-1">Error en verificación</p>
+							{/if}
 						</div>
 					</div>
 				</div>
