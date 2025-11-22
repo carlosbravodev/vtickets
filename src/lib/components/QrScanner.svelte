@@ -17,42 +17,44 @@
 	let errorMessage = $state('');
 	let cameraId = $state<string | null>(null);
 
-	// Configuración del escáner
-	const qrConfig = {
-		fps: 10, // Frames por segundo
-		qrbox: { width: 250, height: 250 }, // Tamaño del cuadro de escaneo
-		aspectRatio: 1.0,
-		disableFlip: false // Permite escanear QR reflejados
-	};
-
 	// Iniciar el escáner
 	async function startScanning() {
 		try {
 			errorMessage = '';
-			
-			// Primero solicitar permisos de cámara explícitamente
-			try {
-				const stream = await navigator.mediaDevices.getUserMedia({ 
-					video: { facingMode: 'environment' } 
-				});
-				// Detener el stream inmediatamente, solo queríamos los permisos
-				stream.getTracks().forEach(track => track.stop());
-			} catch (permError) {
-				throw new Error('No se pudo acceder a la cámara. Por favor, permite el acceso a la cámara en la configuración de tu navegador.');
-			}
 			
 			// Inicializar Html5Qrcode si no existe
 			if (!html5QrCode) {
 				html5QrCode = new Html5Qrcode('qr-reader');
 			}
 
-			// Usar facingMode en lugar de deviceId para mejor compatibilidad
-			const constraints = { facingMode: 'environment' };
+			// Obtener cámaras disponibles
+			const cameras = await Html5Qrcode.getCameras();
+			
+			if (!cameras || cameras.length === 0) {
+				throw new Error('No se encontraron cámaras en tu dispositivo');
+			}
 
-			// Iniciar el escáner con constraints
+			// Buscar cámara trasera (mejor para escanear QR)
+			const backCamera = cameras.find(camera => 
+				camera.label.toLowerCase().includes('back') || 
+				camera.label.toLowerCase().includes('trasera') ||
+				camera.label.toLowerCase().includes('rear')
+			);
+			
+			// Usar cámara trasera si existe, si no, la primera disponible
+			const selectedCamera = backCamera || cameras[cameras.length - 1];
+			
+			console.log('Usando cámara:', selectedCamera.label);
+
+			// Iniciar el escáner con la cámara seleccionada
 			await html5QrCode.start(
-				constraints,
-				qrConfig,
+				selectedCamera.id,
+				{
+					fps: 10,
+					qrbox: { width: 250, height: 250 },
+					aspectRatio: 1.0,
+					disableFlip: false
+				},
 				(decodedText) => {
 					// QR detectado
 					console.log('QR detectado:', decodedText);
@@ -67,15 +69,16 @@
 				},
 				(errorMsg) => {
 					// Error de escaneo (normal, ocurre constantemente mientras busca QR)
-					// No hacer nada aquí, solo registrar en consola si es necesario
+					// No hacer nada aquí
 				}
 			);
 
 			isScanning = true;
+			console.log('Escáner iniciado correctamente');
 		} catch (err) {
-			const errorMsg = err instanceof Error ? err.message : 'Error al iniciar el escáner';
+			const errorMsg = err instanceof Error ? err.message : 'Error desconocido al iniciar el escáner';
 			errorMessage = errorMsg;
-			console.error('Error iniciando escáner:', err);
+			console.error('Error completo:', err);
 			
 			if (onScanError) {
 				onScanError(errorMsg);
