@@ -5,10 +5,12 @@
 	// Props
 	let {
 		onScanSuccess,
-		onScanError
+		onScanError,
+		scannerState = $bindable()
 	}: {
 		onScanSuccess: (decodedText: string) => void;
 		onScanError?: (error: string) => void;
+		scannerState?: 'idle' | 'processing' | 'success' | 'error';
 	} = $props();
 
 	// Estado
@@ -16,6 +18,10 @@
 	let isScanning = $state(false);
 	let errorMessage = $state('');
 	let cameraId = $state<string | null>(null);
+	
+	// Cooldown para evitar escaneos duplicados
+	const recentScans = new Map<string, number>();
+	const SCAN_COOLDOWN = 3000; // 3 segundos
 
 	// Inicializar en onMount para asegurar que el DOM esté listo
 	onMount(() => {
@@ -68,14 +74,29 @@
 				},
 				(decodedText) => {
 					// QR detectado
-					console.log('QR detectado:', decodedText);
+					const now = Date.now();
 					
-					// Vibrar el dispositivo si está disponible
-					if (navigator.vibrate) {
-						navigator.vibrate(200);
+					// Verificar cooldown para evitar duplicados
+					const lastScan = recentScans.get(decodedText);
+					if (lastScan && now - lastScan < SCAN_COOLDOWN) {
+						console.log('QR ignorado (cooldown activo)');
+						return;
 					}
 					
+					// Registrar escaneo
+					recentScans.set(decodedText, now);
+					
+					// Limpiar escaneos antiguos (más de 10 segundos)
+					for (const [key, timestamp] of recentScans.entries()) {
+						if (now - timestamp > 10000) {
+							recentScans.delete(key);
+						}
+					}
+					
+					console.log('QR detectado:', decodedText.substring(0, 50));
+					
 					// Llamar al callback de éxito
+					// NO DETENER EL SCANNER - se procesa en background
 					onScanSuccess(decodedText);
 				},
 				(errorMsg) => {
@@ -134,8 +155,15 @@
 
 <!-- Contenedor del escáner -->
 <div class="relative">
-	<!-- Visor de cámara -->
-	<div id="qr-reader" class="rounded-lg overflow-hidden shadow-lg"></div>
+	<!-- Visor de cámara con estados visuales -->
+	<div 
+		id="qr-reader" 
+		class="qr-scanner rounded-lg overflow-hidden shadow-lg"
+		class:scanner-idle={scannerState === 'idle'}
+		class:scanner-processing={scannerState === 'processing'}
+		class:scanner-success={scannerState === 'success'}
+		class:scanner-error={scannerState === 'error'}
+	></div>
 
 	<!-- Mensaje de error -->
 	{#if errorMessage}
@@ -166,6 +194,7 @@
 		width: 100%;
 		max-width: 500px;
 		margin: 0 auto;
+		transition: all 0.3s ease;
 	}
 
 	:global(#qr-reader video) {
@@ -180,5 +209,83 @@
 
 	:global(#qr-reader__scan_region) {
 		border: 3px solid #4F46E5 !important;
+		transition: border-color 0.3s ease;
+	}
+
+	/* Estados del scanner */
+	.qr-scanner {
+		position: relative;
+	}
+
+	.qr-scanner::before {
+		content: '';
+		position: absolute;
+		inset: 0;
+		border-radius: 0.5rem;
+		pointer-events: none;
+		transition: all 0.3s ease;
+		border: 4px solid transparent;
+		z-index: 10;
+	}
+
+	/* Estado IDLE - Indigo (esperando) */
+	.scanner-idle::before {
+		border-color: #4F46E5;
+	}
+
+	/* Estado PROCESSING - Yellow con pulse (validando) */
+	.scanner-processing::before {
+		border-color: #EAB308;
+		animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+	}
+
+	/* Estado SUCCESS - Green con flash (verificado) */
+	.scanner-success::before {
+		border-color: #10B981;
+		animation: flash-success 1s ease-out;
+	}
+
+	/* Estado ERROR - Red con shake (error) */
+	.scanner-error::before {
+		border-color: #EF4444;
+		animation: shake 0.5s ease-in-out;
+	}
+
+	/* Animaciones */
+	@keyframes pulse {
+		0%, 100% {
+			opacity: 1;
+		}
+		50% {
+			opacity: 0.5;
+		}
+	}
+
+	@keyframes flash-success {
+		0% {
+			opacity: 0.3;
+			transform: scale(0.95);
+		}
+		50% {
+			opacity: 1;
+			transform: scale(1.02);
+			box-shadow: 0 0 20px rgba(16, 185, 129, 0.5);
+		}
+		100% {
+			opacity: 1;
+			transform: scale(1);
+		}
+	}
+
+	@keyframes shake {
+		0%, 100% {
+			transform: translateX(0);
+		}
+		10%, 30%, 50%, 70%, 90% {
+			transform: translateX(-5px);
+		}
+		20%, 40%, 60%, 80% {
+			transform: translateX(5px);
+		}
 	}
 </style>

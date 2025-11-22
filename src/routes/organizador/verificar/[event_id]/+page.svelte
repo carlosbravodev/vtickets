@@ -20,6 +20,9 @@
 	// Referencias
 	let scannerRef: any = $state(null);
 
+	// Estado del scanner (bindable con QrScanner)
+	let scannerState: 'idle' | 'processing' | 'success' | 'error' = $state('idle');
+
 	// Estado
 	let isScanning = $state(false);
 	let isProcessing = $state(false);
@@ -29,9 +32,22 @@
 		message: string;
 		ticket?: any;
 		isOffline?: boolean;
+		error_type?: string;
 	} | null>(null);
 	let showResult = $state(false);
 	let offlineMode = $state(!isOnline());
+
+	// Stream de últimas verificaciones
+	interface ScanRecord {
+		id: string;
+		name: string;
+		type: string;
+		timestamp: number;
+		success: boolean;
+		already_verified?: boolean;
+	}
+	let recentScans = $state<ScanRecord[]>([]);
+	const MAX_RECENT_SCANS = 5;
 	
 	// Estadísticas reactivas
 	let stats = $state({
@@ -196,20 +212,47 @@
 		}
 	}
 
-	// Manejar QR escaneado
+	// Vibración diferenciada por resultado
+	function vibratePattern(type: 'success' | 'error' | 'already_verified') {
+		if (!navigator.vibrate) return;
+		
+		switch (type) {
+			case 'success':
+				navigator.vibrate([100, 50, 100]); // Corta y agradable
+				break;
+			case 'error':
+				navigator.vibrate([400, 100, 400]); // Larga y notable
+				break;
+			case 'already_verified':
+				navigator.vibrate([200, 100, 200, 100, 200]); // Patrón doble
+				break;
+		}
+	}
+
+	// Agregar a lista de escaneos recientes
+	function addToRecentScans(record: ScanRecord) {
+		recentScans = [record, ...recentScans].slice(0, MAX_RECENT_SCANS);
+	}
+
+	// Formatear tiempo relativo (ej: "2s ago")
+	function formatRelativeTime(timestamp: number): string {
+		const seconds = Math.floor((Date.now() - timestamp) / 1000);
+		if (seconds < 60) return `${seconds}s`;
+		const minutes = Math.floor(seconds / 60);
+		if (minutes < 60) return `${minutes}m`;
+		return `${Math.floor(minutes / 60)}h`;
+	}
+
+	// Manejar QR escaneado (MODO CONTINUO - NO DETIENE SCANNER)
 	async function handleScanSuccess(decodedText: string) {
-		// Si ya estamos procesando, ignorar
+		// Si ya estamos procesando, ignorar (el cooldown ya está en QrScanner)
 		if (isProcessing) return;
 
 		isProcessing = true;
+		scannerState = 'processing'; // Estado visual amarillo
 
 		try {
-			console.log('QR escaneado:', decodedText.substring(0, 50) + '...');
-			
-			// El QR puede ser:
-			// 1. Un JWT (comienza con "eyJ")
-			// 2. Un JSON con { ticket_id: "..." }
-			// 3. Un UUID directo
+			console.log('[SCAN] QR detectado:', decodedText.substring(0, 50));
 			
 			let ticketId: string | null = null;
 			let qrData: string = decodedText;
@@ -221,12 +264,10 @@
 					ticketId = parsed.ticket_id;
 				}
 			} catch {
-				// No es JSON, puede ser JWT o UUID directo
-				// Lo enviamos tal cual al backend
+				// No es JSON, es JWT o UUID directo
 			}
 
-			// Detener escaneo mientras procesamos
-			await stopScan();
+			// NO DETENER EL SCANNER - procesamos en background
 
 			// ========== MODO OFFLINE ==========
 			if (offlineMode || !isOnline()) {
@@ -356,109 +397,95 @@
 				return;
 			}
 
-			// ========== MODO ONLINE ==========
-			// Llamar a la API de validación
-			const validateResponse = await fetch('/api/verificar/validate', {
+			// ========== MODO ONLINE (OPTIMIZADO) ==========
+			// Llamar al nuevo endpoint unificado /api/verificar/scan
+			const scanResponse = await fetch('/api/verificar/scan', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
-					ticket_id: ticketId, // Puede ser null si es JWT
-					qr_data: qrData, // El JWT o datos del QR
-					event_id: data.event.id
+					ticket_id: ticketId,
+					qr_data: qrData,
+					event_id: data.event.id,
+					device_info: { user_agent: navigator.userAgent }
 				})
 			});
 
-			const validateData = await validateResponse.json();
+			const scanResult = await scanResponse.json();
 
-			if (!validateResponse.ok) {
-				// Error de validación
-				verificationResult = {
-					success: false,
-					message: validateData.error || 'Ticket inválido'
-				};
-				showResult = true;
+			if (scanResult.success) {
+				// ✅ ÉXITO - Ticket verificado
+				scannerState = 'success';
+				vibratePattern('success');
+
+				// Actualizar estadísticas
+				stats.verified += 1;
+				stats.pending -= 1;
+				stats.percentage = Math.round((stats.verified / stats.total) * 100);
+
+				// Agregar a lista de recientes
+				addToRecentScans({
+					id: scanResult.ticket.id,
+					name: scanResult.ticket.holder_name || 'Sin nombre',
+					type: scanResult.ticket.type || 'General',
+					timestamp: Date.now(),
+					success: true
+				});
+
+				console.log('✅ Ticket verificado:', scanResult.ticket.code);
 				
-				// Vibración de error (patrón largo-corto-largo)
-				if (navigator.vibrate) {
-					navigator.vibrate([400, 100, 400]);
-				}
-
+				// Volver a idle después de 1 segundo
 				setTimeout(() => {
-					showResult = false;
+					scannerState = 'idle';
 					isProcessing = false;
-				}, 3000);
+				}, 1000);
 
-				return;
-			}
-
-			// Extraer el ticket_id real de la respuesta (puede venir del JWT)
-			const actualTicketId = validateData.ticket?.id || ticketId;
-
-			// Ticket válido, ahora marcarlo como verificado
-			const markResponse = await fetch('/api/verificar/mark-verified', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({
-					ticket_id: actualTicketId,
-					event_id: data.event.id
-				})
-			});
-
-			const markData = await markResponse.json();
-
-			if (!markResponse.ok) {
-				// Error al marcar (posible duplicado)
-				verificationResult = {
-					success: false,
-					message: markData.error || 'Error al verificar ticket'
-				};
 			} else {
-				// Éxito total
-				verificationResult = {
-					success: true,
-					message: markData.already_verified 
-						? 'Ticket ya fue verificado anteriormente' 
-						: '✓ Ticket verificado correctamente',
-					ticket: validateData.ticket
-				};
+				// ❌ ERROR - Ticket inválido o ya verificado
+				const isAlreadyVerified = scanResult.error_type === 'already_verified';
+				
+				scannerState = 'error';
+				vibratePattern(isAlreadyVerified ? 'already_verified' : 'error');
 
-				// Actualizar estadísticas en tiempo real
-				if (!markData.already_verified) {
-					stats.verified += 1;
-					stats.pending -= 1;
-					stats.percentage = Math.round((stats.verified / stats.total) * 100);
-					console.log('📊 Estadísticas actualizadas:', stats);
+				// Agregar a lista de recientes con warning
+				if (scanResult.ticket) {
+					addToRecentScans({
+						id: scanResult.ticket.id,
+						name: scanResult.ticket.holder_name || 'Sin nombre',
+						type: scanResult.ticket.type || 'General',
+						timestamp: Date.now(),
+						success: false,
+						already_verified: isAlreadyVerified
+					});
 				}
 
-				// Vibración de éxito (patrón corto-corto)
-				if (navigator.vibrate) {
-					navigator.vibrate([100, 50, 100]);
+				// Toast solo para errores críticos
+				if (scanResult.error_type === 'wrong_event') {
+					toast.error('⚠️ Ticket de otro evento');
+				} else if (scanResult.error_type === 'cancelled') {
+					toast.error('❌ Ticket cancelado');
+				} else if (isAlreadyVerified) {
+					// No toast, solo visual + vibración
+					console.log('⚠️ Ticket ya verificado');
 				}
+
+				// Volver a idle después de 1.5 segundos
+				setTimeout(() => {
+					scannerState = 'idle';
+					isProcessing = false;
+				}, 1500);
 			}
-
-			showResult = true;
-			console.log('✅ Mostrando resultado:', verificationResult);
-
-			// Ocultar resultado y permitir nuevo escaneo después de 5 segundos
-			setTimeout(() => {
-				showResult = false;
-				verificationResult = null;
-				isProcessing = false;
-			}, 5000);
 
 		} catch (error) {
-			console.error('Error procesando QR:', error);
+			console.error('[SCAN] Error procesando QR:', error);
 			
-			verificationResult = {
-				success: false,
-				message: error instanceof Error ? error.message : 'Error al procesar el código QR'
-			};
-			showResult = true;
+			scannerState = 'error';
+			vibratePattern('error');
+			toast.error('Error al procesar el código QR');
 
 			setTimeout(() => {
-				showResult = false;
+				scannerState = 'idle';
 				isProcessing = false;
-			}, 3000);
+			}, 1500);
 		}
 	}
 
@@ -592,13 +619,47 @@
 				{/if}
 			</div>
 
-			<!-- Componente escáner -->
+			<!-- Componente escáner con estado bindable -->
 			{#if isScanning || isProcessing}
 				<QrScanner
 					bind:this={scannerRef}
+					bind:scannerState
 					onScanSuccess={handleScanSuccess}
 					onScanError={handleScanError}
 				/>
+				
+				<!-- Stream de últimas verificaciones -->
+				{#if recentScans.length > 0}
+					<div class="mt-6 bg-gray-50 rounded-lg p-4">
+						<h3 class="text-sm font-semibold text-gray-700 mb-3">Últimos escaneados:</h3>
+						<div class="space-y-2">
+							{#each recentScans as scan (scan.id)}
+								<div 
+									class="flex items-center justify-between bg-white rounded-md p-3 border"
+									class:border-green-200={scan.success && !scan.already_verified}
+									class:border-amber-200={scan.already_verified}
+									class:border-red-200={!scan.success && !scan.already_verified}
+									style="animation: fadeIn 0.3s ease-out;"
+								>
+									<div class="flex items-center gap-3">
+										{#if scan.success && !scan.already_verified}
+											<span class="text-green-600 text-xl">✓</span>
+										{:else if scan.already_verified}
+											<span class="text-amber-600 text-xl">⚠️</span>
+										{:else}
+											<span class="text-red-600 text-xl">✗</span>
+										{/if}
+										<div>
+											<p class="font-medium text-gray-900 text-sm">{scan.name}</p>
+											<p class="text-xs text-gray-500">{scan.type}</p>
+										</div>
+									</div>
+									<span class="text-xs text-gray-400">{formatRelativeTime(scan.timestamp)} ago</span>
+								</div>
+							{/each}
+						</div>
+					</div>
+				{/if}
 			{/if}
 
 			<!-- Botón detener -->
@@ -715,6 +776,17 @@
 		to {
 			opacity: 1;
 			transform: translate(-50%, 0);
+		}
+	}
+
+	@keyframes fadeIn {
+		from {
+			opacity: 0;
+			transform: translateY(-10px);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0);
 		}
 	}
 </style>
