@@ -1,5 +1,6 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
+import { supabaseAdmin } from '$lib/supabaseAdmin';
 
 export const POST: RequestHandler = async ({ request, locals }) => {
   try {
@@ -14,6 +15,8 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
     // Obtener datos del request
     const { ticket_id, event_id, entry_gate, device_info } = await request.json();
+
+    console.log('[MARK-VERIFIED] Datos recibidos:', { ticket_id, event_id });
 
     if (!ticket_id || !event_id) {
       throw error(400, 'Faltan parámetros: ticket_id y event_id son requeridos');
@@ -34,16 +37,19 @@ export const POST: RequestHandler = async ({ request, locals }) => {
       return json({ error: 'No tienes permiso para verificar tickets de este evento' }, { status: 403 });
     }
 
-    // 2. Verificar el estado actual del ticket
-    const { data: currentTicket, error: ticketError } = await locals.supabase
+    // 2. Verificar el estado actual del ticket (usando admin para evitar RLS)
+    const { data: currentTicket, error: ticketError } = await supabaseAdmin
       .from('tickets')
       .select('id, verified, event_id, status')
       .eq('id', ticket_id)
       .single();
 
     if (ticketError || !currentTicket) {
+      console.error('[MARK-VERIFIED] Error obteniendo ticket:', ticketError);
       return json({ error: 'Ticket no encontrado' }, { status: 404 });
     }
+
+    console.log('[MARK-VERIFIED] Ticket actual:', currentTicket);
 
     if (currentTicket.event_id !== event_id) {
       return json({ error: 'El ticket no pertenece a este evento' }, { status: 400 });
@@ -51,8 +57,9 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
     // Si ya está verificado, registrar en historial pero no actualizar ticket
     if (currentTicket.verified) {
+      console.log('[MARK-VERIFIED] Ticket ya verificado');
       // Registrar en historial como "already_verified"
-      await locals.supabase
+      await supabaseAdmin
         .from('ticket_verifications')
         .insert({
           ticket_id,
@@ -74,7 +81,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     // 3. Marcar el ticket como verificado (con protección contra race conditions)
     const now = new Date().toISOString();
 
-    const { error: updateError } = await locals.supabase
+    const { error: updateError } = await supabaseAdmin
       .from('tickets')
       .update({
         verified: true,
@@ -90,10 +97,10 @@ export const POST: RequestHandler = async ({ request, locals }) => {
       .eq('verified', false); // IMPORTANTE: solo actualizar si aún no está verificado
 
     if (updateError) {
-      console.error('Error actualizando ticket:', updateError);
+      console.error('[MARK-VERIFIED] Error actualizando ticket:', updateError);
       
       // Registrar el error en el historial
-      await locals.supabase
+      await supabaseAdmin
         .from('ticket_verifications')
         .insert({
           ticket_id,
@@ -108,8 +115,10 @@ export const POST: RequestHandler = async ({ request, locals }) => {
       return json({ error: 'Error al verificar el ticket' }, { status: 500 });
     }
 
+    console.log('[MARK-VERIFIED] Ticket verificado correctamente');
+
     // 4. Registrar en el historial de verificaciones
-    const { error: historyError } = await locals.supabase
+    const { error: historyError } = await supabaseAdmin
       .from('ticket_verifications')
       .insert({
         ticket_id,
@@ -123,7 +132,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
       });
 
     if (historyError) {
-      console.error('Error registrando en historial:', historyError);
+      console.error('[MARK-VERIFIED] Error registrando en historial:', historyError);
       // No fallar la operación si falla el historial, el ticket ya fue marcado
     }
 
