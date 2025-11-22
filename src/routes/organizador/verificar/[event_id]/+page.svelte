@@ -4,7 +4,7 @@
 	import { syncStore } from '$lib/stores/sync.svelte';
 	import QrScanner from '$lib/components/QrScanner.svelte';
 	import type { PageData } from './$types';
-	import { onMount, tick } from 'svelte';
+	import { onMount, onDestroy, tick } from 'svelte';
 	import { 
 		cacheEvent, 
 		cacheTickets, 
@@ -13,6 +13,7 @@
 		isOnline,
 		getCachedTickets 
 	} from '$lib/utils/offline';
+	import type { RealtimeChannel } from '@supabase/supabase-js';
 
 	let { data }: { data: PageData } = $props();
 
@@ -40,6 +41,26 @@
 		percentage: data.stats.percentage
 	});
 
+	// Canal de Realtime para actualizaciones en vivo
+	let realtimeChannel: RealtimeChannel | null = null;
+
+	// Función para actualizar estadísticas desde la BD
+	async function refreshStats() {
+		try {
+			const response = await fetch(`/api/verificar/stats/${data.event.id}`);
+			if (response.ok) {
+				const newStats = await response.json();
+				stats.total = newStats.total;
+				stats.verified = newStats.verified;
+				stats.pending = newStats.pending;
+				stats.percentage = newStats.percentage;
+				console.log('📊 Estadísticas actualizadas desde BD:', stats);
+			}
+		} catch (error) {
+			console.error('Error actualizando estadísticas:', error);
+		}
+	}
+
 	// Inicializar
 	onMount(() => {
 		// Cachear el evento actual
@@ -64,6 +85,31 @@
 		// Inicializar store de sincronización
 		syncStore.init();
 
+		// Suscribirse a cambios en tiempo real en tickets
+		import('$lib/supabaseClient').then(({ supabase }) => {
+			realtimeChannel = supabase
+				.channel(`tickets-${data.event.id}`)
+				.on(
+					'postgres_changes',
+					{
+						event: '*', // Escuchar INSERT, UPDATE, DELETE
+						schema: 'public',
+						table: 'tickets',
+						filter: `event_id=eq.${data.event.id}`
+					},
+					(payload) => {
+						console.log('🔄 Cambio detectado en tickets:', payload);
+						// Actualizar estadísticas cuando hay cambios
+						refreshStats();
+					}
+				)
+				.subscribe((status) => {
+					if (status === 'SUBSCRIBED') {
+						console.log('✅ Suscrito a actualizaciones en tiempo real');
+					}
+				});
+		});
+
 		// Listener para detectar cambios en conexión
 		window.addEventListener('online', handleOnline);
 		window.addEventListener('offline', handleOffline);
@@ -72,6 +118,14 @@
 			window.removeEventListener('online', handleOnline);
 			window.removeEventListener('offline', handleOffline);
 		};
+	});
+
+	// Limpiar al desmontar
+	onDestroy(() => {
+		if (realtimeChannel) {
+			realtimeChannel.unsubscribe();
+			console.log('🔌 Desuscrito de actualizaciones en tiempo real');
+		}
 	});
 
 	// Manejar cambio a online

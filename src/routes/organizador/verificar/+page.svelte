@@ -1,8 +1,69 @@
 <script lang="ts">
 	import { page } from '$app/stores';
 	import type { PageData } from './$types';
+	import { onMount, onDestroy } from 'svelte';
+	import type { RealtimeChannel } from '@supabase/supabase-js';
 
 	let { data }: { data: PageData } = $props();
+
+	// Hacer eventos reactivos
+	let events = $state(data.events);
+	let realtimeChannel: RealtimeChannel | null = null;
+
+	// Actualizar estadísticas de un evento específico
+	async function refreshEventStats(eventId: string) {
+		try {
+			const response = await fetch(`/api/verificar/stats/${eventId}`);
+			if (response.ok) {
+				const newStats = await response.json();
+				// Actualizar el evento en la lista
+				events = events.map(event => 
+					event.id === eventId 
+						? { ...event, stats: newStats }
+						: event
+				);
+				console.log(`📊 Stats actualizadas para evento ${eventId}`);
+			}
+		} catch (error) {
+			console.error('Error actualizando stats:', error);
+		}
+	}
+
+	// Inicializar Realtime
+	onMount(() => {
+		// Suscribirse a cambios en tickets
+		import('$lib/supabaseClient').then(({ supabase }) => {
+			realtimeChannel = supabase
+				.channel('all-tickets')
+				.on(
+					'postgres_changes',
+					{
+						event: '*',
+						schema: 'public',
+						table: 'tickets'
+					},
+					(payload: any) => {
+						console.log('🔄 Cambio en tickets detectado:', payload);
+						// Actualizar stats del evento afectado
+						const eventId = payload.new?.event_id || payload.old?.event_id;
+						if (eventId) {
+							refreshEventStats(eventId);
+						}
+					}
+				)
+				.subscribe((status) => {
+					if (status === 'SUBSCRIBED') {
+						console.log('✅ Suscrito a actualizaciones de tickets');
+					}
+				});
+		});
+	});
+
+	onDestroy(() => {
+		if (realtimeChannel) {
+			realtimeChannel.unsubscribe();
+		}
+	});
 
 	// Formatear fecha
 	function formatDate(dateString: string) {

@@ -48,11 +48,12 @@ export const load: PageServerLoad = async ({ locals }) => {
   // Para cada evento, obtener el conteo de tickets verificados
   const eventsWithStats = await Promise.all(
     (events || []).map(async (event) => {
+      // Contar TODOS los tickets vendidos (active + used)
       const { count: totalTickets } = await locals.supabase
         .from('tickets')
         .select('*', { count: 'exact', head: true })
         .eq('event_id', event.id)
-        .eq('status', 'active');
+        .in('status', ['active', 'used']);
 
       const { count: verifiedTickets } = await locals.supabase
         .from('tickets')

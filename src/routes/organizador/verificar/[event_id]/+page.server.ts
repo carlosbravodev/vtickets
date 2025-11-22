@@ -39,11 +39,12 @@ export const load: PageServerLoad = async ({ params, locals }) => {
   }
 
   // Obtener estadísticas de verificación
+  // Contar TODOS los tickets vendidos (active + used)
   const { count: totalTickets } = await locals.supabase
     .from('tickets')
     .select('*', { count: 'exact', head: true })
     .eq('event_id', eventId)
-    .eq('status', 'active');
+    .in('status', ['active', 'used']);
 
   const { count: verifiedTickets } = await locals.supabase
     .from('tickets')
