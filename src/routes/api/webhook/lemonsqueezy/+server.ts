@@ -31,29 +31,35 @@ export const POST: RequestHandler = async ({ request }) => {
 			return json({ error: 'Invalid signature' }, { status: 401 });
 		}
 
-		const event = JSON.parse(rawBody);
-		const eventName = event.meta.event_name;
+	const event = JSON.parse(rawBody);
+	const eventName = event.meta.event_name;
 
-		logger.info(`📨 Webhook received: ${eventName}`);
+	logger.info(`📨 Webhook received: ${eventName}`);
+	
+	// Debug: Log completo de checkout_data para ver qué campos están disponibles
+	if (eventName === 'order_created' && event.data.attributes.checkout_data) {
+		logger.info(`   Checkout Data:`, JSON.stringify(event.data.attributes.checkout_data, null, 2));
+	}
 
-		// Procesar evento de pago exitoso
-		if (eventName === 'order_created') {
-			const orderId = event.data.id;
-			const orderIdentifier = event.data.attributes.identifier; // UUID de la orden
-			const orderNumber = event.data.attributes.order_number; // Número secuencial (el que ve el usuario)
-			const customData = event.meta.custom_data || {};
-		const status = event.data.attributes.status;
-		const totalAmount = parseFloat(event.data.attributes.total) / 100;
-		const userEmail = event.data.attributes.user_email;
-		const userName = event.data.attributes.user_name || null; // Nombre completo del comprador
+	// Procesar evento de pago exitoso
+	if (eventName === 'order_created') {
+		const orderId = event.data.id;
+		const orderIdentifier = event.data.attributes.identifier; // UUID de la orden
+		const orderNumber = event.data.attributes.order_number; // Número secuencial (el que ve el usuario)
+		const customData = event.meta.custom_data || {};
+	const status = event.data.attributes.status;
+	const totalAmount = parseFloat(event.data.attributes.total) / 100;
+	const userEmail = event.data.attributes.user_email;
+	
+	// Extraer nombre del comprador desde checkout_data
+	const checkoutData = event.data.attributes.checkout_data || {};
+	const userName = checkoutData.name || event.data.attributes.user_name || null;
 
-		logger.info(`   Order Number: #${orderNumber}`);
-		logger.info(`   Order ID: ${orderIdentifier}`);
-		logger.info(`   User: ${userName} <${userEmail}>`);
-			logger.info(`   Status: ${status}`);
-			logger.info(`   Amount: $${totalAmount}`);
-
-			if (status === 'paid') {
+	logger.info(`   Order Number: #${orderNumber}`);
+	logger.info(`   Order ID: ${orderIdentifier}`);
+	logger.info(`   User: ${userName} <${userEmail}>`);
+		logger.info(`   Status: ${status}`);
+		logger.info(`   Amount: $${totalAmount}`);			if (status === 'paid') {
 				// Extraer información personalizada
 				const eventId = customData.event_id;
 				const tickets = JSON.parse(customData.tickets || '{}');
