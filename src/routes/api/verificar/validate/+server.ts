@@ -2,6 +2,7 @@ import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { jwtVerify } from 'jose';
 import { env } from '$env/dynamic/private';
+import { supabaseAdmin } from '$lib/supabaseAdmin';
 
 export const POST: RequestHandler = async ({ request, locals }) => {
   try {
@@ -17,6 +18,8 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     // Obtener datos del request
     const { ticket_id, event_id, qr_data } = await request.json();
 
+    console.log('[VALIDATE] Datos recibidos:', { ticket_id, event_id, qr_data: qr_data?.substring(0, 50) });
+
     if (!event_id) {
       throw error(400, 'event_id es requerido');
     }
@@ -28,11 +31,13 @@ export const POST: RequestHandler = async ({ request, locals }) => {
       try {
         // Verificar si es un JWT (comienza con "eyJ")
         if (qr_data.startsWith('eyJ')) {
+          console.log('[VALIDATE] Decodificando JWT...');
           const secret = new TextEncoder().encode(
             env.JWT_SECRET_KEY || 'your-secret-key-change-in-production'
           );
           
           const { payload } = await jwtVerify(qr_data, secret);
+          console.log('[VALIDATE] JWT decodificado:', payload);
           
           // El JWT contiene tid (ticket_id) y eid (event_id)
           actualTicketId = payload.tid as string;
@@ -50,7 +55,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
           actualTicketId = qr_data;
         }
       } catch (jwtError) {
-        console.error('Error decodificando JWT:', jwtError);
+        console.error('[VALIDATE] Error decodificando JWT:', jwtError);
         return json({ error: 'QR inválido o expirado' }, { status: 400 });
       }
     }
@@ -58,6 +63,8 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     if (!actualTicketId) {
       throw error(400, 'Se requiere ticket_id o qr_data');
     }
+
+    console.log('[VALIDATE] Ticket ID a validar:', actualTicketId);
 
     // 1. Verificar que el evento existe y el usuario es el organizador
     const { data: event, error: eventError } = await locals.supabase
@@ -67,6 +74,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
       .single();
 
     if (eventError || !event) {
+      console.error('[VALIDATE] Error obteniendo evento:', eventError);
       return json({ error: 'Evento no encontrado' }, { status: 404 });
     }
 
@@ -74,8 +82,10 @@ export const POST: RequestHandler = async ({ request, locals }) => {
       return json({ error: 'No tienes permiso para verificar tickets de este evento' }, { status: 403 });
     }
 
-    // 2. Obtener el ticket con toda su información
-    const { data: ticket, error: ticketError } = await locals.supabase
+    console.log('[VALIDATE] Evento validado:', event.title);
+
+    // 2. Obtener el ticket con toda su información (usando admin client para evitar RLS)
+    const { data: ticket, error: ticketError } = await supabaseAdmin
       .from('tickets')
       .select(`
         id,
@@ -98,8 +108,11 @@ export const POST: RequestHandler = async ({ request, locals }) => {
       .single();
 
     if (ticketError || !ticket) {
+      console.error('[VALIDATE] Error obteniendo ticket:', ticketError);
       return json({ error: 'Ticket no encontrado' }, { status: 404 });
     }
+
+    console.log('[VALIDATE] Ticket encontrado:', ticket.ticket_code);
 
     // 3. Validaciones de negocio
     
