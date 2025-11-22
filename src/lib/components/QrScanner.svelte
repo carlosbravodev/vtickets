@@ -17,14 +17,25 @@
 	let errorMessage = $state('');
 	let cameraId = $state<string | null>(null);
 
+	// Inicializar en onMount para asegurar que el DOM esté listo
+	onMount(() => {
+		try {
+			html5QrCode = new Html5Qrcode('qr-reader');
+			console.log('Html5Qrcode inicializado correctamente');
+		} catch (err) {
+			console.error('Error al inicializar Html5Qrcode:', err);
+			errorMessage = 'Error al inicializar el escáner de QR';
+		}
+	});
+
 	// Iniciar el escáner
 	async function startScanning() {
 		try {
 			errorMessage = '';
 			
-			// Inicializar Html5Qrcode si no existe
+			// Verificar que html5QrCode esté inicializado
 			if (!html5QrCode) {
-				html5QrCode = new Html5Qrcode('qr-reader');
+				throw new Error('El escáner no está inicializado. Por favor, recarga la página.');
 			}
 
 			// Obtener cámaras disponibles
@@ -101,7 +112,14 @@
 	// Limpiar al desmontar el componente
 	onDestroy(async () => {
 		await stopScanning();
-		html5QrCode = null;
+		if (html5QrCode) {
+			try {
+				await html5QrCode.clear();
+			} catch (err) {
+				console.error('Error al limpiar escáner:', err);
+			}
+			html5QrCode = null;
+		}
 	});
 
 	// Exponer funciones para control externo
