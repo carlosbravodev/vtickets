@@ -1,5 +1,7 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
+import { jwtVerify } from 'jose';
+import { env } from '$env/dynamic/private';
 
 export const POST: RequestHandler = async ({ request, locals }) => {
   try {
@@ -13,10 +15,48 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     const user = session.data.session.user;
 
     // Obtener datos del request
-    const { ticket_id, event_id } = await request.json();
+    const { ticket_id, event_id, qr_data } = await request.json();
 
-    if (!ticket_id || !event_id) {
-      throw error(400, 'Faltan parámetros: ticket_id y event_id son requeridos');
+    if (!event_id) {
+      throw error(400, 'event_id es requerido');
+    }
+
+    let actualTicketId = ticket_id;
+
+    // Si se proporciona qr_data (JWT), decodificarlo
+    if (qr_data && !ticket_id) {
+      try {
+        // Verificar si es un JWT (comienza con "eyJ")
+        if (qr_data.startsWith('eyJ')) {
+          const secret = new TextEncoder().encode(
+            env.JWT_SECRET_KEY || 'your-secret-key-change-in-production'
+          );
+          
+          const { payload } = await jwtVerify(qr_data, secret);
+          
+          // El JWT contiene tid (ticket_id) y eid (event_id)
+          actualTicketId = payload.tid as string;
+          
+          // Validar que el event_id del JWT coincida con el solicitado
+          if (payload.eid !== event_id) {
+            return json({ 
+              error: 'El ticket no pertenece a este evento (verificación JWT)',
+              ticket_event: payload.eid,
+              expected_event: event_id
+            }, { status: 400 });
+          }
+        } else {
+          // Si no es JWT, asumir que es el ticket_id directamente
+          actualTicketId = qr_data;
+        }
+      } catch (jwtError) {
+        console.error('Error decodificando JWT:', jwtError);
+        return json({ error: 'QR inválido o expirado' }, { status: 400 });
+      }
+    }
+
+    if (!actualTicketId) {
+      throw error(400, 'Se requiere ticket_id o qr_data');
     }
 
     // 1. Verificar que el evento existe y el usuario es el organizador
@@ -54,7 +94,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
           description
         )
       `)
-      .eq('id', ticket_id)
+      .eq('id', actualTicketId)
       .single();
 
     if (ticketError || !ticket) {

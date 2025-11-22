@@ -142,19 +142,25 @@
 		isProcessing = true;
 
 		try {
-			// Parsear el QR (debería ser JSON)
-			let qrData: any;
+			console.log('QR escaneado:', decodedText.substring(0, 50) + '...');
 			
+			// El QR puede ser:
+			// 1. Un JWT (comienza con "eyJ")
+			// 2. Un JSON con { ticket_id: "..." }
+			// 3. Un UUID directo
+			
+			let ticketId: string | null = null;
+			let qrData: string = decodedText;
+			
+			// Intentar parsear como JSON primero (retrocompatibilidad)
 			try {
-				qrData = JSON.parse(decodedText);
+				const parsed = JSON.parse(decodedText);
+				if (parsed.ticket_id) {
+					ticketId = parsed.ticket_id;
+				}
 			} catch {
-				// Si no es JSON, asumir que es solo el ticket_id
-				qrData = { ticket_id: decodedText };
-			}
-
-			// Validar que el QR tenga ticket_id
-			if (!qrData.ticket_id) {
-				throw new Error('QR inválido: no contiene ticket_id');
+				// No es JSON, puede ser JWT o UUID directo
+				// Lo enviamos tal cual al backend
 			}
 
 			// Detener escaneo mientras procesamos
@@ -164,8 +170,29 @@
 			if (offlineMode || !isOnline()) {
 				console.log('📵 Modo offline: validando localmente');
 				
-				// Buscar ticket en caché
-				const cachedTicket = await findTicketByCode(qrData.ticket_id);
+				// En modo offline, necesitamos el ticket_id
+				// Si solo tenemos JWT, no podemos validar offline sin decodificarlo
+				if (!ticketId) {
+					verificationResult = {
+						success: false,
+						message: 'No se puede validar JWT en modo offline. Conéctate a internet.',
+						isOffline: true
+					};
+					showResult = true;
+					
+					if (navigator.vibrate) {
+						navigator.vibrate([400, 100, 400]);
+					}
+					
+					setTimeout(() => {
+						showResult = false;
+						isProcessing = false;
+					}, 3000);
+					return;
+				}
+				
+				// Buscar ticket en caché por ID
+				const cachedTicket = await findTicketByCode(ticketId);
 				
 				if (!cachedTicket) {
 					verificationResult = {
@@ -273,7 +300,8 @@
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
-					ticket_id: qrData.ticket_id,
+					ticket_id: ticketId, // Puede ser null si es JWT
+					qr_data: qrData, // El JWT o datos del QR
 					event_id: data.event.id
 				})
 			});
@@ -301,12 +329,15 @@
 				return;
 			}
 
+			// Extraer el ticket_id real de la respuesta (puede venir del JWT)
+			const actualTicketId = validateData.ticket?.id || ticketId;
+
 			// Ticket válido, ahora marcarlo como verificado
 			const markResponse = await fetch('/api/verificar/mark-verified', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
-					ticket_id: qrData.ticket_id,
+					ticket_id: actualTicketId,
 					event_id: data.event.id
 				})
 			});
