@@ -12,7 +12,11 @@ const config = {
 		adapter: adapter({
 			// Vercel edge functions configuration
 			runtime: 'nodejs20.x'
-		})
+		}),
+		// Habilitar service worker
+		serviceWorker: {
+			register: false // Lo registraremos manualmente para mejor control
+		}
 	}
 };
 

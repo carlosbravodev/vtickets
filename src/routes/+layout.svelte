@@ -11,12 +11,41 @@
   import "../app.css";
   import { goto, invalidateAll, onNavigate } from "$app/navigation";
   import { page } from "$app/stores";
+  import { onMount } from "svelte";
+  import { browser } from "$app/environment";
 
   let isMenuOpen = $state(false);
   let showUserMenu = $state(false);
 
   // Control para evitar mostrar el mismo toast múltiples veces
   let lastToastShown = $state('');
+
+  // Registrar Service Worker para PWA
+  onMount(() => {
+    if (browser && 'serviceWorker' in navigator) {
+      navigator.serviceWorker
+        .register('/service-worker.js')
+        .then((registration) => {
+          console.log('✅ Service Worker registrado:', registration);
+          
+          // Escuchar actualizaciones del service worker
+          registration.addEventListener('updatefound', () => {
+            const newWorker = registration.installing;
+            if (newWorker) {
+              newWorker.addEventListener('statechange', () => {
+                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                  // Hay una nueva versión disponible
+                  toast.info('Nueva versión disponible. Recarga la página para actualizar.');
+                }
+              });
+            }
+          });
+        })
+        .catch((err) => {
+          console.error('❌ Error registrando Service Worker:', err);
+        });
+    }
+  });
 
   // Detectar mensajes de toast en la URL
   $effect(() => {
