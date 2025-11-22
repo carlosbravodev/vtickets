@@ -42,12 +42,14 @@ export const POST: RequestHandler = async ({ request }) => {
 			const orderIdentifier = event.data.attributes.identifier; // UUID de la orden
 			const orderNumber = event.data.attributes.order_number; // Número secuencial (el que ve el usuario)
 			const customData = event.meta.custom_data || {};
-			const status = event.data.attributes.status;
-			const totalAmount = parseFloat(event.data.attributes.total) / 100;
-			const userEmail = event.data.attributes.user_email;
+		const status = event.data.attributes.status;
+		const totalAmount = parseFloat(event.data.attributes.total) / 100;
+		const userEmail = event.data.attributes.user_email;
+		const userName = event.data.attributes.user_name || null; // Nombre completo del comprador
 
-			logger.info(`   Order Number: #${orderNumber}`);
-			logger.info(`   Order ID: ${orderIdentifier}`);
+		logger.info(`   Order Number: #${orderNumber}`);
+		logger.info(`   Order ID: ${orderIdentifier}`);
+		logger.info(`   User: ${userName} <${userEmail}>`);
 			logger.info(`   Status: ${status}`);
 			logger.info(`   Amount: $${totalAmount}`);
 
@@ -173,6 +175,7 @@ export const POST: RequestHandler = async ({ request }) => {
 					ticket_code: t.ticket_code,
 					qr_token: t.qr_token,
 					qr_hash: t.qr_hash,
+					holder_name: userName,
 					holder_email: userEmail,
 					status: 'active'
 				}));
