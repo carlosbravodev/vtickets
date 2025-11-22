@@ -1,5 +1,6 @@
 import { error, redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
+import { supabaseAdmin } from '$lib/supabaseAdmin';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
   // Verificar autenticación
@@ -39,14 +40,14 @@ export const load: PageServerLoad = async ({ params, locals }) => {
   }
 
   // Obtener estadísticas de verificación
-  // Contar TODOS los tickets vendidos (active + used)
-  const { count: totalTickets } = await locals.supabase
+  // Contar TODOS los tickets vendidos (active + used) - usar admin para evitar RLS
+  const { count: totalTickets } = await supabaseAdmin
     .from('tickets')
     .select('*', { count: 'exact', head: true })
     .eq('event_id', eventId)
     .in('status', ['active', 'used']);
 
-  const { count: verifiedTickets } = await locals.supabase
+  const { count: verifiedTickets } = await supabaseAdmin
     .from('tickets')
     .select('*', { count: 'exact', head: true })
     .eq('event_id', eventId)
