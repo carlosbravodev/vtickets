@@ -31,6 +31,14 @@
 	} | null>(null);
 	let showResult = $state(false);
 	let offlineMode = $state(!isOnline());
+	
+	// Estadísticas reactivas
+	let stats = $state({
+		total: data.stats.total,
+		verified: data.stats.verified,
+		pending: data.stats.pending,
+		percentage: data.stats.percentage
+	});
 
 	// Inicializar
 	onMount(() => {
@@ -268,9 +276,9 @@
 				syncStore.incrementPending();
 
 				// Actualizar estadísticas localmente
-				data.stats.verified += 1;
-				data.stats.pending -= 1;
-				data.stats.percentage = Math.round((data.stats.verified / data.stats.total) * 100);
+				stats.verified += 1;
+				stats.pending -= 1;
+				stats.percentage = Math.round((stats.verified / stats.total) * 100);
 
 				// Mostrar éxito
 				verificationResult = {
@@ -362,9 +370,10 @@
 
 				// Actualizar estadísticas en tiempo real
 				if (!markData.already_verified) {
-					data.stats.verified += 1;
-					data.stats.pending -= 1;
-					data.stats.percentage = Math.round((data.stats.verified / data.stats.total) * 100);
+					stats.verified += 1;
+					stats.pending -= 1;
+					stats.percentage = Math.round((stats.verified / stats.total) * 100);
+					console.log('📊 Estadísticas actualizadas:', stats);
 				}
 
 				// Vibración de éxito (patrón corto-corto)
@@ -374,13 +383,14 @@
 			}
 
 			showResult = true;
+			console.log('✅ Mostrando resultado:', verificationResult);
 
-			// Ocultar resultado y permitir nuevo escaneo después de 4 segundos
+			// Ocultar resultado y permitir nuevo escaneo después de 5 segundos
 			setTimeout(() => {
 				showResult = false;
 				verificationResult = null;
 				isProcessing = false;
-			}, 4000);
+			}, 5000);
 
 		} catch (error) {
 			console.error('Error procesando QR:', error);
@@ -493,15 +503,15 @@
 		<!-- Estadísticas -->
 		<div class="grid grid-cols-3 gap-4 mb-6">
 			<div class="bg-white rounded-lg shadow-md p-4 text-center">
-				<div class="text-3xl font-bold text-gray-900">{data.stats.total}</div>
+				<div class="text-3xl font-bold text-gray-900">{stats.total}</div>
 				<div class="text-sm text-gray-600 mt-1">Total</div>
 			</div>
 			<div class="bg-white rounded-lg shadow-md p-4 text-center">
-				<div class="text-3xl font-bold text-green-600">{data.stats.verified}</div>
+				<div class="text-3xl font-bold text-green-600">{stats.verified}</div>
 				<div class="text-sm text-gray-600 mt-1">Verificados</div>
 			</div>
 			<div class="bg-white rounded-lg shadow-md p-4 text-center">
-				<div class="text-3xl font-bold text-orange-600">{data.stats.pending}</div>
+				<div class="text-3xl font-bold text-orange-600">{stats.pending}</div>
 				<div class="text-sm text-gray-600 mt-1">Pendientes</div>
 			</div>
 		</div>
