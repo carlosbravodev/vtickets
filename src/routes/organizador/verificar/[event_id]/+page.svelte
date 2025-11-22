@@ -4,7 +4,7 @@
 	import { syncStore } from '$lib/stores/sync.svelte';
 	import QrScanner from '$lib/components/QrScanner.svelte';
 	import type { PageData } from './$types';
-	import { onMount } from 'svelte';
+	import { onMount, tick } from 'svelte';
 	import { 
 		cacheEvent, 
 		cacheTickets, 
@@ -105,7 +105,16 @@
 			isScanning = true;
 			verificationResult = null;
 			showResult = false;
-			await scannerRef.start();
+			
+			// Esperar a que el componente se monte en el DOM
+			await tick();
+			
+			// Ahora sí podemos iniciar el escáner
+			if (scannerRef) {
+				await scannerRef.start();
+			} else {
+				throw new Error('El escáner no se pudo inicializar');
+			}
 		} catch (error) {
 			console.error('Error al iniciar escaneo:', error);
 			toast.error('Error al acceder a la cámara');
@@ -116,7 +125,9 @@
 	// Detener escaneo
 	async function stopScan() {
 		try {
-			await scannerRef.stop();
+			if (scannerRef) {
+				await scannerRef.stop();
+			}
 			isScanning = false;
 		} catch (error) {
 			console.error('Error al detener escaneo:', error);
