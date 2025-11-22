@@ -51,9 +51,11 @@ export const POST: RequestHandler = async ({ request }) => {
 	const totalAmount = parseFloat(event.data.attributes.total) / 100;
 	const userEmail = event.data.attributes.user_email;
 	
-	// Extraer nombre del comprador desde checkout_data
-	const checkoutData = event.data.attributes.checkout_data || {};
-	const userName = checkoutData.name || event.data.attributes.user_name || null;
+	// Extraer nombre del comprador - prioridad: custom_data > checkout_data > user_name
+	const userName = customData.buyer_name || 
+	                 event.data.attributes.checkout_data?.name || 
+	                 event.data.attributes.user_name || 
+	                 null;
 
 	logger.info(`   Order Number: #${orderNumber}`);
 	logger.info(`   Order ID: ${orderIdentifier}`);

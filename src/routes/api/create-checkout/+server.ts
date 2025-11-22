@@ -142,18 +142,17 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			}, { status: 400 });
 		}
 	}
-		// Preparar custom data para el webhook
-		const customData: any = {
-			event_id: eventId,
-			tickets: JSON.stringify(tickets)
-		};
+	// Preparar custom data para el webhook
+	const customData: any = {
+		event_id: eventId,
+		tickets: JSON.stringify(tickets),
+		buyer_name: `${profile.first_name} ${profile.last_name}`.trim() // Agregar nombre del comprador
+	};
 
-		// Agregar buyer_id si el usuario está autenticado
-		if (buyerId) {
-			customData.buyer_id = buyerId;
-		}
-
-		// Preparar datos de checkout prellenados
+	// Agregar buyer_id si el usuario está autenticado
+	if (buyerId) {
+		customData.buyer_id = buyerId;
+	}		// Preparar datos de checkout prellenados
 		const checkoutData: any = {
 			custom: customData,
 			billing_address: {
