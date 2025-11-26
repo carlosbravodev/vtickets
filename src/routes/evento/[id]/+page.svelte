@@ -126,6 +126,15 @@
 
 	// Función para proceder al pago
 	async function proceedToPayment() {
+		// Verificar autenticación antes de proceder
+		if (!isAuthenticated) {
+			toast.warning('Debes iniciar sesión para comprar entradas', 4000);
+			setTimeout(() => {
+				goto(`/iniciar-sesion?redirectTo=${encodeURIComponent(currentPath)}`);
+			}, 500);
+			return;
+		}
+		
 		if (totalAmount <= 0) return;
 
 		isCreatingCheckout = true;
@@ -194,150 +203,123 @@
 </script>
 
 <div class="min-h-screen bg-gray-50">
-	<!-- Hero Section con imagen -->
-	<div class="relative h-96 overflow-hidden" in:fade={{ duration: 400 }}>
-		<img
-			class="w-full h-full object-cover"
-			src={optimizeSupabaseImage(event.image_url, { width: 1920, quality: 90 })}
-			alt={event.title}
-		/>
-		<div class="absolute inset-0 bg-linear-to-t from-black/80 via-black/40 to-black/10"></div>
-		
-		<!-- Botón de volver atrás - Superior izquierda -->
-		<div class="absolute top-8 left-8 z-30" in:fly={{ x: -30, duration: 500, delay: 100 }}>
-			<button
-				onclick={goBack}
-				class="flex items-center gap-2 px-4 py-2 bg-white/90 hover:bg-white text-gray-900 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 backdrop-blur-sm group"
-				aria-label="Volver a eventos"
-			>
-				<svg 
-					class="w-5 h-5 transform group-hover:-translate-x-1 transition-transform duration-200" 
-					fill="none" 
-					stroke="currentColor" 
-					viewBox="0 0 24 24"
-				>
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-				</svg>
-				<span class="font-semibold">Volver a eventos</span>
-			</button>
-		</div>
-		
-		<!-- Título sobre la imagen -->
-		<div class="absolute bottom-0 left-0 right-0 p-8" in:fly={{ y: 30, duration: 600, delay: 200 }}>
-			<div class="container mx-auto max-w-5xl">
-				<h1 class="text-4xl md:text-5xl font-bold text-white mb-4 drop-shadow-lg">
-					{event.title}
-				</h1>
-				{#if isEventPast}
-					<span class="inline-block bg-gray-600 text-white text-sm font-semibold px-4 py-2 rounded-full">
-						Evento Finalizado
-					</span>
-				{:else if event.is_active}
-					<span class="inline-block bg-green-500 text-white text-sm font-semibold px-4 py-2 rounded-full">
-						Evento Activo
-					</span>
-				{/if}
+	<!-- Botón de volver -->
+	<div class="container mx-auto max-w-4xl px-4 pt-8 pb-4">
+		<button
+			onclick={goBack}
+			class="bg-white text-black px-4 py-2 rounded-lg font-medium hover:bg-black hover:text-white transition-all duration-200 shadow-sm border-2 border-black flex items-center gap-2"
+			in:fly={{ x: -20, duration: 400, delay: 200 }}
+		>
+			<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+			</svg>
+			<span>Volver</span>
+		</button>
+	</div>
+
+	<!-- Hero Section: Imagen + Info del Evento -->
+	<div class="container mx-auto max-w-7xl px-4 pb-8" in:fade={{ duration: 400 }}>
+		<div class="grid lg:grid-cols-2 gap-8 items-start">
+			<!-- Imagen del evento (horizontal 4:3) -->
+			<div class="w-full" style="aspect-ratio: 4/3;">
+				<img
+					class="w-full h-full object-cover rounded-2xl shadow-xl"
+					src={optimizeSupabaseImage(event.image_url, { width: 1200, quality: 90 })}
+					alt={event.title}
+				/>
+			</div>
+
+			<!-- Información del evento -->
+			<div class="space-y-8" in:fly={{ y: 30, duration: 500, delay: 300 }}>
+				<!-- Título y badge -->
+				<div>
+					<h1 class="text-3xl md:text-4xl lg:text-5xl font-extrabold text-black mb-3 leading-tight" style="letter-spacing: -0.025em;">
+						{event.title}
+					</h1>
+					{#if isEventPast}
+						<span class="inline-block bg-black text-white text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-wide">
+							Evento Finalizado
+						</span>
+					{:else if event.is_active}
+						<span class="inline-block bg-black text-white text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-wide">
+							Evento Activo
+						</span>
+					{/if}
+				</div>
+
+				<!-- Información clave en grid -->
+				<div class="space-y-5">
+					<!-- Fecha y hora -->
+					<div class="flex items-start space-x-3">
+						<div class="shrink-0 w-10 h-10 bg-black rounded-lg flex items-center justify-center">
+							<svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+							</svg>
+						</div>
+						<div>
+							<p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Fecha y Hora</p>
+							<p class="text-base font-bold text-black">{formatDateTime(event.event_date)}</p>
+						</div>
+					</div>
+
+					<!-- Ubicación -->
+					{#if event.location || event.venue}
+						<div class="flex items-start space-x-3">
+							<div class="shrink-0 w-10 h-10 bg-black rounded-lg flex items-center justify-center">
+								<svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+								</svg>
+							</div>
+							<div>
+								<p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Ubicación</p>
+								{#if event.venue}
+									<p class="text-base font-bold text-black">{event.venue}</p>
+									{#if event.location}
+										<p class="text-sm font-medium text-gray-600">{event.location}</p>
+									{/if}
+								{:else}
+									<p class="text-base font-bold text-black">{event.location}</p>
+								{/if}
+							</div>
+						</div>
+					{/if}
+				</div>
+
+				<!-- Descripción -->
+				<div class="pt-4 border-t border-gray-200">
+					<h2 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-3">Acerca del Evento</h2>
+					<p class="text-black text-base font-normal leading-relaxed whitespace-pre-line">{event.description}</p>
+				</div>
 			</div>
 		</div>
 	</div>
 
-	<!-- Contenido principal -->
-	<div class="container mx-auto max-w-5xl px-4 py-12" in:fly={{ y: 50, duration: 500, delay: 300 }}>
+	<!-- Contenido principal: Compra de Entradas -->
+	<div class="container mx-auto max-w-7xl px-4 pb-12" in:fly={{ y: 50, duration: 500, delay: 300 }}>
 		<div class="bg-white rounded-2xl shadow-xl p-8 md:p-12">
-			<!-- Información clave -->
-			<div class="grid md:grid-cols-2 gap-6 mb-8 pb-8 border-b border-gray-200">
-				<!-- Fecha y hora -->
-				<div class="flex items-start space-x-4">
-					<div class="shrink-0 w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center">
-						<svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-						</svg>
-					</div>
-					<div>
-						<h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1">Fecha y Hora</h3>
-						<p class="text-lg text-gray-900">{formatDateTime(event.event_date)}</p>
-					</div>
-				</div>
 
-				<!-- Ubicación -->
-				{#if event.location || event.venue}
-					<div class="flex items-start space-x-4">
-						<div class="shrink-0 w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-							<svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-							</svg>
-						</div>
-						<div>
-							<h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1">Ubicación</h3>
-							{#if event.venue}
-								<p class="text-lg font-semibold text-gray-900">{event.venue}</p>
-								{#if event.location}
-									<p class="text-md text-gray-600">{event.location}</p>
-								{/if}
-							{:else}
-								<p class="text-lg text-gray-900">{event.location}</p>
-							{/if}
-						</div>
-					</div>
-				{/if}
-			</div>
-
-			<!-- Descripción -->
-			<div class="mb-8">
-				<h2 class="text-2xl font-bold text-gray-900 mb-4">Acerca del Evento</h2>
-				<p class="text-gray-700 text-lg leading-relaxed whitespace-pre-line">{event.description}</p>
-			</div>
-
-			<!-- Información de Precios (solo informativa) -->
 			{#if event.ticket_types && event.ticket_types.length > 0}
-				<div class="mb-8 pb-8 border-b border-gray-200">
-					<h2 class="text-2xl font-bold text-gray-900 mb-6">Precios de Entradas</h2>
-					<div class="bg-gray-50 rounded-xl p-6">
-						<div class="space-y-4">
-							{#each event.ticket_types as ticket}
-								<div class="flex items-center justify-between py-3 border-b border-gray-200 last:border-0">
-									<div class="flex items-center gap-3">
-										<div class="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center">
-											<svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-												<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
-											</svg>
-										</div>
-										<div>
-											<h3 class="font-semibold text-gray-900">{ticket.name}</h3>
-											<p class="text-sm text-green-600 font-medium">Disponible</p>
-										</div>
-									</div>
-									<div class="text-right">
-										<p class="text-2xl font-bold text-indigo-600">${ticket.price}</p>
-										<p class="text-xs text-gray-500">por entrada</p>
-									</div>
-								</div>
-							{/each}
-						</div>
-					</div>
-				</div>
-
 				<!-- Sección de Compra de Entradas -->
-				<div class="mb-8 pb-8 border-b border-gray-200 relative">
-					<h2 class="text-2xl font-bold text-gray-900 mb-6">Comprar Entradas</h2>
+				<div class="mb-10 relative">
+					<h2 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-6">Entradas Disponibles</h2>
 					
 					<!-- Overlay si el evento ya pasó (prioridad máxima) -->
 					{#if isEventPast}
 						<div class="absolute inset-0 bg-white/80 backdrop-blur-sm z-20 rounded-xl flex items-center justify-center" in:fade={{ duration: 300 }}>
-							<div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md mx-4 text-center border-2 border-gray-300" in:fly={{ y: 20, duration: 400, delay: 100 }}>
+							<div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md mx-4 text-center border-2 border-black" in:fly={{ y: 20, duration: 400, delay: 100 }}>
 								<div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-									<svg class="w-8 h-8 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<svg class="w-8 h-8 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
 									</svg>
 								</div>
-								<h3 class="text-2xl font-bold text-gray-900 mb-3">Evento Finalizado</h3>
+								<h3 class="text-2xl font-bold text-black mb-3">Evento Finalizado</h3>
 								<p class="text-gray-600 mb-6">
 									Lo sentimos, este evento ya ha pasado y las entradas ya no están disponibles para la compra.
 								</p>
 								<button
 									onclick={goBack}
-									class="w-full px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white font-semibold rounded-lg transition-colors duration-200 flex items-center justify-center gap-2"
+									class="w-full px-6 py-3 bg-white hover:bg-black text-black hover:text-white border-2 border-black font-semibold rounded-lg transition-all duration-200 flex items-center justify-center gap-2"
 								>
 									<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -348,63 +330,28 @@
 						</div>
 					{/if}
 					
-					<!-- Overlay de blur si no está autenticado -->
-					{#if !isAuthenticated}
-						<div class="absolute inset-0 bg-white/60 backdrop-blur-sm z-10 rounded-xl flex items-center justify-center" in:fade={{ duration: 300 }}>
-							<div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md mx-4 text-center" in:fly={{ y: 20, duration: 400, delay: 100 }}>
-								<div class="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
-									<svg class="w-8 h-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-									</svg>
-								</div>
-								<h3 class="text-2xl font-bold text-gray-900 mb-3">Inicia sesión para comprar</h3>
-								<p class="text-gray-600 mb-6">
-									Necesitas tener una cuenta para poder adquirir tus entradas. 
-									Es rápido, fácil y seguro.
-								</p>
-								<div class="space-y-3">
-									<button
-										onclick={() => goto(`/iniciar-sesion?redirectTo=${encodeURIComponent(currentPath)}`)}
-										class="w-full px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition-colors duration-200 flex items-center justify-center gap-2"
-									>
-										<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-										</svg>
-										Iniciar Sesión
-									</button>
-									<p class="text-sm text-gray-500">
-										¿No tienes cuenta? 
-										<button onclick={() => goto(`/iniciar-sesion?redirectTo=${encodeURIComponent(currentPath)}`)} class="text-indigo-600 hover:text-indigo-700 font-semibold">
-											Regístrate aquí
-										</button>
-									</p>
-								</div>
-							</div>
-						</div>
-					{/if}
-					
-					<div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6" class:pointer-events-none={!isAuthenticated} class:cursor-default={!isAuthenticated}>
+					<div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
 						{#each event.ticket_types as ticket, i (ticket.id)}
 							<div
 								in:fly={{ y: 30, duration: 400, delay: 400 + (i * 100) }}
-								class="bg-linear-to-br from-gray-50 to-gray-100 rounded-xl p-6 border-2 border-gray-200 hover:border-indigo-500 hover:shadow-lg transition-all duration-300"
+								class="bg-white rounded-xl p-6 border-2 border-gray-200 hover:border-black hover:shadow-lg transition-all duration-300"
 							>
-								<!-- Nombre del ticket -->
-								<div class="flex items-center justify-between mb-4">
-									<h3 class="text-xl font-bold text-gray-900">{ticket.name}</h3>
-									<svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
-									</svg>
-								</div>
+							<!-- Nombre del ticket -->
+							<div class="flex items-center justify-between mb-5">
+								<h3 class="text-lg font-extrabold text-black">{ticket.name}</h3>
+								<svg class="w-5 h-5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
+								</svg>
+							</div>
 
-								<!-- Precio -->
-								<div class="mb-4">
-									<span class="text-3xl font-extrabold text-indigo-600">${ticket.price}</span>
-									<span class="text-gray-500 ml-1">por entrada</span>
-								</div>
+							<!-- Precio -->
+							<div class="mb-5">
+								<span class="text-4xl font-extrabold text-black" style="letter-spacing: -0.02em;">${ticket.price}</span>
+								<span class="text-gray-400 ml-2 text-sm font-medium uppercase tracking-wide">por entrada</span>
+							</div>
 
-								<!-- Disponibilidad -->
-								<div class="flex items-center text-sm text-green-600 font-medium mb-4">
+							<!-- Disponibilidad -->
+							<div class="flex items-center text-xs text-green-600 font-bold uppercase tracking-wide mb-5">
 									<svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
 									</svg>
@@ -415,7 +362,7 @@
 								{#if !selectedTickets[ticket.id]}
 									<button
 										onclick={() => selectTicket(ticket.id)}
-										class="w-full py-2 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition-colors duration-200"
+										class="w-full py-2 px-4 bg-white hover:bg-black text-black hover:text-white border-2 border-black font-semibold rounded-lg transition-all duration-200"
 									>
 										Seleccionar
 									</button>
@@ -439,7 +386,7 @@
 											type="number"
 											value={selectedTickets[ticket.id]}
 											readonly
-											class="w-full py-2 px-4 text-center text-lg font-bold bg-white border-2 border-indigo-300 rounded-lg focus:outline-none"
+											class="w-full py-2 px-4 text-center text-lg font-bold bg-white border-2 border-black rounded-lg focus:outline-none"
 										/>
 									</div>
 
@@ -469,29 +416,29 @@
 			<div class="pt-8 border-t border-gray-200">
 				{#if totalAmount > 0}
 					<!-- Resumen del total -->
-					<div class="bg-indigo-50 rounded-xl p-6 mb-6" in:fly={{ y: 20, duration: 400 }}>
-						<div class="flex items-center justify-between mb-4">
+					<div class="bg-gray-50 rounded-xl p-8 mb-8" in:fly={{ y: 20, duration: 400 }}>
+						<div class="flex items-center justify-between mb-6">
 							<div>
-								<h3 class="text-lg font-semibold text-gray-900">Total a pagar</h3>
-								<p class="text-sm text-gray-600">
+								<h3 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-1">Total a pagar</h3>
+								<p class="text-xs text-gray-500 font-medium">
 									{Object.values(selectedTickets).reduce((sum, qty) => sum + qty, 0)} 
 									{Object.values(selectedTickets).reduce((sum, qty) => sum + qty, 0) === 1 ? 'entrada' : 'entradas'} seleccionada(s)
 								</p>
 							</div>
 							<div class="text-right">
-								<p class="text-4xl font-extrabold text-indigo-600">${totalAmount.toFixed(2)}</p>
+								<p class="text-5xl font-extrabold text-black" style="letter-spacing: -0.03em;">${totalAmount.toFixed(2)}</p>
 							</div>
 						</div>
 
 						<!-- Desglose de tickets -->
-						<div class="space-y-2 pt-4 border-t border-indigo-200">
+						<div class="space-y-3 pt-5 border-t border-gray-200">
 							{#each event.ticket_types as ticket}
 								{#if selectedTickets[ticket.id]}
-									<div class="flex items-center justify-between text-sm">
-										<span class="text-gray-700">
+									<div class="flex items-center justify-between">
+										<span class="text-sm text-gray-600 font-medium">
 											{ticket.name} x {selectedTickets[ticket.id]}
 										</span>
-										<span class="font-semibold text-gray-900">
+										<span class="text-base font-bold text-black">
 											${(selectedTickets[ticket.id] * parseFloat(ticket.price)).toFixed(2)}
 										</span>
 									</div>
@@ -505,7 +452,7 @@
 						<button
 							onclick={proceedToPayment}
 							disabled={isCreatingCheckout}
-							class="px-8 py-4 bg-linear-to-r from-indigo-600 to-purple-600 text-white font-bold text-lg rounded-lg hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-4 focus:ring-indigo-300 transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+							class="px-10 py-5 bg-white hover:bg-black text-black hover:text-white border-2 border-black font-extrabold text-base rounded-lg focus:outline-none transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-3 uppercase tracking-wide"
 						>
 							{#if isCreatingCheckout}
 								<svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -542,19 +489,19 @@
 		in:fade={{ duration: 200 }}
 	>
 		<div 
-			class="bg-white rounded-2xl shadow-2xl p-8 max-w-md mx-4 text-center"
+			class="bg-white rounded-2xl shadow-2xl p-8 max-w-md mx-4 text-center border-2 border-black"
 			in:fly={{ y: 20, duration: 300 }}
 		>
 			<!-- Spinner grande -->
 			<div class="flex justify-center mb-6">
-				<svg class="animate-spin h-16 w-16 text-indigo-600" fill="none" viewBox="0 0 24 24">
+				<svg class="animate-spin h-16 w-16 text-black" fill="none" viewBox="0 0 24 24">
 					<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
 					<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
 				</svg>
 			</div>
 			
 			<!-- Mensaje -->
-			<h3 class="text-2xl font-bold text-gray-900 mb-3">
+			<h3 class="text-2xl font-bold text-black mb-3">
 				Preparando tu compra...
 			</h3>
 			<p class="text-gray-600 mb-4">
