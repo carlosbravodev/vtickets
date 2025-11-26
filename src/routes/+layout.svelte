@@ -18,63 +18,68 @@
   let showUserMenu = $state(false);
 
   // Control para evitar mostrar el mismo toast múltiples veces
-  let lastToastShown = $state('');
+  let lastToastShown = $state("");
 
   // Registrar Service Worker para PWA
   onMount(() => {
-    if (browser && 'serviceWorker' in navigator) {
+    if (browser && "serviceWorker" in navigator) {
       navigator.serviceWorker
-        .register('/service-worker.js')
+        .register("/service-worker.js")
         .then((registration) => {
-          console.log('✅ Service Worker registrado:', registration);
-          
+          console.log("✅ Service Worker registrado:", registration);
+
           // Escuchar actualizaciones del service worker
-          registration.addEventListener('updatefound', () => {
+          registration.addEventListener("updatefound", () => {
             const newWorker = registration.installing;
             if (newWorker) {
-              newWorker.addEventListener('statechange', () => {
-                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              newWorker.addEventListener("statechange", () => {
+                if (
+                  newWorker.state === "installed" &&
+                  navigator.serviceWorker.controller
+                ) {
                   // Hay una nueva versión disponible
-                  toast.info('Nueva versión disponible. Recarga la página para actualizar.');
+                  toast.info(
+                    "Nueva versión disponible. Recarga la página para actualizar."
+                  );
                 }
               });
             }
           });
         })
         .catch((err) => {
-          console.error('❌ Error registrando Service Worker:', err);
+          console.error("❌ Error registrando Service Worker:", err);
         });
     }
   });
 
   // Detectar mensajes de toast en la URL
   $effect(() => {
-    const toastType = $page.url.searchParams.get('toast');
-    const toastMessage = $page.url.searchParams.get('message');
-    
+    const toastType = $page.url.searchParams.get("toast");
+    const toastMessage = $page.url.searchParams.get("message");
+
     // Crear un identificador único para este toast
     const toastId = `${toastType}-${toastMessage}`;
-    
+
     if (toastType && toastMessage && toastId !== lastToastShown) {
       // Marcar este toast como mostrado
       lastToastShown = toastId;
-      
+
       // Mostrar el toast según el tipo
-      if (toastType === 'error') {
+      if (toastType === "error") {
         toast.error(toastMessage);
-      } else if (toastType === 'success') {
+      } else if (toastType === "success") {
         toast.success(toastMessage);
-      } else if (toastType === 'warning') {
+      } else if (toastType === "warning") {
         toast.warning(toastMessage);
       } else {
         toast.info(toastMessage);
       }
-      
+
       // Limpiar los parámetros de la URL sin recargar la página
       const newUrl = new URL($page.url);
-      newUrl.searchParams.delete('toast');
-      newUrl.searchParams.delete('message');
-      window.history.replaceState({}, '', newUrl.toString());
+      newUrl.searchParams.delete("toast");
+      newUrl.searchParams.delete("message");
+      window.history.replaceState({}, "", newUrl.toString());
     }
   });
 
@@ -84,12 +89,14 @@
   let profiles = $derived(data.profiles || []);
   let availableRoles = $derived(data.availableRoles || []);
   let isAuthenticated = $derived(!!user);
-  
+
   // Verificar si el usuario tiene ambos roles
-  let hasBothRoles = $derived(availableRoles.includes('buyer') && availableRoles.includes('organizer'));
-  let hasOrganizerRole = $derived(availableRoles.includes('organizer'));
-  let hasBuyerRole = $derived(availableRoles.includes('buyer'));
-  
+  let hasBothRoles = $derived(
+    availableRoles.includes("buyer") && availableRoles.includes("organizer")
+  );
+  let hasOrganizerRole = $derived(availableRoles.includes("organizer"));
+  let hasBuyerRole = $derived(availableRoles.includes("buyer"));
+
   // Nombre a mostrar: nombre completo o email
   let displayName = $derived(
     profile?.first_name && profile?.last_name
@@ -99,9 +106,9 @@
 
   // Obtener la URL actual para redirección
   let currentPath = $derived($page.url.pathname);
-  
+
   // Verificar si estamos en la sección de organizadores
-  let isOrganizerSection = $derived(currentPath.startsWith('/organizador'));
+  let isOrganizerSection = $derived(currentPath.startsWith("/organizador"));
 
   function toggleMenu() {
     isMenuOpen = !isMenuOpen;
@@ -140,58 +147,144 @@
 
 <!-- Banner de advertencia si está en la sección equivocada -->
 {#if isAuthenticated && !isOrganizerSection}
-  <RoleWarningBanner 
+  <RoleWarningBanner
     currentSection="buyer"
     userHasRole={hasBuyerRole}
-    availableRoles={availableRoles}
+    {availableRoles}
   />
 {/if}
 
 {#if !isOrganizerSection}
-<header class="bg-white shadow sticky top-0 z-50">
-  <nav class="flex justify-between items-center max-w-7xl mx-auto px-4 py-4">
-    <div class="flex items-center gap-8">
-      <a href="/">
-        <img
-          src={logoNavbar}
-          alt="Logo de vtickets"
-          class="h-10 w-auto min-w-28"
-        />
-      </a>
-      <div class="hidden md:flex items-center gap-6">
-        <a
-          href="/eventos"
-          class="text-xl font-bold hover:text-gray-600 transition-colors duration-300"
-          >Eventos</a
-        >
-        {#if !isAuthenticated}
+  <header class="bg-buyer-600 shadow-elevation-2 sticky top-0 z-50">
+    <nav class="flex justify-between items-center max-w-7xl mx-auto px-4 py-4">
+      <div class="flex items-center gap-8">
+        <a href="/">
+          <img
+            src={logoNavbar}
+            alt="Logo de vtickets"
+            class="h-10 w-auto min-w-28 brightness-0 invert"
+          />
+        </a>
+        <div class="hidden md:flex items-center gap-6">
           <a
-            href="/organizador/iniciar-sesion"
-            class="text-sm font-semibold text-gray-500 hover:text-indigo-600 transition-colors duration-300"
-            >Para Organizadores →</a
+            href="/eventos"
+            class="text-xl font-bold text-white hover:text-buyer-100 transition-colors duration-200"
+            >Eventos</a
           >
-        {/if}
-      </div>
-    </div>
-
-    <div class="hidden md:flex items-center gap-4">
-      {#if isAuthenticated}
-        <div class="relative">
-          <button
-            onclick={toggleUserMenu}
-            class="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 transition-colors duration-300 font-bold text-lg text-white py-2 px-4 rounded cursor-pointer"
-          >
-            <img
-              src={userIcon}
-              alt="Icono de usuario"
-              class="h-6 w-6"
-            />
-            <span class="max-w-[150px] truncate"
-              >{displayName}</span
+          {#if !isAuthenticated}
+            <a
+              href="/organizador/iniciar-sesion"
+              class="text-sm font-semibold text-buyer-200 hover:text-white transition-colors duration-200"
+              >Para Organizadores →</a
             >
+          {/if}
+        </div>
+      </div>
+
+      <div class="hidden md:flex items-center gap-4">
+        {#if isAuthenticated}
+          <div class="relative">
+            <button
+              onclick={toggleUserMenu}
+              class="flex items-center gap-2 bg-white hover:bg-buyer-50 text-buyer-600 transition-colors duration-200 font-bold text-lg py-2 px-4 rounded-lg cursor-pointer shadow-elevation-1"
+            >
+              <svg
+                class="h-6 w-6 text-buyer-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                />
+              </svg>
+              <span class="max-w-[150px] truncate">{displayName}</span>
+              <svg
+                class="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M19 9l-7 7-7-7"
+                ></path>
+              </svg>
+            </button>
+
+            {#if showUserMenu}
+              <div
+                class="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-elevation-3 py-2 z-50"
+              >
+                <div class="px-4 py-2 border-b border-gray-200">
+                  <p class="text-sm text-gray-500">Cuenta</p>
+                  <p class="text-sm font-semibold text-gray-900 truncate">
+                    {displayName}
+                  </p>
+                  {#if profile?.first_name && profile?.last_name}
+                    <p class="text-xs text-gray-400 truncate mt-0.5">
+                      {user?.email}
+                    </p>
+                  {/if}
+                </div>
+                <a
+                  href="/cuenta"
+                  class="block px-4 py-2 text-sm text-gray-700 hover:bg-buyer-50 hover:text-buyer-600 transition-colors"
+                  onclick={() => (showUserMenu = false)}
+                >
+                  Mi cuenta
+                </a>
+
+                {#if hasOrganizerRole}
+                  <a
+                    href="/organizador"
+                    class="block px-4 py-2 text-sm text-organizer-600 hover:bg-organizer-50 border-t border-gray-200 transition-colors"
+                    onclick={() => (showUserMenu = false)}
+                  >
+                    <div class="flex items-center gap-2">
+                      <svg
+                        class="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
+                        />
+                      </svg>
+                      <span class="font-semibold">Cambiar a Organizador</span>
+                    </div>
+                  </a>
+                {/if}
+
+                <button
+                  onclick={handleLogout}
+                  class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 border-t border-gray-200 transition-colors"
+                >
+                  Cerrar sesión
+                </button>
+              </div>
+            {/if}
+          </div>
+        {:else}
+          <button
+            onclick={() =>
+              goto(
+                `/iniciar-sesion?redirectTo=${encodeURIComponent(currentPath)}`
+              )}
+            class="flex items-center gap-2 bg-white hover:bg-buyer-50 text-buyer-600 transition-colors duration-200 font-bold text-lg py-2 px-4 rounded-lg cursor-pointer shadow-elevation-1"
+          >
             <svg
-              class="w-4 h-4"
-              fill="none"
+              class="h-6 w-6 text-buyer-600"
+              fill="#4f39f6"
               stroke="currentColor"
               viewBox="0 0 24 24"
             >
@@ -199,151 +292,100 @@
                 stroke-linecap="round"
                 stroke-linejoin="round"
                 stroke-width="2"
-                d="M19 9l-7 7-7-7"
-              ></path>
+                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+              />
             </svg>
-          </button>
-
-          {#if showUserMenu}
-            <div
-              class="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl py-2 z-50"
-            >
-              <div class="px-4 py-2 border-b border-gray-200">
-                <p class="text-sm text-gray-500">Cuenta</p>
-                <p class="text-sm font-semibold text-gray-900 truncate">
-                  {displayName}
-                </p>
-                {#if profile?.first_name && profile?.last_name}
-                  <p class="text-xs text-gray-400 truncate mt-0.5">
-                    {user?.email}
-                  </p>
-                {/if}
-              </div>
-              <a
-                href="/cuenta"
-                class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                onclick={() => (showUserMenu = false)}
-              >
-                Mi cuenta
-              </a>
-              
-              {#if hasOrganizerRole}
-                <a
-                  href="/organizador"
-                  class="block px-4 py-2 text-sm text-purple-600 hover:bg-purple-50 border-t border-gray-200"
-                  onclick={() => (showUserMenu = false)}
-                >
-                  <div class="flex items-center gap-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-                    </svg>
-                    <span class="font-semibold">Cambiar a Organizador</span>
-                  </div>
-                </a>
-              {/if}
-              
-              <button
-                onclick={handleLogout}
-                class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 border-t border-gray-200"
-              >
-                Cerrar sesión
-              </button>
-            </div>
-          {/if}
-        </div>
-      {:else}
-        <button
-          onclick={() =>
-            goto(`/iniciar-sesion?redirectTo=${encodeURIComponent(currentPath)}`)}
-          class="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 transition-colors duration-300 font-bold text-lg text-white py-2 px-4 rounded cursor-pointer"
-        >
-          <img
-            src={userIcon}
-            alt="Icono de usuario"
-            class="h-6 w-6"
-          />
-          Entrar
-        </button>
-      {/if}
-    </div>
-
-    <div class="md:hidden flex items-center">
-      <button onclick={toggleMenu} class="text-gray-800 focus:outline-none">
-        <svg
-          class="w-6 h-6"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          {#if isMenuOpen}
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M6 18L18 6M6 6l12 12"
-            ></path>
-          {:else}
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M4 6h16M4 12h16M4 18h16"
-            ></path>
-          {/if}
-        </svg>
-      </button>
-    </div>
-  </nav>
-
-  <!-- Mobile Menu -->
-  {#if isMenuOpen}
-    <div class="mobile-menu-container">
-      <div class="mobile-menu-content">
-        <a href="/eventos" class="menu-link" onclick={toggleMenu}>Eventos</a>
-        {#if !isAuthenticated}
-          <a href="/organizador/iniciar-sesion" class="menu-link-secondary" onclick={toggleMenu}>
-            Para Organizadores →
-          </a>
-        {/if}
-
-        {#if isAuthenticated}
-          <div class="menu-divider"></div>
-          <div class="user-info">
-            <p class="user-label">Cuenta</p>
-            <p class="user-email">{user?.email}</p>
-          </div>
-          <a href="/cuenta" class="menu-link" onclick={toggleMenu}>
-            Mi cuenta
-          </a>
-          <button
-            onclick={() => {
-              handleLogout();
-              toggleMenu();
-            }}
-            class="menu-link logout-link"
-          >
-            Cerrar sesión
-          </button>
-        {:else}
-          <button
-            onclick={() => {
-              goto(`/iniciar-sesion?redirectTo=${encodeURIComponent(currentPath)}`);
-              toggleMenu();
-            }}
-            class="login-button-mobile"
-          >
-            <img src={userIcon} alt="Icono de usuario" class="icon-mobile" />
             Entrar
           </button>
         {/if}
       </div>
-    </div>
-  {/if}
-</header>
+
+      <div class="md:hidden flex items-center">
+        <button onclick={toggleMenu} class="text-white focus:outline-none">
+          <svg
+            class="w-6 h-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            {#if isMenuOpen}
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M6 18L18 6M6 6l12 12"
+              ></path>
+            {:else}
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M4 6h16M4 12h16M4 18h16"
+              ></path>
+            {/if}
+          </svg>
+        </button>
+      </div>
+    </nav>
+
+    <!-- Mobile Menu -->
+    {#if isMenuOpen}
+      <div class="mobile-menu-container">
+        <div class="mobile-menu-content">
+          <a href="/eventos" class="menu-link" onclick={toggleMenu}>Eventos</a>
+          {#if !isAuthenticated}
+            <a
+              href="/organizador/iniciar-sesion"
+              class="menu-link-secondary"
+              onclick={toggleMenu}
+            >
+              Para Organizadores →
+            </a>
+          {/if}
+
+          {#if isAuthenticated}
+            <div class="menu-divider"></div>
+            <div class="user-info">
+              <p class="user-label">Cuenta</p>
+              <p class="user-email">{user?.email}</p>
+            </div>
+            <a href="/cuenta" class="menu-link" onclick={toggleMenu}>
+              Mi cuenta
+            </a>
+            <button
+              onclick={() => {
+                handleLogout();
+                toggleMenu();
+              }}
+              class="menu-link logout-link"
+            >
+              Cerrar sesión
+            </button>
+          {:else}
+            <button
+              onclick={() => {
+                goto(
+                  `/iniciar-sesion?redirectTo=${encodeURIComponent(currentPath)}`
+                );
+                toggleMenu();
+              }}
+              class="login-button-mobile"
+            >
+              <img src={userIcon} alt="Icono de usuario" class="icon-mobile" />
+              Entrar
+            </button>
+          {/if}
+        </div>
+      </div>
+    {/if}
+  </header>
 {/if}
 
 {@render children?.()}
+
+<!-- Toast Container -->
+<Toast />
 
 <style>
   /* Mobile Menu Container - Fondo con backdrop */
@@ -409,8 +451,8 @@
   }
 
   .menu-link:hover {
-    background: #f3f4f6;
-    color: #667eea;
+    background: oklch(95.5% 0.026 276.966); /* buyer-100 */
+    color: oklch(51.1% 0.262 276.966); /* buyer-600 */
   }
 
   /* Link secundario (para organizadores) */
@@ -429,9 +471,9 @@
   }
 
   .menu-link-secondary:hover {
-    background: #eef2ff;
-    color: #667eea;
-    border-color: #667eea;
+    background: oklch(95.5% 0.026 276.966); /* buyer-100 */
+    color: oklch(51.1% 0.262 276.966); /* buyer-600 */
+    border-color: oklch(51.1% 0.262 276.966); /* buyer-600 */
   }
 
   /* Divisor */
@@ -484,7 +526,7 @@
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: oklch(51.1% 0.262 276.966); /* buyer-600 */
     color: white;
     font-weight: 700;
     font-size: 1rem;
@@ -492,14 +534,16 @@
     border-radius: 10px;
     border: none;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
     width: 100%;
     margin-top: 0.25rem;
+    box-shadow: var(--shadow-elevation-2);
   }
 
   .login-button-mobile:hover {
     transform: translateY(-1px);
-    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    box-shadow: var(--shadow-glow-buyer);
+    background: oklch(56.1% 0.262 276.966); /* buyer-700 */
   }
 
   .login-button-mobile:active {
@@ -511,6 +555,3 @@
     width: 1.25rem;
   }
 </style>
-
-<!-- Toast Container -->
-<Toast />

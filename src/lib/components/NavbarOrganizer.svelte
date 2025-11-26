@@ -62,28 +62,31 @@
           Panel de Organizadores
         </span>
       </a>
-      <div class="hidden md:flex items-center gap-6">
-        <a
-          href="/organizador/eventos"
-          class="text-lg font-bold {currentPath.startsWith('/organizador/eventos') ? 'text-white border-b-2 border-white pb-1' : 'text-purple-100 hover:text-white'} transition-colors duration-300"
-        >
-          Mis Eventos
-        </a>
-        <a
-          href="/organizador/verificar"
-          class="text-lg font-bold {currentPath.startsWith('/organizador/verificar') ? 'text-white border-b-2 border-white pb-1' : 'text-purple-100 hover:text-white'} transition-colors duration-300"
-        >
-          Verificar Tickets
-        </a>
-        {#if !isAuthenticated}
+      {#if isAuthenticated}
+        <div class="hidden md:flex items-center gap-6">
+          <a
+            href="/organizador/eventos"
+            class="text-lg font-bold {currentPath.startsWith('/organizador/eventos') ? 'text-white border-b-2 border-white pb-1' : 'text-purple-100 hover:text-white'} transition-colors duration-300"
+          >
+            Mis Eventos
+          </a>
+          <a
+            href="/organizador/verificar"
+            class="text-lg font-bold {currentPath.startsWith('/organizador/verificar') ? 'text-white border-b-2 border-white pb-1' : 'text-purple-100 hover:text-white'} transition-colors duration-300"
+          >
+            Verificar Tickets
+          </a>
+        </div>
+      {:else}
+        <div class="hidden md:flex items-center gap-6">
           <a
             href="/"
             class="text-sm font-semibold text-purple-200 hover:text-white transition-colors duration-300"
           >
             ← Ir a Tienda
           </a>
-        {/if}
-      </div>
+        </div>
+      {/if}
     </div>
 
     <div class="hidden md:flex items-center gap-4">
@@ -214,23 +217,26 @@
   {#if isMenuOpen}
     <div class="mobile-menu-container">
       <div class="mobile-menu-content">
-        <a 
-          href="/organizador/eventos" 
-          class="menu-link {currentPath.startsWith('/organizador/eventos') ? 'font-bold text-purple-600' : ''}" 
-          onclick={toggleMenu}
-        >
-          Mis Eventos
-        </a>
-        <a 
-          href="/organizador/verificar" 
-          class="menu-link {currentPath.startsWith('/organizador/verificar') ? 'font-bold text-purple-600' : ''}" 
-          onclick={toggleMenu}
-        >
-          Verificar Tickets
-        </a>
-        <a href="/" class="menu-link-secondary" onclick={toggleMenu}>
-          ← Ir a Tienda
-        </a>
+        {#if isAuthenticated}
+          <a 
+            href="/organizador/eventos" 
+            class="menu-link {currentPath.startsWith('/organizador/eventos') ? 'font-bold text-purple-600' : ''}" 
+            onclick={toggleMenu}
+          >
+            Mis Eventos
+          </a>
+          <a 
+            href="/organizador/verificar" 
+            class="menu-link {currentPath.startsWith('/organizador/verificar') ? 'font-bold text-purple-600' : ''}" 
+            onclick={toggleMenu}
+          >
+            Verificar Tickets
+          </a>
+        {:else}
+          <a href="/" class="menu-link-secondary" onclick={toggleMenu}>
+            ← Ir a Tienda
+          </a>
+        {/if}
 
         {#if isAuthenticated}
           <div class="menu-divider"></div>
