@@ -161,12 +161,8 @@
               style="height: {index < currentIndex
                 ? '100%'
                 : index === currentIndex
-                  ? `${100 - progress}%`
-                  : '100%'}; top: {index < currentIndex
-                ? '0'
-                : index === currentIndex
                   ? `${progress}%`
-                  : '0'}"
+                  : '0%'}; top: 0"
             ></div>
           </div>
         </button>
@@ -301,7 +297,7 @@
 
   .hero-cta:hover {
     background: white;
-    color: oklch(51.1% 0.262 276.966); /* buyer-600 */
+    color: black; /* buyer-600 */
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(255, 255, 255, 0.3);
   }
@@ -344,7 +340,7 @@
 
   .progress-bar-fill {
     width: 100%;
-    background: rgba(255, 255, 255, 0.3);
+    background: white;
     border-radius: 3px;
     box-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
     transition: none;
@@ -357,15 +353,7 @@
 
   .progress-bar-wrapper.completed .progress-bar-fill {
     height: 100% !important;
-  }
-
-  .progress-bar-wrapper.active .progress-bar-bg {
-    background: rgba(255, 255, 255, 0.3);
-  }
-
-  .progress-bar-wrapper.active .progress-bar-fill {
-    background: white;
-    box-shadow: 0 0 10px rgba(255, 255, 255, 0.6);
+    top: 0 !important;
   }
 
   /* Responsive */
