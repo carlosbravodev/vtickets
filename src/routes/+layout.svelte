@@ -39,7 +39,7 @@
                 ) {
                   // Hay una nueva versión disponible
                   toast.info(
-                    "Nueva versión disponible. Recarga la página para actualizar."
+                    "Nueva versión disponible. Recarga la página para actualizar.",
                   );
                 }
               });
@@ -92,7 +92,7 @@
 
   // Verificar si el usuario tiene ambos roles
   let hasBothRoles = $derived(
-    availableRoles.includes("buyer") && availableRoles.includes("organizer")
+    availableRoles.includes("buyer") && availableRoles.includes("organizer"),
   );
   let hasOrganizerRole = $derived(availableRoles.includes("organizer"));
   let hasBuyerRole = $derived(availableRoles.includes("buyer"));
@@ -101,7 +101,7 @@
   let displayName = $derived(
     profile?.first_name && profile?.last_name
       ? `${profile.first_name} ${profile.last_name}`
-      : profile?.first_name || user?.email?.split("@")[0] || user?.email || ""
+      : profile?.first_name || user?.email?.split("@")[0] || user?.email || "",
   );
 
   // Obtener la URL actual para redirección
@@ -278,7 +278,7 @@
           <button
             onclick={() =>
               goto(
-                `/iniciar-sesion?redirectTo=${encodeURIComponent(currentPath)}`
+                `/iniciar-sesion?redirectTo=${encodeURIComponent(currentPath)}`,
               )}
             class="flex items-center gap-2 bg-white hover:bg-buyer-50 text-buyer-600 transition-colors duration-200 font-bold text-lg py-2 px-4 rounded-lg cursor-pointer shadow-elevation-1"
           >
@@ -366,7 +366,7 @@
             <button
               onclick={() => {
                 goto(
-                  `/iniciar-sesion?redirectTo=${encodeURIComponent(currentPath)}`
+                  `/iniciar-sesion?redirectTo=${encodeURIComponent(currentPath)}`,
                 );
                 toggleMenu();
               }}
