@@ -3,7 +3,10 @@
 	import { fade } from 'svelte/transition';
 	
 	let { data }: { data: PageData } = $props();
-	const { globalStats, topEvents, activeEvents, recentOrders } = data;
+	const globalStats = $derived(data.globalStats);
+	const topEvents = $derived(data.topEvents);
+	const activeEvents = $derived(data.activeEvents);
+	const recentOrders = $derived(data.recentOrders);
 
 	function formatCurrency(amount: number) {
 		return new Intl.NumberFormat('es-ES', {

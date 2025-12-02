@@ -5,7 +5,10 @@
 	import { goto } from '$app/navigation';
 
 	let { data }: { data: PageData } = $props();
-	const { event, stats, recentOrders, ticketSalesByType } = data;
+	const event = $derived(data.event);
+	const stats = $derived(data.stats);
+	const recentOrders = $derived(data.recentOrders);
+	const ticketSalesByType = $derived(data.ticketSalesByType);
 
 	function formatDateTime(dateString: string) {
 		const date = new Date(dateString);
@@ -66,6 +69,8 @@
 				<button
 					onclick={() => goto('/organizador/eventos')}
 					class="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+					aria-label="Volver a eventos"
+					title="Volver a eventos"
 				>
 					<svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />

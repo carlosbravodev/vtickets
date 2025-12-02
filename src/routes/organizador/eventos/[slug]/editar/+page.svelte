@@ -2,6 +2,7 @@
 	import { goto } from '$app/navigation';
 	import { compressImage, validateImageFile } from '$lib/utils/image';
 	import { toast } from '$lib/stores/toast.svelte';
+	import { onMount } from 'svelte';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -12,35 +13,54 @@
 	let isCompressingImage = $state(false);
 
 	// Datos del evento pre-poblados
-	const eventDateTime = new Date(data.event.event_date);
-	const eventDate = eventDateTime.toISOString().split('T')[0];
-	const eventTime = eventDateTime.toTimeString().slice(0, 5);
+	const eventDateTime = $derived.by(() => new Date(data.event.event_date));
+	const eventDate = $derived.by(() => eventDateTime.toISOString().split('T')[0]);
+	const eventTime = $derived.by(() => eventDateTime.toTimeString().slice(0, 5));
 
 	let eventData = $state({
-		name: data.event.title,
-		description: data.event.description,
-		venue: data.event.venue,
-		location: data.event.location,
-		date: eventDate,
-		time: eventTime,
+		name: '',
+		description: '',
+		venue: '',
+		location: '',
+		date: '',
+		time: '',
 		image: null as File | null,
 		keepCurrentImage: true
 	});
 
-	// Tipos de tickets pre-poblados
-	let ticketTypes = $state(
-		data.event.ticket_types.map((ticket: any) => ({
-			id: `existing-${ticket.id}`, // Marcar como existente
-			name: ticket.name,
-			price: ticket.price,
-			quantity: ticket.initial_quantity,
-			description: ''
-		}))
-	);
+	let ticketTypes = $state<any[]>([]);
 
-	// Imagen actual
-	let currentImageUrl = $state(data.event.image_url);
+	let currentImageUrl = $state('');
 	let imagePreview = $state<string | null>(null);
+
+	// Inicializar datos desde data cuando se monta
+	let isInitialized = $state(false);
+
+	onMount(() => {
+		if (!isInitialized) {
+			eventData = {
+				name: data.event.title,
+				description: data.event.description,
+				venue: data.event.venue,
+				location: data.event.location,
+				date: eventDate,
+				time: eventTime,
+				image: null,
+				keepCurrentImage: true
+			};
+
+			ticketTypes = (data.event.ticket_types || []).map((ticket: any) => ({
+				id: `existing-${ticket.id}`,
+				name: ticket.name,
+				price: ticket.price,
+				quantity: ticket.initial_quantity,
+				description: ''
+			}));
+
+			currentImageUrl = data.event.image_url || '';
+			isInitialized = true;
+		}
+	});
 
 	// Validaciones por paso
 	function validateStep1() {
@@ -375,7 +395,7 @@
 			{#if currentStep === 2}
 				<div class="space-y-6">
 					<div>
-						<label class="block text-sm font-medium text-gray-700 mb-2">
+						<label for="event-image" class="block text-sm font-medium text-gray-700 mb-2">
 							Imagen del evento
 						</label>
 
@@ -483,27 +503,29 @@
 										</svg>
 									</button>
 
-									<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-										<div>
-											<label class="block text-sm font-medium text-gray-700 mb-2">
-												Nombre *
-											</label>
-											<input
-												type="text"
-												bind:value={ticket.name}
+								<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+									<div>
+										<label for="ticket-name-{ticket.id}" class="block text-sm font-medium text-gray-700 mb-2">
+											Nombre *
+										</label>
+										<input
+											id="ticket-name-{ticket.id}"
+											type="text"
+											bind:value={ticket.name}
 												class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
 												placeholder="Ej: General, VIP"
 												required
 											/>
 										</div>
 
-										<div>
-											<label class="block text-sm font-medium text-gray-700 mb-2">
-												Precio ($) *
-											</label>
-											<input
-												type="number"
-												bind:value={ticket.price}
+									<div>
+										<label for="ticket-price-{ticket.id}" class="block text-sm font-medium text-gray-700 mb-2">
+											Precio ($) *
+										</label>
+										<input
+											id="ticket-price-{ticket.id}"
+											type="number"
+											bind:value={ticket.price}
 												min="0"
 												step="1"
 												class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
@@ -512,13 +534,14 @@
 											/>
 										</div>
 
-										<div>
-											<label class="block text-sm font-medium text-gray-700 mb-2">
-												Cantidad *
-											</label>
-											<input
-												type="number"
-												bind:value={ticket.quantity}
+									<div>
+										<label for="ticket-quantity-{ticket.id}" class="block text-sm font-medium text-gray-700 mb-2">
+											Cantidad *
+										</label>
+										<input
+											id="ticket-quantity-{ticket.id}"
+											type="number"
+											bind:value={ticket.quantity}
 												min="1"
 												step="1"
 												class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"

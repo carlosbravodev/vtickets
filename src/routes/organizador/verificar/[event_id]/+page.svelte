@@ -54,10 +54,20 @@
 	
 	// Estadísticas reactivas
 	let stats = $state({
-		total: data.stats.total,
-		verified: data.stats.verified,
-		pending: data.stats.pending,
-		percentage: data.stats.percentage
+		total: 0,
+		verified: 0,
+		pending: 0,
+		percentage: 0
+	});
+
+	// Inicializar stats en onMount
+	onMount(() => {
+		stats = {
+			total: data.stats.total,
+			verified: data.stats.verified,
+			pending: data.stats.pending,
+			percentage: data.stats.percentage
+		};
 	});
 
 	// Canal de Realtime para actualizaciones en vivo

@@ -47,7 +47,7 @@
               <!-- Imagen del evento con overlay mejorado -->
               <a
                 href={`/evento/${event.slug}`}
-                class="block relative aspect-[4/3] overflow-hidden bg-gray-100"
+                class="block relative aspect-4/3 overflow-hidden bg-gray-100"
               >
                 <img
                   src={optimizeSupabaseImage(event.image_url, {
@@ -60,7 +60,7 @@
                 />
                 <!-- Gradient overlay -->
                 <div
-                  class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-70 group-hover:opacity-50 transition-opacity duration-500"
+                  class="absolute inset-0 bg-linear-to-t from-black/80 via-black/20 to-transparent opacity-70 group-hover:opacity-50 transition-opacity duration-500"
                 ></div>
 
                 <!-- Badge de fecha -->
@@ -111,7 +111,7 @@
 
                 <!-- Separador -->
                 <div
-                  class="h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent my-1"
+                  class="h-px bg-linear-to-r from-transparent via-gray-200 to-transparent my-1"
                 ></div>
 
                 <!-- Footer -->
@@ -146,7 +146,7 @@
 
               <!-- Efecto de brillo -->
               <div
-                class="absolute inset-0 bg-gradient-to-br from-white/0 via-white/5 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+                class="absolute inset-0 bg-linear-to-br from-white/0 via-white/5 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
               ></div>
             </Card.Root>
           </div>

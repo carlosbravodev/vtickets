@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
+	import { onMount } from 'svelte';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -9,9 +10,16 @@
 	type Verification = any; // Simplificado para evitar problemas de tipos con Supabase
 
 	// Estado para filtros
-	let dateFrom = $state(data.filters.dateFrom || '');
-	let dateTo = $state(data.filters.dateTo || '');
-	let selectedVerifier = $state(data.filters.verifierId || '');
+	let dateFrom = $state('');
+	let dateTo = $state('');
+	let selectedVerifier = $state('');
+
+	// Inicializar filtros en onMount
+	onMount(() => {
+		dateFrom = data.filters.dateFrom || '';
+		dateTo = data.filters.dateTo || '';
+		selectedVerifier = data.filters.verifierId || '';
+	});
 
 	// Aplicar filtros
 	function applyFilters() {

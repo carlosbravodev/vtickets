@@ -117,7 +117,7 @@
               <!-- Imagen del evento con overlay mejorado -->
               <a
                 href={`/evento/${event.slug}`}
-                class="block relative aspect-[4/3] overflow-hidden bg-gray-100"
+                class="block relative aspect-4/3 overflow-hidden bg-gray-100"
               >
                 <img
                   src={event.image_url}
@@ -126,7 +126,7 @@
                 />
                 <!-- Gradient overlay más sofisticado -->
                 <div
-                  class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-70 group-hover:opacity-50 transition-opacity duration-500"
+                  class="absolute inset-0 bg-linear-to-t from-black/80 via-black/20 to-transparent opacity-70 group-hover:opacity-50 transition-opacity duration-500"
                 ></div>
 
                 <!-- Badge de fecha con glassmorphism -->
@@ -150,14 +150,14 @@
                 <!-- Título -->
                 <a href={`/evento/${event.slug}`} class="group/title block">
                   <h3
-                    class="text-lg font-black leading-tight line-clamp-2 min-h-[3.5rem] text-gray-900 group-hover/title:text-buyer-600 transition-colors duration-200"
+                    class="text-lg font-black leading-tight line-clamp-2 min-h-14 text-gray-900 group-hover/title:text-buyer-600 transition-colors duration-200"
                   >
                     {event.title}
                   </h3>
                 </a>
 
                 <!-- Ubicación con icono -->
-                <div class="flex items-start gap-2.5 min-h-[2.5rem]">
+                <div class="flex items-start gap-2.5 min-h-10">
                   <MapPin class="w-4 h-4 shrink-0 mt-0.5 text-buyer-500" />
                   <span
                     class="text-sm text-gray-600 line-clamp-2 leading-relaxed"
@@ -177,7 +177,7 @@
 
                 <!-- Separador sutil -->
                 <div
-                  class="h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent my-1"
+                  class="h-px bg-linear-to-r from-transparent via-gray-200 to-transparent my-1"
                 ></div>
 
                 <!-- Footer con precio y botón -->
@@ -212,7 +212,7 @@
 
               <!-- Efecto de brillo en hover -->
               <div
-                class="absolute inset-0 bg-gradient-to-br from-white/0 via-white/5 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+                class="absolute inset-0 bg-linear-to-br from-white/0 via-white/5 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
               ></div>
             </Card.Root>
           </div>

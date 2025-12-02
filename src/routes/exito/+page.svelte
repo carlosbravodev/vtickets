@@ -3,7 +3,8 @@
 	import { optimizeSupabaseImage } from '$lib/utils/image';
 
 	let { data } = $props();
-	const { order, ticketCount } = data;
+	const order = $derived(data.order);
+	const ticketCount = $derived(data.ticketCount);
 
 	// Formatear fecha
 	function formatDate(dateString: string) {

@@ -6,9 +6,14 @@
 
 	let { data }: { data: PageData } = $props();
 
-	// Hacer eventos reactivos
-	let events = $state(data.events);
+	// Mantener una copia local para mutaciones en tiempo real
+	let eventsSnapshot = $state<any[]>([]);
 	let realtimeChannel: RealtimeChannel | null = null;
+
+	// Inicializar en onMount
+	onMount(() => {
+		eventsSnapshot = data.events || [];
+	});
 
 	// Actualizar estadísticas de un evento específico
 	async function refreshEventStats(eventId: string) {
@@ -17,7 +22,7 @@
 			if (response.ok) {
 				const newStats = await response.json();
 				// Actualizar el evento en la lista
-				events = events.map(event => 
+				eventsSnapshot = eventsSnapshot.map(event => 
 					event.id === eventId 
 						? { ...event, stats: newStats }
 						: event
@@ -112,7 +117,7 @@
 		</div>
 
 		<!-- Lista de eventos -->
-		{#if data.events.length === 0}
+		{#if eventsSnapshot.length === 0}
 			<div class="bg-white rounded-lg shadow-md p-12 text-center">
 				<div class="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
 					<svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -130,7 +135,7 @@
 			</div>
 		{:else}
 			<div class="grid gap-6 md:grid-cols-2">
-				{#each data.events as event}
+				{#each eventsSnapshot as event}
 					<a
 						href="/organizador/verificar/{event.id}"
 						class="bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow overflow-hidden group"

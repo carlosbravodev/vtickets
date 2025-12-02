@@ -8,7 +8,8 @@
 	import { toast } from '$lib/stores/toast.svelte';
 	
 	let { data } = $props();
-	const { event, user } = data;
+	const event = $derived(data.event);
+	const user = $derived(data.user);
 	
 	// Verificar si el usuario está autenticado
 	let isAuthenticated = $derived(!!user);
