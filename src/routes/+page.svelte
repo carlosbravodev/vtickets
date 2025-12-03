@@ -89,11 +89,11 @@
 			<div class="grid md:grid-cols-3 gap-8">
 				<!-- Feature 1: Security -->
 				<div
-					class="group relative bg-white rounded-2xl border border-gray-100 p-8 hover:border-buyer-200 hover:shadow-lg transition-all duration-300"
+					class="group relative bg-white rounded-2xl border border-gray-100 p-8 hover:border-buyer-200 hover:shadow-lg transition-all duration-150"
 				>
 					<!-- Icon Container -->
 					<div
-						class="inline-flex items-center justify-center w-14 h-14 rounded-xl bg-buyer-50 text-buyer-600 mb-6 group-hover:bg-buyer-100 transition-colors duration-300"
+						class="inline-flex items-center justify-center w-14 h-14 rounded-xl bg-buyer-50 text-buyer-600 mb-6 group-hover:bg-buyer-100 transition-colors duration-150"
 					>
 						<svg
 							class="w-7 h-7"
@@ -112,7 +112,7 @@
 
 					<!-- Content -->
 					<h3
-						class="text-xl font-bold text-gray-900 mb-3 group-hover:text-buyer-600 transition-colors duration-300"
+						class="text-xl font-bold text-gray-900 mb-3 group-hover:text-buyer-600 transition-colors duration-150"
 					>
 						Pago Seguro
 					</h3>
@@ -123,17 +123,17 @@
 
 					<!-- Bottom accent -->
 					<div
-						class="absolute bottom-0 left-0 h-1 w-0 bg-buyer-600 rounded-full group-hover:w-full transition-all duration-500"
+						class="absolute bottom-0 left-0 h-1 w-0 bg-buyer-600 rounded-full group-hover:w-full transition-all duration-200"
 					></div>
 				</div>
 
 				<!-- Feature 2: Speed -->
 				<div
-					class="group relative bg-white rounded-2xl border border-gray-100 p-8 hover:border-buyer-200 hover:shadow-lg transition-all duration-300"
+					class="group relative bg-white rounded-2xl border border-gray-100 p-8 hover:border-buyer-200 hover:shadow-lg transition-all duration-150"
 				>
 					<!-- Icon Container -->
 					<div
-						class="inline-flex items-center justify-center w-14 h-14 rounded-xl bg-buyer-50 text-buyer-600 mb-6 group-hover:bg-buyer-100 transition-colors duration-300"
+						class="inline-flex items-center justify-center w-14 h-14 rounded-xl bg-buyer-50 text-buyer-600 mb-6 group-hover:bg-buyer-100 transition-colors duration-150"
 					>
 						<svg
 							class="w-7 h-7"
@@ -152,7 +152,7 @@
 
 					<!-- Content -->
 					<h3
-						class="text-xl font-bold text-gray-900 mb-3 group-hover:text-buyer-600 transition-colors duration-300"
+						class="text-xl font-bold text-gray-900 mb-3 group-hover:text-buyer-600 transition-colors duration-150"
 					>
 						Rápido y Fácil
 					</h3>
@@ -163,17 +163,17 @@
 
 					<!-- Bottom accent -->
 					<div
-						class="absolute bottom-0 left-0 h-1 w-0 bg-buyer-600 rounded-full group-hover:w-full transition-all duration-500"
+						class="absolute bottom-0 left-0 h-1 w-0 bg-buyer-600 rounded-full group-hover:w-full transition-all duration-200"
 					></div>
 				</div>
 
 				<!-- Feature 3: Support -->
 				<div
-					class="group relative bg-white rounded-2xl border border-gray-100 p-8 hover:border-buyer-200 hover:shadow-lg transition-all duration-300"
+					class="group relative bg-white rounded-2xl border border-gray-100 p-8 hover:border-buyer-200 hover:shadow-lg transition-all duration-150"
 				>
 					<!-- Icon Container -->
 					<div
-						class="inline-flex items-center justify-center w-14 h-14 rounded-xl bg-buyer-50 text-buyer-600 mb-6 group-hover:bg-buyer-100 transition-colors duration-300"
+						class="inline-flex items-center justify-center w-14 h-14 rounded-xl bg-buyer-50 text-buyer-600 mb-6 group-hover:bg-buyer-100 transition-colors duration-150"
 					>
 						<svg
 							class="w-7 h-7"
@@ -192,7 +192,7 @@
 
 					<!-- Content -->
 					<h3
-						class="text-xl font-bold text-gray-900 mb-3 group-hover:text-buyer-600 transition-colors duration-300"
+						class="text-xl font-bold text-gray-900 mb-3 group-hover:text-buyer-600 transition-colors duration-150"
 					>
 						Soporte 24/7
 					</h3>
@@ -203,7 +203,7 @@
 
 					<!-- Bottom accent -->
 					<div
-						class="absolute bottom-0 left-0 h-1 w-0 bg-buyer-600 rounded-full group-hover:w-full transition-all duration-500"
+						class="absolute bottom-0 left-0 h-1 w-0 bg-buyer-600 rounded-full group-hover:w-full transition-all duration-200"
 					></div>
 				</div>
 			</div>

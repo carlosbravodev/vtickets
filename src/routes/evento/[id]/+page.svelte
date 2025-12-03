@@ -254,7 +254,7 @@
         <!-- Image - Dominant Left Side -->
         <div
           class="lg:col-span-2 xl:col-span-3"
-          in:fly={{ x: -40, duration: 600, delay: 100 }}
+          in:fly={{ x: -40, duration: 300, delay: 0 }}
         >
           <div class="relative group flex flex-col gap-4">
             <!-- Status & Category -->
@@ -309,7 +309,7 @@
         <!-- Content - Right Side -->
         <div
           class="lg:col-span-3 xl:col-span-2 space-y-8"
-          in:fly={{ x: 40, duration: 600, delay: 100 }}
+          in:fly={{ x: 40, duration: 300, delay: 0 }}
         >
           <!-- Main Title -->
           <div>
@@ -422,7 +422,7 @@
   <!-- Tickets Section - Clean & Modern -->
   <div class="container max-w-7xl mx-auto px-6 py-16 md:py-24">
     <!-- Section Header -->
-    <div class="mb-16" in:fly={{ y: 30, duration: 600, delay: 200 }}>
+    <div class="mb-16" in:fly={{ y: 30, duration: 250, delay: 0 }}>
       <h2
         class="text-4xl md:text-5xl font-black text-gray-900 mb-4 tracking-tight"
       >
@@ -440,13 +440,13 @@
     {#if event.ticket_types && event.ticket_types.length > 0}
       <!-- Event Past State -->
       {#if isEventPast}
-        <div class="relative mb-12" in:fade={{ duration: 300 }}>
+        <div class="relative mb-12" in:fade={{ duration: 200, delay: 0 }}>
           <div
             class="absolute inset-0 bg-white/80 backdrop-blur-sm rounded-3xl z-10"
           ></div>
           <div
             class="absolute inset-0 flex items-center justify-center z-20 rounded-3xl"
-            in:fly={{ y: 20, duration: 200, delay: 100 }}
+            in:fly={{ y: 20, duration: 150, delay: 0 }}
           >
             <div
               class="bg-white rounded-3xl shadow-2xl p-12 max-w-md text-center border border-gray-200"
@@ -507,8 +507,8 @@
           <div class="space-y-2 lg:space-y-3">
             {#each event.ticket_types as ticket, i (ticket.id)}
               <div
-                in:fly={{ y: 20, duration: 400, delay: 200 + i * 50 }}
-                class="group flex gap-3 sm:gap-4 p-4 sm:p-5 bg-white rounded-2xl border border-gray-200 hover:border-buyer-300 hover:shadow-lg transition-all duration-300"
+                in:fly={{ y: 20, duration: 250, delay: i * 20 }}
+                class="group flex gap-3 sm:gap-4 p-4 sm:p-5 bg-white rounded-2xl border border-gray-200 hover:border-buyer-300 hover:shadow-lg transition-all duration-150"
               >
                 <!-- Ticket Name & Price -->
                 <div class="flex-1 min-w-0">
@@ -536,7 +536,7 @@
                     }}
                     disabled={!selectedTickets[ticket.id] ||
                       selectedTickets[ticket.id] <= 0}
-                    class="w-8 h-8 rounded-md flex items-center justify-center text-lg font-black text-gray-500 hover:text-buyer-600 hover:bg-white disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200"
+                    class="w-8 h-8 rounded-md flex items-center justify-center text-lg font-black text-gray-500 hover:text-buyer-600 hover:bg-white disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-150"
                   >
                     −
                   </button>
@@ -555,7 +555,7 @@
                       }
                     }}
                     disabled={(selectedTickets[ticket.id] || 0) >= 10}
-                    class="w-8 h-8 rounded-md flex items-center justify-center text-lg font-black text-buyer-600 hover:bg-buyer-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200"
+                    class="w-8 h-8 rounded-md flex items-center justify-center text-lg font-black text-buyer-600 hover:bg-buyer-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-150"
                   >
                     +
                   </button>
@@ -568,7 +568,7 @@
         <!-- Checkout Sidebar -->
         <div
           class="w-full lg:w-96 relative"
-          in:fly={{ x: 30, duration: 600, delay: 400 }}
+          in:fly={{ x: 30, duration: 300, delay: 0 }}
         >
           <div
             class="sticky top-24 bg-white rounded-3xl border-2 border-gray-100 shadow-xl p-6 lg:p-8 h-fit"
@@ -643,7 +643,7 @@
               <button
                 onclick={proceedToPayment}
                 disabled={isCreatingCheckout}
-                class="w-full py-3 lg:py-4 px-4 lg:px-6 bg-linear-to-r from-buyer-600 to-buyer-700 hover:from-buyer-700 hover:to-buyer-800 disabled:from-gray-300 disabled:to-gray-300 text-white font-black text-base lg:text-lg rounded-2xl transition-all duration-300 flex items-center justify-center gap-3 shadow-lg hover:shadow-2xl disabled:shadow-none"
+                class="w-full py-3 lg:py-4 px-4 lg:px-6 bg-linear-to-r from-buyer-600 to-buyer-700 hover:from-buyer-700 hover:to-buyer-800 disabled:from-gray-300 disabled:to-gray-300 text-white font-black text-base lg:text-lg rounded-2xl transition-all duration-150 flex items-center justify-center gap-3 shadow-lg hover:shadow-2xl disabled:shadow-none"
               >
                 {#if isCreatingCheckout}
                   <svg
@@ -775,7 +775,7 @@
         </p>
         <button
           onclick={goBack}
-          class="inline-flex items-center gap-2 px-8 py-4 bg-buyer-600 hover:bg-buyer-700 text-white font-bold rounded-xl transition-all duration-300"
+          class="inline-flex items-center gap-2 px-8 py-4 bg-buyer-600 hover:bg-buyer-700 text-white font-bold rounded-xl transition-all duration-150"
         >
           <svg
             class="w-5 h-5"

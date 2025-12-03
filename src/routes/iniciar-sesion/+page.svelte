@@ -202,7 +202,7 @@
         <button
           type="submit"
           disabled={isLoading}
-          class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+          class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
         >
           {#if isLoading}
             <svg class="animate-spin h-5 w-5 mr-2" viewBox="0 0 24 24"
@@ -238,7 +238,7 @@
           type="button"
           onclick={() => handleOAuthLogin("google")}
           disabled={isLoading}
-          class="w-full flex items-center justify-center gap-3 bg-white border-2 border-gray-300 hover:border-gray-400 text-gray-700 font-medium py-3 px-4 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          class="w-full flex items-center justify-center gap-3 bg-white border-2 border-gray-300 hover:border-gray-400 text-gray-700 font-medium py-3 px-4 rounded-lg transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {#if isLoading}
             <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
@@ -281,7 +281,7 @@
           type="button"
           onclick={() => handleOAuthLogin("facebook")}
           disabled={isLoading}
-          class="w-full flex items-center justify-center gap-3 bg-[#1877F2] hover:bg-[#166FE5] text-white font-medium py-3 px-4 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          class="w-full flex items-center justify-center gap-3 bg-[#1877F2] hover:bg-[#166FE5] text-white font-medium py-3 px-4 rounded-lg transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {#if isLoading}
             <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">

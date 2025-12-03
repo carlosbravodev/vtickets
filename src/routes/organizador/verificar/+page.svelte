@@ -146,7 +146,7 @@
 								<img
 									src={event.image_url}
 									alt={event.title}
-									class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+									class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-150"
 								/>
 							</div>
 						{:else}
@@ -191,7 +191,7 @@
 								<!-- Barra de progreso -->
 								<div class="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
 									<div
-										class="{getProgressColor(event.stats.percentage)} h-2.5 rounded-full transition-all duration-500"
+										class="{getProgressColor(event.stats.percentage)} h-2.5 rounded-full transition-all duration-200"
 										style="width: {event.stats.percentage}%"
 									></div>
 								</div>

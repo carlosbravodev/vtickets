@@ -71,7 +71,7 @@
 		<!-- Estadísticas Principales -->
 		<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
 			<!-- Ingresos Totales -->
-			<div class="bg-white rounded-xl shadow-md p-6" in:fade={{ duration: 300, delay: 0 }}>
+			<div class="bg-white rounded-xl shadow-md p-6" in:fade={{ duration: 200, delay: 0 }}>
 				<div class="flex items-center justify-between mb-2">
 					<div class="p-3 bg-green-100 rounded-lg">
 						<svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -86,7 +86,7 @@
 			</div>
 
 			<!-- Tickets Vendidos -->
-			<div class="bg-white rounded-xl shadow-md p-6" in:fade={{ duration: 300, delay: 100 }}>
+			<div class="bg-white rounded-xl shadow-md p-6" in:fade={{ duration: 200, delay: 0 }}>
 				<div class="flex items-center justify-between mb-2">
 					<div class="p-3 bg-purple-100 rounded-lg">
 						<svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -101,7 +101,7 @@
 			</div>
 
 			<!-- Órdenes -->
-			<div class="bg-white rounded-xl shadow-md p-6" in:fade={{ duration: 300, delay: 200 }}>
+			<div class="bg-white rounded-xl shadow-md p-6" in:fade={{ duration: 200, delay: 0 }}>
 				<div class="flex items-center justify-between mb-2">
 					<div class="p-3 bg-blue-100 rounded-lg">
 						<svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -116,7 +116,7 @@
 			</div>
 
 			<!-- Compradores -->
-			<div class="bg-white rounded-xl shadow-md p-6" in:fade={{ duration: 300, delay: 300 }}>
+			<div class="bg-white rounded-xl shadow-md p-6" in:fade={{ duration: 200, delay: 0 }}>
 				<div class="flex items-center justify-between mb-2">
 					<div class="p-3 bg-orange-100 rounded-lg">
 						<svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
