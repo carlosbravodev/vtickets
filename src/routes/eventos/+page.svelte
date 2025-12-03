@@ -10,8 +10,8 @@
   let sortedEvents = $derived(
     [...data.events].sort(
       (a, b) =>
-        new Date(a.event_date).getTime() - new Date(b.event_date).getTime(),
-    ),
+        new Date(a.event_date).getTime() - new Date(b.event_date).getTime()
+    )
   );
 </script>
 
@@ -38,7 +38,7 @@
         <p class="text-red-600 font-semibold">Error: {data.error}</p>
       </div>
     {:else if sortedEvents.length > 0}
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {#each sortedEvents as event, i (event.id)}
           <div in:fly={{ y: 30, duration: 400, delay: Math.min(i * 50, 400) }}>
             <Card.Root
@@ -84,14 +84,14 @@
                 <!-- Título -->
                 <a href={`/evento/${event.slug}`} class="group/title block">
                   <h3
-                    class="text-lg font-black leading-tight line-clamp-2 min-h-14 text-gray-900 group-hover/title:text-buyer-600 transition-colors duration-200"
+                    class="text-lg font-black leading-tight line-clamp-2 text-gray-900 group-hover/title:text-buyer-600 transition-colors duration-200"
                   >
                     {event.title}
                   </h3>
                 </a>
 
                 <!-- Ubicación -->
-                <div class="flex items-start gap-2.5 min-h-10">
+                <div class="flex items-start gap-1">
                   <MapPin class="w-4 h-4 shrink-0 mt-0.5 text-buyer-500" />
                   <span
                     class="text-sm text-gray-600 line-clamp-2 leading-relaxed"

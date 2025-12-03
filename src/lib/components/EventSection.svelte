@@ -39,8 +39,8 @@
   let sortedEvents = $derived(
     [...events].sort(
       (a, b) =>
-        new Date(a.event_date).getTime() - new Date(b.event_date).getTime(),
-    ),
+        new Date(a.event_date).getTime() - new Date(b.event_date).getTime()
+    )
   );
 
   // Limitar el número de eventos a mostrar
@@ -60,7 +60,7 @@
   }
 </script>
 
-<section class="py-12 md:py-20 bg-gray-50/50 relative overflow-hidden">
+<section class="py-8 bg-gray-50/50 relative overflow-hidden">
   <!-- Decorative background element -->
   <div
     class="absolute top-0 right-0 w-1/3 h-1/3 bg-buyer-100/30 blur-[100px] rounded-full pointer-events-none"
@@ -77,7 +77,7 @@
         >
           {title}
         </h2>
-        <div class="h-1.5 w-20 bg-buyer-600 rounded-full"></div>
+        <div class="h-1.5 w-24 bg-buyer-600 rounded-full"></div>
       </div>
 
       <div class="hidden md:flex gap-3">
@@ -150,14 +150,14 @@
                 <!-- Título -->
                 <a href={`/evento/${event.slug}`} class="group/title block">
                   <h3
-                    class="text-lg font-black leading-tight line-clamp-2 min-h-14 text-gray-900 group-hover/title:text-buyer-600 transition-colors duration-200"
+                    class="text-lg font-black leading-tight line-clamp-2 text-gray-900 group-hover/title:text-buyer-600 transition-colors duration-200"
                   >
                     {event.title}
                   </h3>
                 </a>
 
                 <!-- Ubicación con icono -->
-                <div class="flex items-start gap-2.5 min-h-10">
+                <div class="flex items-start gap-1">
                   <MapPin class="w-4 h-4 shrink-0 mt-0.5 text-buyer-500" />
                   <span
                     class="text-sm text-gray-600 line-clamp-2 leading-relaxed"
