@@ -61,29 +61,42 @@
 	{/if}
 
 	<!-- Features Section -->
-	<section class="py-20 bg-white dark:bg-gray-800">
-		<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+	<section class="py-16 md:py-24 bg-gray-50/50 relative overflow-hidden">
+		<!-- Decorative elements -->
+		<div
+			class="absolute top-0 left-0 w-1/2 h-1/2 bg-buyer-100/20 blur-[120px] rounded-full pointer-events-none"
+		></div>
+		<div
+			class="absolute bottom-0 right-0 w-1/3 h-1/3 bg-organizer-100/20 blur-[100px] rounded-full pointer-events-none"
+		></div>
+
+		<div class="max-w-7xl mx-auto px-6 relative z-10">
+			<!-- Header -->
 			<div class="text-center mb-16">
 				<h2
-					class="text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-4"
+					class="text-3xl md:text-4xl font-black text-gray-900 tracking-tight mb-4"
 				>
 					¿Por qué elegir VTickets?
 				</h2>
-				<p class="text-lg text-gray-600 dark:text-gray-300">
-					La mejor experiencia para comprar tus entradas
+				<div class="h-1.5 w-24 bg-buyer-600 rounded-full mx-auto mb-6"></div>
+				<p class="text-lg text-gray-600 max-w-2xl mx-auto">
+					La mejor experiencia para comprar tus entradas de forma segura,
+					rápida y confiable
 				</p>
 			</div>
 
+			<!-- Features Grid -->
 			<div class="grid md:grid-cols-3 gap-8">
-				<!-- Feature 1 -->
+				<!-- Feature 1: Security -->
 				<div
-					class="text-center p-8 rounded-2xl bg-linear-to-br from-indigo-50 to-indigo-100 dark:from-indigo-900/20 dark:to-indigo-800/20 hover:shadow-xl transition-shadow duration-300"
+					class="group relative bg-white rounded-2xl border border-gray-100 p-8 hover:border-buyer-200 hover:shadow-lg transition-all duration-300"
 				>
+					<!-- Icon Container -->
 					<div
-						class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-indigo-600 text-white mb-6"
+						class="inline-flex items-center justify-center w-14 h-14 rounded-xl bg-buyer-50 text-buyer-600 mb-6 group-hover:bg-buyer-100 transition-colors duration-300"
 					>
 						<svg
-							class="w-8 h-8"
+							class="w-7 h-7"
 							fill="none"
 							stroke="currentColor"
 							viewBox="0 0 24 24"
@@ -96,26 +109,34 @@
 							/>
 						</svg>
 					</div>
+
+					<!-- Content -->
 					<h3
-						class="text-xl font-bold text-gray-900 dark:text-white mb-3"
+						class="text-xl font-bold text-gray-900 mb-3 group-hover:text-buyer-600 transition-colors duration-300"
 					>
 						Pago Seguro
 					</h3>
-					<p class="text-gray-600 dark:text-gray-300">
+					<p class="text-gray-600 leading-relaxed">
 						Transacciones protegidas con la última tecnología de
-						encriptación
+						encriptación de nivel bancario
 					</p>
+
+					<!-- Bottom accent -->
+					<div
+						class="absolute bottom-0 left-0 h-1 w-0 bg-buyer-600 rounded-full group-hover:w-full transition-all duration-500"
+					></div>
 				</div>
 
-				<!-- Feature 2 -->
+				<!-- Feature 2: Speed -->
 				<div
-					class="text-center p-8 rounded-2xl bg-linear-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 hover:shadow-xl transition-shadow duration-300"
+					class="group relative bg-white rounded-2xl border border-gray-100 p-8 hover:border-buyer-200 hover:shadow-lg transition-all duration-300"
 				>
+					<!-- Icon Container -->
 					<div
-						class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-purple-600 text-white mb-6"
+						class="inline-flex items-center justify-center w-14 h-14 rounded-xl bg-buyer-50 text-buyer-600 mb-6 group-hover:bg-buyer-100 transition-colors duration-300"
 					>
 						<svg
-							class="w-8 h-8"
+							class="w-7 h-7"
 							fill="none"
 							stroke="currentColor"
 							viewBox="0 0 24 24"
@@ -128,26 +149,34 @@
 							/>
 						</svg>
 					</div>
+
+					<!-- Content -->
 					<h3
-						class="text-xl font-bold text-gray-900 dark:text-white mb-3"
+						class="text-xl font-bold text-gray-900 mb-3 group-hover:text-buyer-600 transition-colors duration-300"
 					>
 						Rápido y Fácil
 					</h3>
-					<p class="text-gray-600 dark:text-gray-300">
+					<p class="text-gray-600 leading-relaxed">
 						Compra tus entradas en segundos con nuestra interfaz
-						intuitiva
+						intuitiva y proceso optimizado
 					</p>
+
+					<!-- Bottom accent -->
+					<div
+						class="absolute bottom-0 left-0 h-1 w-0 bg-buyer-600 rounded-full group-hover:w-full transition-all duration-500"
+					></div>
 				</div>
 
-				<!-- Feature 3 -->
+				<!-- Feature 3: Support -->
 				<div
-					class="text-center p-8 rounded-2xl bg-linear-to-br from-pink-50 to-pink-100 dark:from-pink-900/20 dark:to-pink-800/20 hover:shadow-xl transition-shadow duration-300"
+					class="group relative bg-white rounded-2xl border border-gray-100 p-8 hover:border-buyer-200 hover:shadow-lg transition-all duration-300"
 				>
+					<!-- Icon Container -->
 					<div
-						class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-pink-600 text-white mb-6"
+						class="inline-flex items-center justify-center w-14 h-14 rounded-xl bg-buyer-50 text-buyer-600 mb-6 group-hover:bg-buyer-100 transition-colors duration-300"
 					>
 						<svg
-							class="w-8 h-8"
+							class="w-7 h-7"
 							fill="none"
 							stroke="currentColor"
 							viewBox="0 0 24 24"
@@ -156,19 +185,26 @@
 								stroke-linecap="round"
 								stroke-linejoin="round"
 								stroke-width="2"
-								d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+								d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"
 							/>
 						</svg>
 					</div>
+
+					<!-- Content -->
 					<h3
-						class="text-xl font-bold text-gray-900 dark:text-white mb-3"
+						class="text-xl font-bold text-gray-900 mb-3 group-hover:text-buyer-600 transition-colors duration-300"
 					>
 						Soporte 24/7
 					</h3>
-					<p class="text-gray-600 dark:text-gray-300">
+					<p class="text-gray-600 leading-relaxed">
 						Estamos aquí para ayudarte en cualquier momento que lo
-						necesites
+						necesites con atención personalizada
 					</p>
+
+					<!-- Bottom accent -->
+					<div
+						class="absolute bottom-0 left-0 h-1 w-0 bg-buyer-600 rounded-full group-hover:w-full transition-all duration-500"
+					></div>
 				</div>
 			</div>
 		</div>
