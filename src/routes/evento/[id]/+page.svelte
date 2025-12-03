@@ -314,7 +314,7 @@
           <!-- Main Title -->
           <div>
             <h1
-              class="!text-4xl !md:text-6xl !lg:text-7xl !font-black !text-gray-900 !leading-tight !mb-4 !tracking-tight"
+              class="text-4xl md:text-6xl lg:text-7xl font-black text-gray-900 leading-tight mb-4 tracking-tight"
             >
               {event.title}
             </h1>
@@ -513,11 +513,11 @@
                 <!-- Ticket Name & Price -->
                 <div class="flex-1 min-w-0">
                   <h3
-                    class="!text-xl sm:!text-2xl !font-black text-gray-900 mb-1"
+                    class="text-xl sm:text-2xl font-black text-gray-900 mb-1"
                   >
                     {ticket.name}
                   </h3>
-                  <p class="!text-base sm:!text-lg !font-bold text-buyer-600">
+                  <p class="text-base sm:text-lg font-bold text-buyer-600">
                     ${ticket.price}
                   </p>
                 </div>

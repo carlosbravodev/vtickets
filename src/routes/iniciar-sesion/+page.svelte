@@ -83,7 +83,7 @@
   <div class="max-w-md w-full">
     <div class="bg-white rounded-2xl shadow-xl p-8">
       <div class="text-center mb-8">
-        <h1 class="!text-4xl font-bold text-gray-900 mb-2">
+        <h1 class="text-4xl font-bold text-gray-900 mb-2">
           {mode === "login" ? "¡Bienvenido de nuevo!" : "¡Únete a nosotros!"}
         </h1>
         <p class="text-gray-600">
