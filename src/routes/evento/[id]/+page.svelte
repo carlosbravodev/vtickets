@@ -216,7 +216,7 @@
     <div class="container max-w-7xl mx-auto px-6 py-3">
       <button
         onclick={goBack}
-        class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-gray-600 bg-gray-100 border border-gray-400 hover:text-black hover:bg-gray-50 transition-all duration-200 font-medium text-sm"
+        class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-gray-600 bg-gray-100 border border-gray-400 hover:text-black hover:bg-gray-50 transition-all duration-150 font-medium text-sm"
         aria-label="Volver a eventos"
       >
         <svg
@@ -280,7 +280,7 @@
                 </span>
               {:else if event.is_active}
                 <span
-                  class="inline-flex items-center gap-2 px-3 py-1.5 bg-green-100 text-green-700 text-xs font-bold uppercase tracking-wide rounded-full ring-1 ring-gree-200"
+                  class="inline-flex items-center gap-2 px-3 py-1.5 bg-green-100 text-green-700 text-xs font-bold uppercase tracking-wide rounded-full ring-1 ring-green-200"
                 >
                   <svg
                     class="w-3.5 h-3.5"
@@ -314,7 +314,7 @@
           <!-- Main Title -->
           <div>
             <h1
-              class="text-4xl md:text-6xl lg:text-7xl font-black text-gray-900 leading-tight mb-4 tracking-tight"
+              class="text-5xl md:text-6xl lg:text-7xl font-black text-gray-900 leading-tight mb-2 tracking-tight"
             >
               {event.title}
             </h1>
@@ -345,11 +345,11 @@
               </div>
               <div>
                 <p
-                  class="text-xs font-bold text-buyer-600 uppercase tracking-widest mb-1"
+                  class="text-xs font-black text-buyer-600 uppercase tracking-widest mb-1"
                 >
                   Fecha y Hora
                 </p>
-                <p class="text-lg font-bold text-gray-900">
+                <p class="text-lg text-gray-900">
                   {formatDateTime(event.event_date)}
                 </p>
               </div>
@@ -385,17 +385,19 @@
                 </div>
                 <div>
                   <p
-                    class="text-xs font-bold text-buyer-600 uppercase tracking-widest mb-1"
+                    class="text-xs font-black text-buyer-600 uppercase tracking-widest mb-1"
                   >
                     Ubicación
                   </p>
                   {#if event.venue}
-                    <p class="text-lg font-bold text-gray-900">{event.venue}</p>
+                    <p class="text-lg text-gray-900">
+                      {event.venue}
+                    </p>
                     {#if event.location}
-                      <p class="text-sm text-gray-600">{event.location}</p>
+                      <p class="text-sm text-gray-400">{event.location}</p>
                     {/if}
                   {:else}
-                    <p class="text-lg font-bold text-gray-900">
+                    <p class="text-lg text-gray-900">
                       {event.location}
                     </p>
                   {/if}
@@ -512,9 +514,7 @@
               >
                 <!-- Ticket Name & Price -->
                 <div class="flex-1 min-w-0">
-                  <h3
-                    class="text-xl sm:text-2xl font-black text-gray-900 mb-1"
-                  >
+                  <h3 class="text-xl sm:text-2xl font-black text-gray-900 mb-1">
                     {ticket.name}
                   </h3>
                   <p class="text-base sm:text-lg font-bold text-buyer-600">
