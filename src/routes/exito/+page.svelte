@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { fade, fly, scale } from 'svelte/transition';
 	import { optimizeSupabaseImage } from '$lib/utils/image';
+	import { CheckCircle2, Calendar, MapPin } from 'lucide-svelte';
 
 	let { data } = $props();
 	const order = $derived(data.order);
@@ -35,18 +36,16 @@
 
 {#if order}
 	{@const event = Array.isArray(order.event) ? order.event[0] : order.event}
-	<div class="min-h-screen bg-linear-to-br from-green-50 to-blue-50 py-12 px-4">
+	<div class="min-h-screen bg-linear-to-br from-buyer-50 via-white to-buyer-50/50 py-12 px-4">
 		<div class="max-w-4xl mx-auto">
 			<!-- Header de éxito -->
 			<div class="text-center mb-8" in:fade={{ duration: 400 }}>
 				<div class="inline-block mb-4" in:scale={{ duration: 600, delay: 200 }}>
-					<div class="w-24 h-24 bg-green-500 rounded-full flex items-center justify-center mx-auto shadow-lg">
-						<svg class="w-14 h-14 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
-						</svg>
+					<div class="w-24 h-24 bg-buyer-600 rounded-full flex items-center justify-center mx-auto shadow-lg shadow-buyer-600/30">
+						<CheckCircle2 class="w-14 h-14 text-white" />
 					</div>
 				</div>
-				<h1 class="text-4xl md:text-5xl font-bold text-gray-900 mb-3">
+				<h1 class="text-4xl md:text-5xl font-black text-gray-900 mb-3">
 					¡Compra Confirmada!
 				</h1>
 				<p class="text-xl text-gray-600">
@@ -70,25 +69,21 @@
 						</h2>
 						<div class="flex flex-wrap gap-3 text-white">
 							<div class="flex items-center gap-2">
-								<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-								</svg>
-							<span class="text-sm font-medium">{formatDateShort(event.event_date)}</span>
-						</div>
-						{#if event.location || event.venue}
-							<div class="flex items-center gap-2">
-								<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-								</svg>
-								<span class="text-sm font-medium">
-									{#if event.venue}
-										{event.venue}{event.location ? `, ${event.location}` : ''}
-									{:else}
-										{event.location}
-									{/if}
-								</span>
+								<Calendar class="w-5 h-5" />
+								<span class="text-sm font-medium">{formatDateShort(event.event_date)}</span>
 							</div>
-						{/if}
+							{#if event.location || event.venue}
+								<div class="flex items-center gap-2">
+									<MapPin class="w-5 h-5" />
+									<span class="text-sm font-medium">
+										{#if event.venue}
+											{event.venue}{event.location ? `, ${event.location}` : ''}
+										{:else}
+											{event.location}
+										{/if}
+									</span>
+								</div>
+							{/if}
 						</div>
 					</div>
 				</div>

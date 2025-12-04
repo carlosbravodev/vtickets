@@ -6,6 +6,7 @@
 	import { invalidateAll } from '$app/navigation';
 	import { toast } from '$lib/stores/toast.svelte';
 	import { optimizeSupabaseImage } from '$lib/utils/image';
+	import { Ticket, UserCircle } from 'lucide-svelte';
 	
 	let { data, form }: { data: any; form: any } = $props();
 	
@@ -238,12 +239,10 @@
 					onclick={() => activeTab = 'entradas'}
 					class="tab-button {activeTab === 'entradas' ? 'tab-active' : 'tab-inactive'}"
 				>
-					<svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/>
-					</svg>
+					<Ticket class="w-5 h-5 mr-2" />
 					Mis Entradas
 					{#if data.orders.length > 0}
-						<span class="ml-2 px-2 py-0.5 text-xs font-bold bg-indigo-100 text-indigo-800 rounded-full">
+						<span class="ml-2 px-2 py-0.5 text-xs font-bold bg-buyer-100 text-buyer-800 rounded-full">
 							{data.orders.length}
 						</span>
 					{/if}
@@ -253,9 +252,7 @@
 					onclick={() => activeTab = 'perfil'}
 					class="tab-button {activeTab === 'perfil' ? 'tab-active' : 'tab-inactive'}"
 				>
-					<svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-					</svg>
+					<UserCircle class="w-5 h-5 mr-2" />
 					Mi Perfil
 				</button>
 			</nav>

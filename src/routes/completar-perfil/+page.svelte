@@ -3,6 +3,7 @@
 	import { enhance } from '$app/forms';
 	import { toast } from '$lib/stores/toast.svelte';
 	import { goto } from '$app/navigation';
+	import { UserRound } from 'lucide-svelte';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 	
@@ -13,14 +14,12 @@
 	<title>Completa tu Perfil | v•tickets</title>
 </svelte:head>
 
-<div class="min-h-screen bg-linear-to-br from-indigo-50 via-white to-purple-50 py-12 px-4">
+<div class="min-h-screen bg-linear-to-br from-buyer-50 via-white to-buyer-50/50 py-12 px-4">
 	<div class="max-w-2xl mx-auto">
 		<!-- Header -->
 		<div class="text-center mb-8">
-			<div class="inline-flex items-center justify-center w-16 h-16 bg-indigo-600 rounded-full mb-4">
-				<svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-				</svg>
+			<div class="inline-flex items-center justify-center w-16 h-16 bg-buyer-600 rounded-full mb-4 shadow-lg shadow-buyer-600/30">
+				<UserRound class="w-8 h-8 text-white" />
 			</div>
 			<h1 class="text-3xl font-black text-gray-900 mb-2">¡Bienvenido a v•tickets!</h1>
 			<p class="text-lg text-gray-600">
@@ -63,7 +62,7 @@
 							name="first_name"
 							value={data.profile?.first_name || ''}
 							required
-							class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+							class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-buyer-600 focus:border-buyer-600 transition-colors"
 							placeholder="Juan Carlos"
 						/>
 					</div>
@@ -78,7 +77,7 @@
 							name="last_name"
 							value={data.profile?.last_name || ''}
 							required
-							class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+							class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-buyer-600 focus:border-buyer-600 transition-colors"
 							placeholder="Pérez García"
 						/>
 					</div>
