@@ -1,19 +1,25 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { optimizeSupabaseImage } from '$lib/utils/image';
-	import { Calendar, MapPin, QrCode, CheckCircle2 } from 'lucide-svelte';
+	import { Calendar, MapPin, QrCode, CheckCircle2, AlertCircle } from 'lucide-svelte';
 	
 	let { data } = $props();
+	let qrImages: Record<string, string> = {};
 	
 	const formatDate = (dateString: string) => {
 		if (!dateString) return 'Fecha por confirmar';
 		const date = new Date(dateString);
 		return date.toLocaleDateString('es-ES', {
-			weekday: 'long',
+			weekday: 'short',
 			year: 'numeric',
-			month: 'long',
+			month: 'short',
 			day: 'numeric'
 		});
+	};
+	
+	// Generar URLs de QR para cada ticket
+	const generateQrUrl = (token: string) => {
+		return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(token)}`;
 	};
 	
 	// Auto-abrir diálogo de impresión cuando la página carga
@@ -21,7 +27,7 @@
 		// Esperar un momento para que se renderice todo
 		setTimeout(() => {
 			window.print();
-		}, 500);
+		}, 800);
 	});
 </script>
 
@@ -32,123 +38,116 @@
 <div class="print-container">
 	<!-- Tickets - each on its own page -->
 	{#each data.tickets as ticket, index}
-		<div class="ticket-page" class:page-break={index < data.tickets.length - 1}>
+		<div class="ticket-page">
 			<div class="ticket-card">
-				<!-- Header section with branding -->
+				<!-- Header section -->
 				<div class="ticket-header">
-					<div class="header-top">
-						<div class="brand-badge">
-							<CheckCircle2 class="w-5 h-5" />
-							<span>ENTRADA CONFIRMADA</span>
-						</div>
-						<div class="order-info">
-							<span class="order-label">Orden #{data.order.order_number || data.order.lemon_squeezy_order_id}</span>
-							<span class="ticket-counter">Entrada {index + 1} de {data.tickets.length}</span>
-						</div>
-					</div>
-
-					<!-- Event banner -->
-					{#if data.event.image_url}
-						<div class="event-banner">
-							<img 
-								src={optimizeSupabaseImage(data.event.image_url, { width: 800, height: 400 })} 
-								alt={data.event.title}
-							/>
-							<div class="banner-overlay"></div>
-							<div class="banner-content">
-								<h1>{data.event.title}</h1>
+					<div class="header-content">
+						<div class="header-left">
+							<div class="badge">
+								<CheckCircle2 class="w-4 h-4" />
+								<span>CONFIRMADO</span>
 							</div>
+							<div class="ticket-number">Entrada {index + 1} de {data.tickets.length}</div>
 						</div>
-					{/if}
+						<div class="order-number">Orden #{data.order.order_number || data.order.lemon_squeezy_order_id}</div>
+					</div>
 				</div>
 
-				<!-- Event details -->
-				<div class="event-section">
-					<div class="event-details">
-						{#if data.event.event_date}
-							<div class="detail-item">
-								<div class="detail-icon">
-									<Calendar class="w-5 h-5" />
-								</div>
-								<div class="detail-content">
-									<div class="detail-label">Fecha y Hora</div>
-									<div class="detail-value">{formatDate(data.event.event_date)}</div>
-								</div>
+				<!-- Main content area -->
+				<div class="ticket-content">
+					<!-- Left side: Event info -->
+					<div class="content-left">
+						<!-- Event Banner - 16:9 ratio -->
+						{#if data.event.image_url}
+							<div class="event-banner">
+								<img 
+									src={optimizeSupabaseImage(data.event.image_url, { width: 600, height: 337 })} 
+									alt={data.event.title}
+									loading="eager"
+								/>
+							</div>
+						{:else}
+							<div class="event-banner-placeholder">
+								<div class="placeholder-content">{data.event.title}</div>
 							</div>
 						{/if}
-						
-						{#if data.event.location || data.event.venue}
-							<div class="detail-item">
-								<div class="detail-icon">
-									<MapPin class="w-5 h-5" />
+
+						<!-- Event Details -->
+						<div class="event-info">
+							<div class="event-title">{data.event.title}</div>
+							
+							{#if data.event.event_date}
+								<div class="info-row">
+									<Calendar class="w-4 h-4" />
+									<span>{formatDate(data.event.event_date)}</span>
 								</div>
-								<div class="detail-content">
-									<div class="detail-label">Ubicación</div>
-									<div class="detail-value">
+							{/if}
+							
+							{#if data.event.location || data.event.venue}
+								<div class="info-row">
+									<MapPin class="w-4 h-4" />
+									<span>
 										{#if data.event.venue}
 											{data.event.venue}{data.event.location ? `, ${data.event.location}` : ''}
 										{:else}
 											{data.event.location}
 										{/if}
-									</div>
+									</span>
+								</div>
+							{/if}
+						</div>
+
+						<!-- Holder Info -->
+						<div class="holder-section">
+							<div class="section-label">TITULAR</div>
+							<div class="holder-data">
+								<div class="data-row">
+									<span class="data-label">Nombre:</span>
+									<span class="data-value">{ticket.holder_name || 'N/A'}</span>
+								</div>
+								<div class="data-row">
+									<span class="data-label">Email:</span>
+									<span class="data-value">{ticket.holder_email || 'N/A'}</span>
+								</div>
+								<div class="data-row">
+									<span class="data-label">Tipo:</span>
+									<span class="data-value ticket-type">{ticket.ticket_type.name}</span>
 								</div>
 							</div>
-						{/if}
+						</div>
+					</div>
+
+					<!-- Right side: QR Code -->
+					<div class="content-right">
+						<div class="qr-section">
+							<div class="qr-label">CÓDIGO QR</div>
+							<div class="qr-box">
+								<img 
+									src={generateQrUrl(ticket.qr_token)}
+									alt="QR Code"
+									class="qr-image"
+									loading="eager"
+								/>
+							</div>
+							<div class="ticket-code">
+								<div class="code-label">Código</div>
+								<div class="code-value">{ticket.ticket_code}</div>
+							</div>
+						</div>
 					</div>
 				</div>
 
-				<!-- Holder information -->
-				<div class="holder-section">
-					<h2 class="section-title">Información del Titular</h2>
-					<div class="holder-details">
-						<div class="holder-item">
-							<span class="holder-label">Nombre Completo</span>
-							<span class="holder-value">{ticket.holder_name || 'No especificado'}</span>
-						</div>
-						<div class="holder-item">
-							<span class="holder-label">Correo Electrónico</span>
-							<span class="holder-value">{ticket.holder_email || 'No especificado'}</span>
-						</div>
-						<div class="holder-item">
-							<span class="holder-label">Tipo de Entrada</span>
-							<span class="holder-value ticket-type">{ticket.ticket_type.name}</span>
-						</div>
-					</div>
-				</div>
-
-				<!-- QR Code section -->
-				<div class="qr-section">
-					<div class="qr-header">
-						<QrCode class="w-6 h-6" />
-						<h2>Código QR de Entrada</h2>
-					</div>
-					<div class="qr-container">
-						<img 
-							src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data={encodeURIComponent(ticket.qr_token)}"
-							alt="QR Code"
-							class="qr-code"
-						/>
-					</div>
-					<div class="ticket-code">
-						<div class="code-label">Código del Ticket</div>
-						<div class="code-value">{ticket.ticket_code}</div>
-					</div>
-				</div>
-
-				<!-- Footer with warning -->
+				<!-- Footer -->
 				<div class="ticket-footer">
-					<div class="footer-content">
-						<svg class="warning-icon" fill="currentColor" viewBox="0 0 20 20">
-							<path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
-						</svg>
-						<p>Este código QR es único e intransferible. No lo compartas con nadie. ¡Disfruta tu evento!</p>
-					</div>
+					<AlertCircle class="w-4 h-4" />
+					<span>Código QR único e intransferible</span>
 				</div>
 			</div>
 		</div>
 	{/each}
 
-	<!-- Close button (only visible on screen) -->
+	<!-- Close button -->
 	<div class="no-print close-button-container">
 		<button onclick={() => window.close()} class="close-button">
 			← Cerrar
@@ -164,7 +163,7 @@
 	}
 
 	.print-container {
-		max-width: 900px;
+		max-width: 1000px;
 		margin: 0 auto;
 		padding: 20px;
 	}
@@ -173,303 +172,283 @@
 		margin-bottom: 40px;
 	}
 
-	.page-break {
-		page-break-after: always;
-	}
-
 	.ticket-card {
 		background: white;
-		border-radius: 16px;
+		border-radius: 12px;
 		overflow: hidden;
 		box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
 		border: 1px solid #e5e7eb;
+		display: flex;
+		flex-direction: column;
+		height: auto;
 	}
 
-	/* Header Section */
+	/* HEADER */
 	.ticket-header {
 		background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
 		color: white;
-		padding: 20px 24px;
+		padding: 16px 20px;
 	}
 
-	.header-top {
+	.header-content {
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
-		margin-bottom: 20px;
-		flex-wrap: wrap;
 		gap: 12px;
 	}
 
-	.brand-badge {
+	.header-left {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+	}
+
+	.badge {
 		display: inline-flex;
 		align-items: center;
-		gap: 6px;
+		gap: 4px;
 		background: rgba(255, 255, 255, 0.2);
-		padding: 6px 12px;
-		border-radius: 20px;
-		font-size: 12px;
+		padding: 4px 10px;
+		border-radius: 16px;
+		font-size: 11px;
 		font-weight: 700;
 		text-transform: uppercase;
-		letter-spacing: 0.5px;
+		letter-spacing: 0.4px;
 		backdrop-filter: blur(10px);
 	}
 
-	.order-info {
+	.ticket-number {
+		font-size: 12px;
+		font-weight: 600;
+		opacity: 0.9;
+	}
+
+	.order-number {
+		font-size: 13px;
+		font-weight: 600;
+	}
+
+	/* CONTENT LAYOUT */
+	.ticket-content {
+		display: grid;
+		grid-template-columns: 1fr 280px;
+		gap: 20px;
+		padding: 20px;
+		align-items: flex-start;
+	}
+
+	.content-left {
 		display: flex;
 		flex-direction: column;
-		align-items: flex-end;
-		gap: 2px;
-		font-size: 13px;
+		gap: 16px;
 	}
 
-	.order-label {
-		font-weight: 600;
-		opacity: 0.95;
+	.content-right {
+		display: flex;
+		flex-direction: column;
+		gap: 16px;
 	}
 
-	.ticket-counter {
-		font-size: 11px;
-		opacity: 0.8;
-	}
-
-	/* Event Banner */
+	/* EVENT BANNER - 16:9 */
 	.event-banner {
 		position: relative;
 		width: 100%;
-		height: 280px;
+		aspect-ratio: 16 / 9;
 		overflow: hidden;
 		border-radius: 8px;
-		margin-top: 16px;
+		background: #f3f4f6;
 	}
 
 	.event-banner img {
 		width: 100%;
 		height: 100%;
 		object-fit: cover;
+		display: block;
 	}
 
-	.banner-overlay {
-		position: absolute;
-		inset: 0;
-		background: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.6) 100%);
-	}
-
-	.banner-content {
-		position: absolute;
-		bottom: 0;
-		left: 0;
-		right: 0;
-		padding: 20px 24px;
-		color: white;
-	}
-
-	.banner-content h1 {
-		font-size: 28px;
-		font-weight: 900;
-		margin: 0;
-		line-height: 1.2;
-	}
-
-	/* Event Section */
-	.event-section {
-		border-top: 2px dashed #e5e7eb;
-		border-bottom: 2px dashed #e5e7eb;
-	}
-
-	.event-details {
-		padding: 24px;
-		display: flex;
-		flex-direction: column;
-		gap: 16px;
-	}
-
-	.detail-item {
-		display: flex;
-		gap: 16px;
-		align-items: flex-start;
-	}
-
-	.detail-icon {
+	.event-banner-placeholder {
+		width: 100%;
+		height: 100%;
+		background: linear-gradient(135deg, #e0e7ff 0%, #f0f4ff 100%);
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		width: 40px;
-		height: 40px;
-		background: #f0f4ff;
 		border-radius: 8px;
+	}
+
+	.placeholder-content {
+		font-size: 14px;
+		font-weight: 600;
+		color: #4f46e5;
+		text-align: center;
+		padding: 20px;
+	}
+
+	/* EVENT INFO */
+	.event-info {
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
+		padding: 14px;
+		background: #f9fafb;
+		border-radius: 8px;
+	}
+
+	.event-title {
+		font-size: 16px;
+		font-weight: 700;
+		color: #1f2937;
+		line-height: 1.3;
+	}
+
+	.info-row {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		font-size: 13px;
+		color: #4b5563;
+	}
+
+	.info-row :global(svg) {
 		color: #4f46e5;
 		flex-shrink: 0;
 	}
 
-	.detail-content {
-		flex: 1;
-	}
-
-	.detail-label {
-		font-size: 12px;
-		font-weight: 600;
-		color: #6b7280;
-		text-transform: uppercase;
-		letter-spacing: 0.5px;
-		margin-bottom: 4px;
-	}
-
-	.detail-value {
-		font-size: 16px;
-		font-weight: 600;
-		color: #1f2937;
-	}
-
-	/* Holder Section */
+	/* HOLDER SECTION */
 	.holder-section {
-		padding: 24px;
+		padding: 14px;
 		background: #f9fafb;
-		border-bottom: 2px dashed #e5e7eb;
+		border-radius: 8px;
 	}
 
-	.section-title {
-		font-size: 14px;
+	.section-label {
+		font-size: 11px;
 		font-weight: 700;
 		color: #4f46e5;
 		text-transform: uppercase;
-		letter-spacing: 0.5px;
-		margin: 0 0 16px 0;
+		letter-spacing: 0.4px;
+		margin-bottom: 10px;
+		display: block;
 	}
 
-	.holder-details {
+	.holder-data {
 		display: flex;
 		flex-direction: column;
-		gap: 12px;
+		gap: 6px;
 	}
 
-	.holder-item {
+	.data-row {
 		display: flex;
 		justify-content: space-between;
-		align-items: center;
-		padding: 8px 0;
-		border-bottom: 1px solid #e5e7eb;
+		gap: 8px;
+		font-size: 12px;
 	}
 
-	.holder-label {
-		font-size: 13px;
-		font-weight: 500;
-		color: #6b7280;
-	}
-
-	.holder-value {
-		font-size: 14px;
+	.data-label {
 		font-weight: 600;
+		color: #6b7280;
+		min-width: 60px;
+	}
+
+	.data-value {
 		color: #1f2937;
+		font-weight: 500;
+		text-align: right;
 	}
 
 	.ticket-type {
 		display: inline-block;
-		padding: 4px 12px;
+		padding: 2px 8px;
 		background: #dbeafe;
 		color: #1e40af;
-		border-radius: 20px;
-		font-size: 12px;
+		border-radius: 12px;
+		font-size: 11px;
+		font-weight: 600;
 	}
 
-	/* QR Section */
+	/* QR SECTION */
 	.qr-section {
-		padding: 32px 24px;
-		background: #ffffff;
-		border-bottom: 2px dashed #e5e7eb;
-		text-align: center;
-	}
-
-	.qr-header {
 		display: flex;
+		flex-direction: column;
+		gap: 10px;
 		align-items: center;
-		justify-content: center;
-		gap: 8px;
-		margin-bottom: 20px;
-		color: #4f46e5;
-	}
-
-	.qr-header h2 {
-		font-size: 16px;
-		font-weight: 700;
-		margin: 0;
-		text-transform: uppercase;
-		letter-spacing: 0.5px;
-	}
-
-	.qr-container {
-		display: flex;
-		justify-content: center;
-		margin-bottom: 24px;
-		padding: 12px;
+		padding: 14px;
 		background: #f9fafb;
 		border-radius: 8px;
 	}
 
-	.qr-code {
-		width: 280px;
-		height: 280px;
-		border: 3px solid #4f46e5;
-		border-radius: 4px;
+	.qr-label {
+		font-size: 11px;
+		font-weight: 700;
+		color: #4f46e5;
+		text-transform: uppercase;
+		letter-spacing: 0.4px;
+	}
+
+	.qr-box {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 200px;
+		height: 200px;
+		background: white;
+		border: 2px solid #4f46e5;
+		border-radius: 6px;
+		padding: 8px;
+	}
+
+	.qr-image {
+		width: 100%;
+		height: 100%;
+		object-fit: contain;
 		image-rendering: crisp-edges;
 	}
 
 	.ticket-code {
-		background: #f3f4f6;
-		padding: 16px;
-		border-radius: 8px;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 4px;
+		width: 100%;
 	}
 
 	.code-label {
-		display: block;
-		font-size: 12px;
+		font-size: 10px;
 		font-weight: 600;
 		color: #6b7280;
 		text-transform: uppercase;
-		letter-spacing: 0.5px;
-		margin-bottom: 6px;
+		letter-spacing: 0.3px;
 	}
 
 	.code-value {
-		display: block;
-		font-size: 22px;
+		font-size: 14px;
 		font-weight: 900;
 		color: #1f2937;
 		font-family: 'Courier New', monospace;
-		letter-spacing: 3px;
-		word-spacing: 8px;
+		letter-spacing: 2px;
 	}
 
-	/* Footer Section */
+	/* FOOTER */
 	.ticket-footer {
-		padding: 16px 24px;
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		padding: 12px 20px;
 		background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
 		border-top: 1px solid #fcd34d;
-	}
-
-	.footer-content {
-		display: flex;
-		align-items: flex-start;
-		gap: 12px;
-	}
-
-	.warning-icon {
-		width: 20px;
-		height: 20px;
-		color: #d97706;
-		flex-shrink: 0;
-		margin-top: 2px;
-	}
-
-	.footer-content p {
-		margin: 0;
-		font-size: 13px;
+		font-size: 12px;
 		color: #92400e;
-		line-height: 1.5;
 		font-weight: 500;
 	}
 
-	/* Close Button (Screen only) */
+	.ticket-footer :global(svg) {
+		color: #d97706;
+		flex-shrink: 0;
+		width: 16px;
+		height: 16px;
+	}
+
+	/* BUTTONS */
 	.no-print {
 		display: block;
 	}
@@ -499,49 +478,61 @@
 		transform: translateY(-2px);
 	}
 
-	/* Print styles */
+	/* PRINT STYLES */
 	@media print {
 		:global(body) {
 			background: white;
+			margin: 0;
+			padding: 0;
 		}
 
 		.print-container {
 			padding: 0;
+			margin: 0;
 			max-width: 100%;
+		}
+
+		.ticket-page {
+			page-break-inside: avoid;
+			margin-bottom: 0;
 		}
 
 		.no-print {
 			display: none !important;
 		}
 
-		.ticket-page {
-			margin-bottom: 0;
-			page-break-inside: avoid;
-		}
-
-		.page-break {
-			page-break-after: always;
-		}
-
 		.ticket-card {
 			box-shadow: none;
-			border: 1px solid #000;
-			page-break-inside: avoid;
+			border: 1px solid #ccc;
+			margin: 0;
 		}
 
-		/* Optimize colors for printing */
-		.ticket-header {
-			background: #1f2937 !important;
-			color: white !important;
+		.ticket-content {
+			grid-template-columns: 1fr 260px;
+			padding: 16px;
+			gap: 16px;
 		}
 
-		.event-section {
-			border-color: #000 !important;
+		/* Optimize for printing */
+		.event-banner img {
+			print-color-adjust: exact;
+			-webkit-print-color-adjust: exact;
 		}
 
-		.ticket-footer {
-			background: #fef3c7 !important;
-			border-color: #000 !important;
+		.qr-image {
+			print-color-adjust: exact;
+			-webkit-print-color-adjust: exact;
+		}
+	}
+
+	/* RESPONSIVE for screen view */
+	@media screen and (max-width: 768px) {
+		.ticket-content {
+			grid-template-columns: 1fr;
+		}
+
+		.content-right {
+			grid-column: 1;
 		}
 	}
 </style>
