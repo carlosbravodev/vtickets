@@ -13,6 +13,7 @@
 		isOnline,
 		getCachedTickets 
 	} from '$lib/utils/offline';
+	import { triggerSuccessFeedback, triggerErrorFeedback, triggerProcessingFeedback } from '$lib/utils/audio';
 	import type { RealtimeChannel } from '@supabase/supabase-js';
 
 	let { data }: { data: PageData } = $props();
@@ -275,6 +276,7 @@
 
 		isProcessing = true;
 		scannerState = 'processing'; // Estado visual amarillo
+		triggerProcessingFeedback(); // Vibración al detectar QR
 
 		try {
 			console.log('[SCAN] QR detectado:', decodedText.substring(0, 50));
@@ -440,7 +442,7 @@
 			if (scanResult.success) {
 				// ✅ ÉXITO - Ticket verificado
 				scannerState = 'success';
-				vibratePattern('success');
+				triggerSuccessFeedback(); // Sonido + vibración de éxito
 
 				// Actualizar estadísticas
 				stats.verified += 1;
@@ -469,7 +471,7 @@
 				const isAlreadyVerified = scanResult.error_type === 'already_verified';
 				
 				scannerState = 'error';
-				vibratePattern(isAlreadyVerified ? 'already_verified' : 'error');
+				triggerErrorFeedback(); // Sonido + vibración de error
 
 				// Agregar a lista de recientes con warning
 				if (scanResult.ticket) {
