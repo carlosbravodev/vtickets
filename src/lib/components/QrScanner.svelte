@@ -169,28 +169,7 @@
 		class:scanner-error={scannerState === 'error'}
 	></div>
 
-	<!-- Overlay de guías de alineación mejorado -->
-	{#if isScanning}
-		<div class="absolute inset-0 rounded-lg pointer-events-none overflow-hidden" style="max-width: 500px; margin: 0 auto;">
-			<!-- Máscara oscura en los bordes para enfocar la zona de escaneo -->
-			<div class="absolute inset-0 border-40 border-black/30 rounded-lg"></div>
-			
-			<!-- Esquinas destacadas -->
-			<div class="corner top-left"></div>
-			<div class="corner top-right"></div>
-			<div class="corner bottom-left"></div>
-			<div class="corner bottom-right"></div>
-			
-			<!-- Línea de escaneo animada (pasa verticalmente) -->
-			<div class="scan-line"></div>
-			
-			<!-- Indicador de estado central -->
-			<div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-2">
-				<div class="w-3 h-3 rounded-full bg-green-400 animate-pulse"></div>
-				<span class="text-xs text-white font-semibold">Alineando...</span>
-			</div>
-		</div>
-	{/if}
+
 
 	<!-- Mensaje de error -->
 	{#if errorMessage}
@@ -316,66 +295,7 @@
 		}
 	}
 
-	/* Guías de alineación mejoradas */
-	.corner {
-		position: absolute;
-		width: 30px;
-		height: 30px;
-		border: 3px solid #10B981;
-		opacity: 0.8;
-	}
+	/* Guías de alineación grises: ya proporciona html5-qrcode */
+	/* No agregar estilos adicionales para evitar conflictos */
 
-	.corner.top-left {
-		top: 10px;
-		left: 10px;
-		border-right: none;
-		border-bottom: none;
-	}
-
-	.corner.top-right {
-		top: 10px;
-		right: 10px;
-		border-left: none;
-		border-bottom: none;
-	}
-
-	.corner.bottom-left {
-		bottom: 10px;
-		left: 10px;
-		border-right: none;
-		border-top: none;
-	}
-
-	.corner.bottom-right {
-		bottom: 10px;
-		right: 10px;
-		border-left: none;
-		border-top: none;
-	}
-
-	/* Línea de escaneo animada */
-	.scan-line {
-		position: absolute;
-		top: 0;
-		left: 10%;
-		right: 10%;
-		height: 2px;
-		background: linear-gradient(90deg, transparent, #10B981, transparent);
-		animation: scan-down 2s ease-in-out infinite;
-	}
-
-	@keyframes scan-down {
-		0% {
-			top: 0%;
-			box-shadow: 0 0 15px rgba(16, 185, 129, 0.5);
-		}
-		50% {
-			top: 45%;
-			box-shadow: 0 0 20px rgba(16, 185, 129, 0.8);
-		}
-		100% {
-			top: 90%;
-			box-shadow: 0 0 15px rgba(16, 185, 129, 0.5);
-		}
-	}
 </style>
