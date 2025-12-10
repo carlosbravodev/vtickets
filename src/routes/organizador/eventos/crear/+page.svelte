@@ -3,6 +3,7 @@
 	import { toast } from '$lib/stores/toast.svelte';
 	import { compressImage, validateImageFile } from '$lib/utils/image';
 	import type { ActionData } from './$types';
+	import { Plus, ArrowLeft, ImageIcon, X, Trash2, ChevronLeft, ChevronRight, Check, MapPin, Calendar } from 'lucide-svelte';
 
 	let { form, data }: { form: ActionData; data: any } = $props();
 
@@ -256,13 +257,13 @@
 	<title>Crear Evento | Panel de Organizadores</title>
 </svelte:head>
 
-<div class="min-h-screen bg-linear-to-br from-purple-50 via-white to-indigo-50 py-8">
+<div class="min-h-screen bg-linear-to-br from-organizer-50 via-white to-organizer-50 py-8">
 	<div class="max-w-4xl mx-auto px-4">
 		<!-- Header -->
 		<div class="mb-8">
 			<a
 				href="/organizador/eventos"
-				class="inline-flex items-center gap-2 text-purple-600 hover:text-purple-700 font-semibold mb-4"
+				class="inline-flex items-center gap-2 text-organizer-600 hover:text-organizer-700 font-semibold mb-4"
 			>
 				<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 					<path
@@ -286,42 +287,42 @@
 				<div class="flex items-center gap-2">
 					<div
 						class="flex items-center justify-center w-10 h-10 rounded-full {currentStep >= 1
-							? 'bg-purple-600 text-white'
-							: 'bg-gray-300 text-gray-600'} font-bold transition-all"
+							? 'bg-organizer-600 text-white'
+							: 'bg-gray-300 text-gray-600'} font-bold transition-colors duration-150"
 					>
 						{currentStep > 1 ? '✓' : '1'}
 					</div>
-					<span class="text-sm font-semibold {currentStep === 1 ? 'text-purple-600' : 'text-gray-600'}"
+					<span class="text-sm font-semibold {currentStep === 1 ? 'text-organizer-600' : 'text-gray-600'}"
 						>Datos Básicos</span
 					>
 				</div>
 
-				<div class="flex-1 h-1 mx-4 {currentStep >= 2 ? 'bg-purple-600' : 'bg-gray-300'}"></div>
+				<div class="flex-1 h-1 mx-4 {currentStep >= 2 ? 'bg-organizer-600' : 'bg-gray-300'}"></div>
 
 				<div class="flex items-center gap-2">
 					<div
 						class="flex items-center justify-center w-10 h-10 rounded-full {currentStep >= 2
-							? 'bg-purple-600 text-white'
-							: 'bg-gray-300 text-gray-600'} font-bold transition-all"
+							? 'bg-organizer-600 text-white'
+							: 'bg-gray-300 text-gray-600'} font-bold transition-colors duration-150"
 					>
 						{currentStep > 2 ? '✓' : '2'}
 					</div>
-					<span class="text-sm font-semibold {currentStep === 2 ? 'text-purple-600' : 'text-gray-600'}"
+					<span class="text-sm font-semibold {currentStep === 2 ? 'text-organizer-600' : 'text-gray-600'}"
 						>Imagen</span
 					>
 				</div>
 
-				<div class="flex-1 h-1 mx-4 {currentStep >= 3 ? 'bg-purple-600' : 'bg-gray-300'}"></div>
+				<div class="flex-1 h-1 mx-4 {currentStep >= 3 ? 'bg-organizer-600' : 'bg-gray-300'}"></div>
 
 				<div class="flex items-center gap-2">
 					<div
 						class="flex items-center justify-center w-10 h-10 rounded-full {currentStep >= 3
-							? 'bg-purple-600 text-white'
-							: 'bg-gray-300 text-gray-600'} font-bold transition-all"
+							? 'bg-organizer-600 text-white'
+							: 'bg-gray-300 text-gray-600'} font-bold transition-colors duration-150"
 					>
 						3
 					</div>
-					<span class="text-sm font-semibold {currentStep === 3 ? 'text-purple-600' : 'text-gray-600'}"
+					<span class="text-sm font-semibold {currentStep === 3 ? 'text-organizer-600' : 'text-gray-600'}"
 						>Tickets</span
 					>
 				</div>
@@ -352,7 +353,7 @@
 							bind:value={eventData.name}
 							required
 							minlength="3"
-							class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+							class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-organizer-500 focus:border-transparent transition-colors duration-150"
 							placeholder="Ej: Concierto de Rock 2025"
 						/>
 					</div>
@@ -368,7 +369,7 @@
 							required
 							minlength="10"
 							rows="5"
-							class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all resize-none"
+							class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-organizer-500 focus:border-transparent transition-colors duration-150 resize-none"
 							placeholder="Describe tu evento, qué incluye, quién participa, etc."
 						></textarea>
 					<p class="text-xs text-gray-500 mt-1">
@@ -388,7 +389,7 @@
 							bind:value={eventData.venue}
 							required
 							minlength="3"
-							class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+							class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-organizer-500 focus:border-transparent transition-colors duration-150"
 							placeholder="Ej: Estadio Monumental, Teatro Nacional"
 						/>
 					</div>
@@ -404,7 +405,7 @@
 							bind:value={eventData.location}
 							required
 							minlength="3"
-							class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+							class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-organizer-500 focus:border-transparent transition-colors duration-150"
 							placeholder="Ej: Guayaquil, Quito, Cuenca"
 						/>
 					</div>
@@ -420,7 +421,7 @@
 								bind:value={eventData.date}
 								min={minDate}
 								required
-								class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+								class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-organizer-500 focus:border-transparent transition-colors duration-150"
 							/>
 						</div>
 
@@ -434,7 +435,7 @@
 								name="time"
 								bind:value={eventData.time}
 								required
-								class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+								class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-organizer-500 focus:border-transparent transition-colors duration-150"
 							/>
 						</div>
 					</div>
@@ -451,7 +452,7 @@
 							Selecciona una imagen atractiva *
 						</label>
 						<div
-							class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-purple-400 transition-all"
+							class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-organizer-400 transition-colors duration-150"
 						>
 							{#if eventData.imagePreview}
 								<div class="relative">
@@ -467,7 +468,7 @@
 										eventData.imagePreview = null;
 									}}
 									aria-label="Eliminar imagen del evento"
-									class="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-2 shadow-lg transition-all"
+									class="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-2 shadow-lg transition-colors duration-150"
 								>
 										<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 											<path
@@ -506,7 +507,7 @@
 							/>
 							<label
 								for="image"
-								class="inline-block mt-4 px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg cursor-pointer transition-all"
+								class="inline-block mt-4 px-6 py-3 bg-organizer-600 hover:bg-organizer-700 text-white font-semibold rounded-lg cursor-pointer transition-colors duration-150"
 							>
 								{eventData.image ? 'Cambiar Imagen' : 'Seleccionar Imagen'}
 							</label>
@@ -528,7 +529,7 @@
 						<button
 							type="button"
 							onclick={addTicketType}
-							class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-all flex items-center gap-2"
+							class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-colors duration-150 flex items-center gap-2"
 						>
 							<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 								<path
@@ -577,7 +578,7 @@
 								type="text"
 								bind:value={ticket.name}
 								required
-								class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+								class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-organizer-500 focus:border-transparent"
 								placeholder="Ej: General, VIP, Platino"
 							/>
 						</div>									<div>
@@ -591,7 +592,7 @@
 												min="0"
 												step="0.01"
 												required
-												class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+												class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-organizer-500 focus:border-transparent"
 												placeholder="0.00"
 											/>
 										</div>
@@ -607,7 +608,7 @@
 											bind:value={ticket.quantity}
 											min="1"
 											required
-											class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+											class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-organizer-500 focus:border-transparent"
 											placeholder="100"
 										/>
 									</div>
@@ -621,7 +622,7 @@
 										id="ticket-desc-{index}"
 										bind:value={ticket.description}
 										rows="2"
-										class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
+										class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-organizer-500 focus:border-transparent resize-none"
 										placeholder="Ej: Incluye acceso preferencial y bebida gratis"
 									></textarea>
 								</div>
@@ -637,7 +638,7 @@
 					<button
 						type="button"
 						onclick={prevStep}
-						class="px-6 py-3 border-2 border-purple-600 text-purple-600 font-semibold rounded-lg hover:bg-purple-50 transition-all flex items-center gap-2"
+						class="px-6 py-3 border-2 border-organizer-600 text-organizer-600 font-semibold rounded-lg hover:bg-organizer-50 transition-colors duration-150 flex items-center gap-2"
 					>
 						<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path
@@ -657,7 +658,7 @@
 					<button
 						type="button"
 						onclick={nextStep}
-						class="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg transition-all flex items-center gap-2"
+						class="px-6 py-3 bg-organizer-600 hover:bg-organizer-700 text-white font-semibold rounded-lg transition-colors duration-150 flex items-center gap-2"
 					>
 						Siguiente
 						<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -673,7 +674,7 @@
 					<button
 						type="submit"
 						disabled={isSubmitting}
-						class="px-8 py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+						class="px-8 py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
 					>
 						{#if isSubmitting}
 							<svg class="animate-spin h-5 w-5" viewBox="0 0 24 24">
@@ -726,7 +727,7 @@
 						<p class="text-gray-600 mb-4">{eventData.description}</p>
 						<div class="space-y-2 text-sm">
 							<p class="flex items-center gap-2">
-								<svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<svg class="w-5 h-5 text-organizer-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 									<path
 										stroke-linecap="round"
 										stroke-linejoin="round"
@@ -743,7 +744,7 @@
 								<span class="font-semibold">{eventData.location}</span>
 							</p>
 							<p class="flex items-center gap-2">
-								<svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<svg class="w-5 h-5 text-organizer-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 									<path
 										stroke-linecap="round"
 										stroke-linejoin="round"

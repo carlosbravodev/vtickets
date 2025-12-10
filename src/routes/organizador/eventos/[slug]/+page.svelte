@@ -3,6 +3,7 @@
 	import { optimizeSupabaseImage } from '$lib/utils/image';
 	import { fade, fly } from 'svelte/transition';
 	import { goto } from '$app/navigation';
+	import { ArrowLeft, Calendar, MapPin, FileText, CheckCircle, AlertCircle, Clock, Edit, Users, DollarSign, QrCode } from 'lucide-svelte';
 
 	let { data }: { data: PageData } = $props();
 	const event = $derived(data.event);
@@ -72,32 +73,25 @@
 					aria-label="Volver a eventos"
 					title="Volver a eventos"
 				>
-					<svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-					</svg>
+				<ArrowLeft class="w-5 h-5 text-gray-600" />
 				</button>
 				<div class="flex-1">
 					<h1 class="text-3xl font-bold text-gray-900">{event.title}</h1>
 					<div class="flex items-center gap-4 mt-2 text-sm text-gray-600">
-						<div class="flex items-center gap-1">
-							<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-							</svg>
-							<span>{formatDateTime(event.event_date)}</span>
-						</div>
-						<div class="flex items-center gap-1">
-							<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-							</svg>
-							<span>{event.venue}{event.location ? `, ${event.location}` : ''}</span>
-						</div>
+					<div class="flex items-center gap-1">
+						<Calendar class="w-4 h-4" />
+						<span>{formatDateTime(event.event_date)}</span>
+					</div>
+					<div class="flex items-center gap-1">
+						<MapPin class="w-4 h-4" />
+						<span>{event.venue}{event.location ? `, ${event.location}` : ''}</span>
+					</div>
 					</div>
 				</div>
 				<div class="flex gap-2">
 					<a
 						href="/organizador/eventos/{event.slug}/editar"
-						class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg transition-colors"
+						class="px-4 py-2 bg-organizer-600 hover:bg-organizer-700 text-white font-semibold rounded-lg transition-colors"
 					>
 						Editar Evento
 					</a>
@@ -113,7 +107,7 @@
 			<div class="lg:col-span-2 space-y-6">
 				<!-- Imagen del evento -->
 				{#if event.image_url}
-					<div class="bg-white rounded-xl shadow-md overflow-hidden">
+					<div class="bg-white border border-gray-200 rounded-xl shadow-md overflow-hidden">
 						<img
 							src={optimizeSupabaseImage(event.image_url, { width: 800, height: 450 })}
 							alt={event.title}
@@ -123,14 +117,14 @@
 					</div>
 				{/if}
 
-				<!-- Descripción -->
-				<div class="bg-white rounded-xl shadow-md p-6">
+			<!-- Descripción -->
+			<div class="bg-white border border-gray-200 rounded-xl shadow-md p-6">
 					<h2 class="text-xl font-bold text-gray-900 mb-4">Descripción</h2>
 					<p class="text-gray-700 whitespace-pre-line">{event.description}</p>
 				</div>
 
-				<!-- Tipos de tickets -->
-				<div class="bg-white rounded-xl shadow-md p-6">
+			<!-- Tipos de tickets -->
+			<div class="bg-white border border-gray-200 rounded-xl shadow-md p-6">
 					<h2 class="text-xl font-bold text-gray-900 mb-4">Tipos de Tickets</h2>
 					<div class="space-y-4">
 						{#each event.ticket_types as ticketType}
@@ -146,7 +140,7 @@
 										</p>
 									</div>
 									<div class="text-right">
-										<div class="text-2xl font-bold text-purple-600">
+										<div class="text-2xl font-bold text-organizer-600">
 											{sold}
 										</div>
 										<div class="text-xs text-gray-600">
@@ -163,7 +157,7 @@
 									</div>
 									<div class="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
 										<div 
-											class="h-full bg-purple-600 rounded-full transition-all duration-500"
+											class="h-full bg-organizer-600 rounded-full transition-all duration-150"
 											style="width: {Math.min(soldPercentage, 100)}%"
 										></div>
 									</div>
@@ -173,10 +167,8 @@
 								<div class="mt-2">
 									{#if ticketType.is_active}
 										{#if ticketType.available_tickets > 0}
-											<span class="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded">
-												<svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-													<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-												</svg>
+										<span class="inline-flex items-center gap-1 px-2 py-1 bg-organizer-100 text-organizer-700 text-xs font-semibold rounded">
+											<CheckCircle class="w-3 h-3" />
 												Activo
 											</span>
 										{:else}
@@ -198,8 +190,8 @@
 					</div>
 				</div>
 
-				<!-- Órdenes recientes -->
-				<div class="bg-white rounded-xl shadow-md p-6">
+			<!-- Órdenes recientes -->
+			<div class="bg-white border border-gray-200 rounded-xl shadow-md p-6">
 					<h2 class="text-xl font-bold text-gray-900 mb-4">Órdenes Recientes</h2>
 					{#if recentOrders && recentOrders.length > 0}
 						<div class="overflow-x-auto">
@@ -237,10 +229,8 @@
 							</table>
 						</div>
 					{:else}
-						<div class="text-center py-8 text-gray-500">
-							<svg class="w-12 h-12 mx-auto mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-							</svg>
+					<div class="text-center py-8 text-gray-500">
+						<FileText class="w-12 h-12 mx-auto mb-3 text-gray-400" />
 							<p>Aún no hay órdenes para este evento</p>
 						</div>
 					{/if}
@@ -249,14 +239,14 @@
 
 			<!-- Sidebar - Estadísticas -->
 			<div class="space-y-6">
-				<!-- Resumen de ventas -->
-				<div class="bg-white rounded-xl shadow-md p-6">
+			<!-- Resumen de ventas -->
+			<div class="bg-white border border-gray-200 rounded-xl shadow-md p-6">
 					<h2 class="text-lg font-bold text-gray-900 mb-4">Resumen de Ventas</h2>
 					
 					<!-- Ingresos totales -->
 					<div class="mb-6">
 						<p class="text-sm text-gray-600 mb-1">Ingresos Totales</p>
-						<p class="text-3xl font-bold text-green-600">
+						<p class="text-3xl font-bold text-organizer-600">
 							{formatCurrency(stats.total_revenue || 0)}
 						</p>
 					</div>
