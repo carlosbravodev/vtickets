@@ -4,6 +4,7 @@
   import userIcon from "$lib/assets/icons/user.svg";
   import { supabase } from "$lib/supabaseClient";
   import Toast from "$lib/components/Toast.svelte";
+  import ToastContainer from "$lib/components/ToastContainer.svelte";
   import RoleWarningBanner from "$lib/components/RoleWarningBanner.svelte";
   import { toast } from "$lib/stores/toast.svelte";
 
@@ -384,8 +385,11 @@
 
 {@render children?.()}
 
-<!-- Toast Container -->
+<!-- Toast Container - Top Center (Old System) -->
 <Toast />
+
+<!-- Toast Container - Bottom Center (New System) -->
+<ToastContainer />
 
 <style>
   /* Mobile Menu Container - Fondo con backdrop */

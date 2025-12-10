@@ -58,7 +58,7 @@ Agregadas al HTML del componente:
 
 ```svelte
 <!-- Máscara oscura para enfocar zona -->
-<div class="absolute inset-0 border-[40px] border-black/30 rounded-lg"></div>
+<div class="absolute inset-0 border-40px border-black/30 rounded-lg"></div>
 
 <!-- 4 esquinas verdes destacadas -->
 <div class="corner top-left"></div>

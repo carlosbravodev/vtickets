@@ -458,6 +458,9 @@
 					success: true
 				});
 
+				// Toast de éxito
+				toast.success(`✅ ${scanResult.ticket.holder_name || 'Entrada'} verificada`);
+
 				console.log('✅ Ticket verificado:', scanResult.ticket.code);
 				
 				// Volver a idle después de 1 segundo
@@ -469,6 +472,9 @@
 			} else {
 				// ❌ ERROR - Ticket inválido o ya verificado
 				const isAlreadyVerified = scanResult.error_type === 'already_verified';
+				const isWrongEvent = scanResult.error_type === 'wrong_event';
+				const isCancelled = scanResult.error_type === 'cancelled';
+				const isInvalid = scanResult.error_type === 'invalid';
 				
 				scannerState = 'error';
 				triggerErrorFeedback(); // Sonido + vibración de error
@@ -485,15 +491,20 @@
 					});
 				}
 
-				// Toast solo para errores críticos
-				if (scanResult.error_type === 'wrong_event') {
+				// Toast por tipo de error
+				if (isWrongEvent) {
 					toast.error('⚠️ Ticket de otro evento');
-				} else if (scanResult.error_type === 'cancelled') {
+				} else if (isCancelled) {
 					toast.error('❌ Ticket cancelado');
 				} else if (isAlreadyVerified) {
-					// No toast, solo visual + vibración
-					console.log('⚠️ Ticket ya verificado');
+					toast.warning(`⏮️ Ticket ya verificado por ${scanResult.ticket?.holder_name || 'usuario desconocido'}`);
+				} else if (isInvalid) {
+					toast.error('❌ Código QR inválido');
+				} else {
+					toast.error('❌ Error al verificar ticket');
 				}
+
+				console.log('❌ Error en verificación:', scanResult.error_type);
 
 				// Volver a idle después de 1.5 segundos
 				setTimeout(() => {
