@@ -12,11 +12,10 @@ function createToastStore() {
 
 	return {
 		subscribe,
-		add: (toast: Omit<ToastNotification, 'id'>) => {
+		add: (message: string, type: 'success' | 'error' | 'warning' | 'info' = 'info', duration: number = 3000) => {
 			const id = Math.random().toString(36).slice(2);
-			const duration = toast.duration || 3000;
 
-			update((toasts) => [...toasts, { ...toast, id }]);
+			update((toasts) => [...toasts, { id, message, type, duration }]);
 
 			// Auto-remove después del duration
 			setTimeout(() => {
